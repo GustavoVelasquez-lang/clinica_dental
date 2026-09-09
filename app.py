@@ -10,7 +10,7 @@ from authlib.common.security import generate_token
 from authlib.integrations.flask_client import OAuth
 from db import get_connection
 from dotenv import dotenv_values, load_dotenv
-from email_utils import enviar_comprobante_admin
+from email_utils import enviar_comprobante_admin, enviar_confirmacion_cita
 from flask import (Flask, flash, jsonify, redirect, render_template, request,
                    session, url_for)
 from flask_bcrypt import Bcrypt
@@ -101,6 +101,32 @@ def agendar():
         cita_id = cursor.fetchone()["id"]
         conn.commit()
         conn.close()
+
+        # 📧 notificar al paciente la confirmación de su cita
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT u.nombre, u.apePaterno, u.apeMaterno, u.correo,
+                       e.nombre AS especialidad
+                FROM usuarios u
+                JOIN especialidades e ON e.id = %s
+                WHERE u.id = %s
+            """, (especialidad_id, session["usuario_id"]))
+            paciente = cursor.fetchone()
+            conn.close()
+
+            if paciente and paciente["correo"]:
+                nombre_pac = f"{paciente['nombre']} {paciente['apePaterno']} {paciente['apeMaterno']}".strip()
+                enviar_confirmacion_cita(
+                    destinatario=paciente["correo"],
+                    nombre_paciente=nombre_pac,
+                    especialidad=paciente["especialidad"],
+                    fecha=str(fecha),
+                    hora=str(hora)[:5],
+                )
+        except Exception as e:
+            logger.error(f"Error al enviar confirmacion de cita: {e}")
 
         flash("✅ Cita registrada, ahora realiza el adelanto", "success")
 
@@ -549,6 +575,29 @@ def admin_enviar_recordatorios():
         flash(f"Error al enviar recordatorios: {e}", "danger")
     return redirect(url_for("admin_citas"))
 
+@app.route("/admin/recordatorios")
+@admin_required
+def admin_recordatorios():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT r.id, r.dias_antes, r.enviado,
+               u.nombre, u.apePaterno, u.apeMaterno, u.correo,
+               e.nombre AS especialidad, c.fecha, c.hora
+        FROM recordatorios r
+        JOIN citas c ON r.cita_id = c.id
+        JOIN usuarios u ON c.paciente_id = u.id
+        JOIN especialidades e ON c.especialidad_id = e.id
+        ORDER BY r.enviado DESC
+    """)
+
+    recordatorios = cursor.fetchall()
+    conn.close()
+
+    return render_template("admin_recordatorios.html", recordatorios=recordatorios)
+
 @app.route("/admin/eliminar/<int:id>")
 @admin_required
 def eliminar_cita(id):
@@ -805,6 +854,11 @@ def iniciar_scheduler():
 
 if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
     iniciar_scheduler()
+    # 🔥 pasada inmediata al arrancar (dedupe por tabla recordatorios evita duplicados)
+    try:
+        enviar_recordatorios_app()
+    except Exception as e:
+        logger.error(f"Error en la pasada inmediata de recordatorios: {e}")
 
 
 if __name__ == '__main__':
