@@ -782,7 +782,7 @@ def limpiar_ip(ip: str):
 
 def enviar_recordatorios_app():
     try:
-        from recordatorios import enviar_recordatorios
+        from recordatorios import enviar_recordatorios 
         enviar_recordatorios()
     except Exception as e:
         logger.exception(f"Error en el envio automatico de recordatorios: {e}")
