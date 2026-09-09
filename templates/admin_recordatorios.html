@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Recordatorios — Sele Dent Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ LAYOUT ══ -->
+<div style="display:flex;min-height:100vh">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">
+      <svg viewBox="0 0 26 26" fill="none"><path d="M13 3C9 3 6 6 6 9.5C6 12 7 14 8 16C9 18 9.5 22 10.5 22C11.5 22 12 19 13 19C14 19 14.5 22 15.5 22C16.5 22 17 18 18 16C19 14 20 12 20 9.5C20 6 17 3 13 3Z" fill="white"/></svg>
+    </div>
+    <div class="sb-logo-text">
+      <strong>Sele Dent</strong>
+      <small>Panel Admin</small>
+    </div>
+  </div>
+
+  <div class="sb-section">Principal</div>
+  <ul class="sb-nav">
+    <li><a href="{{ url_for('admin_citas') }}"><span class="icon"></span> Citas</a></li>
+    <li><a href="{{ url_for('admin_recordatorios') }}" class="active"><span class="icon"></span> Recordatorios</a></li>
+  </ul>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Recordatorios</h1>
+      <p id="fechaHoy"></p>
+    </div>
+    <div class="topbar-right">
+      <span class="tb-date" id="diaHoy"><i class="fa-solid fa-calendar-days"></i></span>
+      <div class="tb-btn"><i class="fa-solid fa-bell"></i><span class="dot"></span></div>
+      <a href="{{ url_for('logout') }}" class="tb-btn" title="Cerrar sesión"><i class="fa-solid fa-door-open"></i>
+</a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;gap:8px">
+      <a href="{{ url_for('admin_enviar_recordatorios') }}"
+         onclick="return confirm('¿Enviar recordatorios ahora para citas en 3, 2 y 1 día?')"
+         style="font-size:13px;font-weight:500;color:white;background:#0d6efd;padding:8px 18px;border-radius:8px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+        📧 Enviar recordatorios ahora
+      </a>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <h3>Correos de recordatorio enviados</h3>
+          <p>A quién, qué y cuándo se notificó</p>
+        </div>
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
+            <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">#</th>
+            <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Paciente</th>
+            <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Correo</th>
+            <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Especialidad</th>
+            <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Cita</th>
+            <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Enviado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in recordatorios %}
+          <tr style="border-bottom:1px solid rgba(10,124,110,0.06);transition:background 0.15s;"
+              onmouseover="this.style.background='rgba(10,124,110,0.03)'"
+              onmouseout="this.style.background='transparent'">
+            <td style="padding:12px 12px;color:var(--muted);">{{ r.id }}</td>
+            <td style="padding:12px 12px;font-weight:500;color:var(--dark);">
+              {{ r.nombre }} {{ r.apePaterno }} {{ r.apeMaterno }}
+            </td>
+            <td style="padding:12px 12px;color:var(--mid);">{{ r.correo }}</td>
+            <td style="padding:12px 12px;color:var(--mid);">{{ r.especialidad }}</td>
+            <td style="padding:12px 12px;">
+              <span style="background:var(--teal-xl);color:var(--teal);font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;">
+                {{ r.fecha }} · {{ r.hora }}
+              </span>
+              <div style="margin-top:4px;font-size:11px;color:var(--muted);">
+                <strong>{{ r.dias_antes }}</strong> día(s) antes
+              </div>
+            </td>
+            <td style="padding:12px 12px;color:var(--mid);">{{ r.enviado }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="padding:48px;text-align:center;color:var(--muted);">
+              Aún no se han enviado recordatorios.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+const now = new Date();
+const dias_s = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const meses  = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+document.getElementById('fechaHoy').textContent = `${dias_s[now.getDay()]}, ${now.getDate()} de ${meses[now.getMonth()]} de ${now.getFullYear()}`;
+document.getElementById('diaHoy').textContent   = `📅 Hoy: ${dias_s[now.getDay()]}`;
+</script>
+
+{% endblock %}

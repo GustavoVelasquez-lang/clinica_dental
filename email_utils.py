@@ -110,6 +110,27 @@ def enviar_recordatorio_cita(
     return enviar_correo(destinatario, asunto, cuerpo)
 
 
+def enviar_confirmacion_cita(
+    destinatario: str,
+    nombre_paciente: str,
+    especialidad: str,
+    fecha: str,
+    hora: str,
+) -> bool:
+    with open(_BASE_DIR / "templates" / "email_confirmacion.html", encoding="utf-8") as f:
+        cuerpo = f.read()
+
+    cuerpo = (
+        cuerpo.replace("{{nombre}}", nombre_paciente)
+        .replace("{{especialidad}}", especialidad)
+        .replace("{{fecha}}", fecha)
+        .replace("{{hora}}", hora)
+    )
+
+    asunto = "Cita registrada - Sele Dent Clinica Dental"
+    return enviar_correo(destinatario, asunto, cuerpo)
+
+
 def enviar_comprobante_admin(
     nombre_paciente: str,
     especialidad: str,
