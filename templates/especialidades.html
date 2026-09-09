@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/especialidades.css') }}">
+{% endblock %}
+{% block title %}Especialidades{% endblock %}
+
+{% block content %}
+
+<h2 class="titulo-tratamientos">Nuestras Especialidades</h2>
+
+<div class="tratamientos-container">
+
+  {% for e in especialidades %}
+  <div class="card-tratamiento-grande" 
+      id="{{ e.nombre|lower|replace(' ', '-')|replace('(', '')|replace(')', '') }}">
+  
+      <!-- IMAGEN -->
+      <img src="{{ url_for('static', filename='img/' ~ e.imagen) }}" class="img-tratamiento">
+  
+      <!-- CONTENIDO -->
+      <div class="contenido-tratamiento">
+        <h3>{{ e.nombre }}</h3>
+        <p>{{ e.descripcion }}</p>
+  
+        <a href="{{ url_for('agendar') }}" class="btn-agendar">
+          Agendar cita
+        </a>
+      </div>
+  
+  </div>
+  {% endfor %}
+
+</div>
+<script>
+  function buscar() {
+      let texto = document.getElementById("busqueda").value
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[()]/g, '');
+  
+      window.location.href = "/especialidades#" + texto;
+  }
+  </script>
+{% endblock %}

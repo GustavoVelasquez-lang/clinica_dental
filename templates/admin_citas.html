@@ -1,0 +1,184 @@
+{% extends "base_admin.html" %}
+{% block title %}Citas — Sele Dent Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ LAYOUT ══ -->
+<div style="display:flex;min-height:100vh">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">
+      <svg viewBox="0 0 26 26" fill="none"><path d="M13 3C9 3 6 6 6 9.5C6 12 7 14 8 16C9 18 9.5 22 10.5 22C11.5 22 12 19 13 19C14 19 14.5 22 15.5 22C16.5 22 17 18 18 16C19 14 20 12 20 9.5C20 6 17 3 13 3Z" fill="white"/></svg>
+    </div>
+    <div class="sb-logo-text">
+      <strong>Sele Dent</strong>
+      <small>Panel Admin</small>
+    </div>
+  </div>
+
+  <div class="sb-section">Principal</div>
+  <ul class="sb-nav">
+    <li><a href="#"><span class="icon"></span> Dashboard</a></li>
+    <li><a href="{{ url_for('admin_citas') }}" class="active"><span class="icon"></span> Citas</a></li>
+    <li><a href="#"><span class="icon"></span> Pacientes</a></li>
+    <li><a href="#"><span class="icon"></span> Tratamientos</a></li>
+  </ul>
+
+  <div class="sb-section">Gestión</div>
+  <ul class="sb-nav">
+    <li><a href="#"><span class="icon"></span> Facturación</a></li>
+    <li><a href="#"><span class="icon"></span> Personal</a></li>
+    <li><a href="#"><span class="icon"></span> Inventario</a></li>
+    <li><a href="#"><span class="icon"></span> Reportes</a></li>
+  </ul>
+
+  <div class="sb-section">Sistema</div>
+  <ul class="sb-nav">
+    <li><a href="#"><span class="icon"></span> Configuración</a></li>
+  </ul>
+
+  <div class="sb-profile">
+    <div class="sb-avatar">{{ session.nombre[0]|upper if session.nombre else 'A' }}</div>
+    <div class="sb-profile-text">
+      <strong>{{ session.nombre if session.nombre else 'Administrador' }}</strong>
+      <small>Admin</small>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Gestión de Citas</h1>
+      <p id="fechaHoy"></p>
+    </div>
+    <div class="topbar-right">
+      <span class="tb-date" id="diaHoy"><i class="fa-solid fa-calendar-days"></i></span>
+      <div class="tb-btn"><i class="fa-solid fa-bell"></i><span class="dot"></span></div>
+      <a href="{{ url_for('logout') }}" class="tb-btn" title="Cerrar sesión"><i class="fa-solid fa-door-open"></i>
+</a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;gap:8px">
+      <a href="{{ url_for('admin_enviar_recordatorios') }}"
+         onclick="return confirm('¿Enviar recordatorios ahora para citas en 3, 2 y 1 día?')"
+         style="font-size:13px;font-weight:500;color:white;background:#0d6efd;padding:8px 18px;border-radius:8px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+        📧 Enviar recordatorios ahora
+      </a>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <h3>Todas las citas</h3>
+          <p>Listado completo de citas registradas</p>
+        </div>
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
+            <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">#</th>
+            <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Paciente</th>
+            <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Especialidad</th>
+            <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Fecha</th>
+            <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Hora</th>
+            <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Estado / Pago</th>
+            <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Comprobante</th>
+            <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cita in citas %}
+          <tr style="border-bottom:1px solid rgba(10,124,110,0.06);transition:background 0.15s;"
+              onmouseover="this.style.background='rgba(10,124,110,0.03)'"
+              onmouseout="this.style.background='transparent'">
+            <td style="padding:12px 12px;color:var(--muted);">{{ cita.id }}</td>
+            <td style="padding:12px 12px;font-weight:500;color:var(--dark);">{{ cita.paciente }}</td>
+            <td style="padding:12px 12px;color:var(--mid);">{{ cita.especialidad }}</td>
+            <td style="padding:12px 12px;color:var(--mid);">{{ cita.fecha }}</td>
+            <td style="padding:12px 12px;">
+              <span style="background:var(--teal-xl);color:var(--teal);font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;">
+                {{ cita.hora }}
+              </span>
+            </td>
+            <td style="padding:12px 12px;">
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                {% if cita.estado == 'pendiente' %}
+                  <span style="background:#fef3e2;color:#d97706;font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;display:inline-block;width:fit-content;">Pendiente</span>
+                {% elif cita.estado == 'confirmada' %}
+                  <span style="background:#e8f7f5;color:var(--teal);font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;display:inline-block;width:fit-content;">Confirmada</span>
+                {% elif cita.estado == 'completada' %}
+                  <span style="background:#f0f0f0;color:#888;font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;display:inline-block;width:fit-content;">Completada</span>
+                {% else %}
+                  <span style="background:#fdf0f0;color:#e05252;font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;display:inline-block;width:fit-content;">{{ cita.estado }}</span>
+                {% endif %}
+                {% if cita.comprobante %}
+                  <span style="background:#e8f7f5;color:#0a7c6e;font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;display:inline-block;width:fit-content;">Pago enviado</span>
+                {% endif %}
+              </div>
+            </td>
+            <td style="padding:12px 12px;">
+              {% if cita.comprobante %}
+                <a href="{{ url_for('static', filename=cita.comprobante.replace('static/', '')) }}" target="_blank"
+                   style="font-size:12px;font-weight:500;color:var(--teal);background:var(--teal-xl);padding:5px 12px;border-radius:6px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;"
+                   onmouseover="this.style.background='var(--teal)';this.style.color='white'"
+                   onmouseout="this.style.background='var(--teal-xl)';this.style.color='var(--teal)'">
+                  👁️ Ver
+                </a>
+              {% else %}
+                <span style="font-size:11px;color:var(--muted);">—</span>
+              {% endif %}
+            </td>
+            <td style="padding:12px 12px;">
+              <div style="display:flex;gap:8px;">
+                <a href="{{ url_for('editar_cita', id=cita.id) }}"
+                   style="font-size:12px;font-weight:500;color:var(--teal);background:var(--teal-xl);padding:5px 12px;border-radius:6px;text-decoration:none;transition:all 0.2s;"
+                   onmouseover="this.style.background='var(--teal)';this.style.color='white'"
+                   onmouseout="this.style.background='var(--teal-xl)';this.style.color='var(--teal)'">
+                  ✏️ Editar
+                </a>
+                <a href="{{ url_for('eliminar_cita', id=cita.id) }}"
+                   onclick="return confirm('¿Eliminar esta cita?')"
+                   style="font-size:12px;font-weight:500;color:#e05252;background:#fdf0f0;padding:5px 12px;border-radius:6px;text-decoration:none;transition:all 0.2s;"
+                   onmouseover="this.style.background='#e05252';this.style.color='white'"
+                   onmouseout="this.style.background='#fdf0f0';this.style.color='#e05252'">
+                  🗑️ Eliminar
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" style="padding:48px;text-align:center;color:var(--muted);">
+              No hay citas registradas aún.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+const now = new Date();
+const dias_s = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const meses  = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+document.getElementById('fechaHoy').textContent = `${dias_s[now.getDay()]}, ${now.getDate()} de ${meses[now.getMonth()]} de ${now.getFullYear()}`;
+document.getElementById('diaHoy').textContent   = `📅 Hoy: ${dias_s[now.getDay()]}`;
+</script>
+
+{% endblock %}

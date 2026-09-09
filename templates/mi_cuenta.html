@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Mi Cuenta — Clinica Dental{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mi_cuenta.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="cuenta-page">
+
+  <a href="/" class="btn-back">
+    <i class="fa-solid fa-arrow-left"></i> Volver al inicio
+  </a>
+
+  <div class="cuenta-card">
+
+    <!-- Cabecera -->
+    <div class="cuenta-header">
+      <div class="cuenta-avatar">
+        {{ usuario.nombre[0]|upper }}
+      </div>
+      <h2>{{ usuario.nombre ~ ' ' ~ usuario.apePaterno ~ ' ' ~ usuario.apeMaterno }}</h2>
+      <div class="cuenta-badge"><span></span> {{ usuario.rol|capitalize }}</div>
+    </div>
+
+    <!-- Cuerpo -->
+    <div class="cuenta-body">
+
+      <!-- Datos -->
+      <div class="datos-card">
+
+        <div class="dato-row">
+          <div class="dato-icon"><i class="fa-solid fa-id-card"></i></div>
+          <div class="dato-info">
+            <span class="dato-label">DNI</span>
+            <span class="dato-valor">{{ usuario.numero_documento }}</span>
+          </div>
+        </div>
+
+        <div class="dato-row">
+          <div class="dato-icon"><i class="fa-solid fa-user"></i></div>
+          <div class="dato-info">
+            <span class="dato-label">Nombre completo</span>
+            <span class="dato-valor">{{ usuario.nombre ~ ' ' ~ usuario.apePaterno ~ ' ' ~ usuario.apeMaterno }}</span>
+          </div>
+        </div>
+
+        <div class="dato-row">
+          <div class="dato-icon"><i class="fa-solid fa-envelope"></i></div>
+          <div class="dato-info">
+            <span class="dato-label">Correo electronico</span>
+            <span class="dato-valor">{{ usuario.correo }}</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Citas -->
+      <div class="citas-section">
+        <h3 class="citas-section-title">Mis Citas</h3>
+
+        {% if citas %}
+          {% for c in citas %}
+          <div class="cita-item-card">
+            <div class="cita-item-left">
+              <span class="cita-especialidad">{{ c.especialidad }}</span>
+              <span class="cita-fecha"><i class="fa-regular fa-calendar"></i> {{ c.fecha }}</span>
+              <span class="cita-hora"><i class="fa-regular fa-clock"></i> {{ c.hora }}</span>
+            </div>
+            <div class="cita-item-right">
+              {% if c.estado == 'pendiente' %}
+                <span class="badge-estado bg-warning">Pendiente</span>
+              {% elif c.estado == 'confirmada' %}
+                <span class="badge-estado bg-info">Confirmada</span>
+              {% elif c.estado == 'atendido' or c.estado == 'completada' %}
+                <span class="badge-estado bg-success">Completada</span>
+              {% elif c.estado == 'cancelado' %}
+                <span class="badge-estado bg-danger">Cancelada</span>
+              {% else %}
+                <span class="badge-estado bg-secondary">{{ c.estado }}</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="citas-empty">
+            <p>No tienes citas registradas</p>
+            <a href="{{ url_for('agendar') }}" class="btn-teal" style="display:inline-flex;width:auto;padding:10px 24px;margin-top:8px">
+              Agendar una cita
+            </a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Acciones -->
+      <a href="{{ url_for('logout') }}" class="btn-outline-danger">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        Cerrar sesion
+      </a>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

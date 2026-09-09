@@ -1,0 +1,286 @@
+:root {
+    --teal:      #0a7c6e;
+    --teal-dark: #065a50;
+    --teal-xl:   #e6f5f3;
+    --gold:      #c9a84c;
+    --gold-l:    #e8c97a;
+    --cream:     #f8f6f2;
+    --dark:      #0f1f1d;
+    --mid:       #2e4a46;
+    --muted:     #6b8c88;
+    --border:    rgba(10,124,110,0.12);
+    --font-d:    'Playfair Display', serif;
+    --font-b:    'DM Sans', sans-serif;
+  }
+
+  html, body {
+    font-family: var(--font-b);
+    background: var(--cream);
+    margin: 0; padding: 0;
+    min-height: 100vh;
+    display: block;
+    overflow-y: auto;
+  }
+
+  /* ── página ── */
+  .cuenta-page {
+    min-height: 100vh;
+    background: var(--cream);
+    padding: 48px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  /* ── tarjeta principal ── */
+  .cuenta-card {
+    width: 100%;
+    max-width: 700px;
+    background: white;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 60px rgba(10,124,110,0.1);
+  }
+
+  /* cabecera verde */
+  .cuenta-header {
+    background: linear-gradient(140deg, var(--teal-dark) 0%, var(--teal) 100%);
+    padding: 36px 32px 48px;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+  .cuenta-header::before {
+    content: '';
+    position: absolute; right: -40px; top: -40px;
+    width: 180px; height: 180px;
+    border: 2px solid rgba(255,255,255,0.07);
+    border-radius: 50%;
+  }
+  .cuenta-header::after {
+    content: '';
+    position: absolute; left: -20px; bottom: -50px;
+    width: 130px; height: 130px;
+    border: 2px solid rgba(255,255,255,0.05);
+    border-radius: 50%;
+  }
+
+  /* avatar */
+  .cuenta-avatar {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 3px solid rgba(255,255,255,0.3);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-family: var(--font-d);
+    font-size: 30px; font-weight: 700;
+    color: white;
+    position: relative; z-index: 1;
+  }
+  .cuenta-header h2 {
+    font-family: var(--font-d);
+    font-size: 22px; font-weight: 700;
+    color: white; margin: 0 0 6px;
+    position: relative; z-index: 1;
+  }
+  .cuenta-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50px; padding: 4px 14px;
+    font-size: 11px; font-weight: 500;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    position: relative; z-index: 1;
+  }
+  .cuenta-badge span {
+    width: 5px; height: 5px;
+    background: var(--gold); border-radius: 50%;
+  }
+
+  /* solapamiento de la card del avatar */
+  .cuenta-body {
+    padding: 0 32px 32px;
+    margin-top: -20px;
+    position: relative; z-index: 2;
+  }
+
+  /* tarjetita interna de datos */
+  .datos-card {
+    background: var(--cream);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .dato-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .dato-row:last-child { border-bottom: none; }
+  .dato-row:hover { background: rgba(10,124,110,0.04); }
+  .dato-icon {
+    width: 36px; height: 36px; flex-shrink: 0;
+    background: rgba(10,124,110,0.1);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--teal); font-size: 15px;
+  }
+  .dato-info { min-width: 0; flex: 1; }
+  .dato-label {
+    font-size: 10px; font-weight: 500;
+    color: var(--muted); letter-spacing: 0.08em;
+    text-transform: uppercase; display: block; margin-bottom: 2px;
+  }
+  .dato-valor {
+    font-size: 14px; font-weight: 500;
+    color: var(--dark);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* botones */
+  .btn-teal {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 13px;
+    background: var(--teal); color: white;
+    border: none; border-radius: 50px;
+    font-size: 14px; font-weight: 500;
+    font-family: var(--font-b);
+    cursor: pointer; text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(10,124,110,0.25);
+    margin-bottom: 10px;
+  }
+  .btn-teal:hover {
+    background: var(--teal-dark); color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 28px rgba(10,124,110,0.35);
+  }
+  .btn-outline-danger {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 12px;
+    background: transparent; color: #c0392b;
+    border: 1.5px solid rgba(192,57,43,0.25);
+    border-radius: 50px;
+    font-size: 14px; font-weight: 500;
+    font-family: var(--font-b);
+    cursor: pointer; text-decoration: none;
+    transition: all 0.2s;
+  }
+  .btn-outline-danger:hover {
+    background: rgba(192,57,43,0.06);
+    border-color: rgba(192,57,43,0.5);
+    color: #c0392b;
+    transform: translateY(-1px);
+  }
+
+  /* volver */
+  .btn-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 500; color: var(--muted);
+    text-decoration: none; margin-bottom: 28px;
+    transition: color 0.2s;
+  }
+  .btn-back:hover { color: var(--teal); }
+  .btn-back i { font-size: 15px; }
+
+  /* ── Sección de citas ── */
+  .citas-section {
+    margin-bottom: 24px;
+  }
+  .citas-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--dark);
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--teal-xl);
+  }
+  .cita-item-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    transition: box-shadow 0.2s;
+  }
+  .cita-item-card:hover {
+    box-shadow: 0 2px 12px rgba(10,124,110,0.08);
+  }
+  .cita-item-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .cita-especialidad {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--teal);
+  }
+  .cita-fecha, .cita-hora {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .cita-fecha i, .cita-hora i {
+    margin-right: 4px;
+    width: 14px;
+  }
+  .cita-item-right {
+    flex-shrink: 0;
+  }
+  .badge-estado {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: capitalize;
+    color: white;
+  }
+  .badge-estado.bg-warning { background: #f59e0b; color: #1a1a1a; }
+  .badge-estado.bg-info    { background: #0ea5e9; }
+  .badge-estado.bg-success { background: #10b981; }
+  .badge-estado.bg-danger  { background: #ef4444; }
+  .badge-estado.bg-secondary { background: #9ca3af; }
+
+  .citas-empty {
+    text-align: center;
+    padding: 24px 16px;
+    background: var(--cream);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .citas-empty p { margin: 0; }
+
+  /* responsive */
+  @media (max-width: 500px) {
+    .cuenta-page { padding: 24px 12px; }
+    .cuenta-card { border-radius: 16px; }
+    .cuenta-header { padding: 28px 20px 40px; }
+    .cuenta-body { padding: 0 16px 20px; }
+    .dato-row { padding: 12px 14px; }
+    .cita-item-card {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .cita-item-right { align-self: flex-end; }
+  }
+
+  /* animación */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .cuenta-card { animation: fadeUp 0.5s ease both; }

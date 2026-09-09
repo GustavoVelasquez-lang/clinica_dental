@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Cita{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5 d-flex justify-content-center">
+
+  <div class="col-md-6">
+    <div class="card shadow p-4">
+
+      <h3 class="text-center mb-4">Editar Cita</h3>
+
+      <form method="POST">
+
+        <!-- FECHA -->
+        <div class="mb-3">
+          <label>Fecha</label>
+          <input type="date" name="fecha" value="{{ cita.fecha }}" class="form-control" required>
+        </div>
+
+        <!-- HORA -->
+        <div class="mb-3">
+          <label>Hora</label>
+          <input type="time" name="hora" value="{{ cita.hora }}" class="form-control" required>
+        </div>
+
+        {% if cita.comprobante %}
+        <div class="mb-3">
+          <label>Comprobante de pago</label>
+          <div>
+            <a href="{{ url_for('static', filename=cita.comprobante.replace('static/', '')) }}" target="_blank" class="btn btn-sm btn-outline-info">
+              👁️ Ver comprobante
+            </a>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ESTADO -->
+        <div class="mb-3">
+          <label>Estado</label>
+          <select name="estado" class="form-control">
+            <option value="pendiente" {% if cita.estado == "pendiente" %}selected{% endif %}>Pendiente</option>
+            <option value="confirmada" {% if cita.estado == "confirmada" %}selected{% endif %}>Confirmada (pago validado)</option>
+            <option value="atendido" {% if cita.estado == "atendido" %}selected{% endif %}>Atendido</option>
+            <option value="cancelado" {% if cita.estado == "cancelado" %}selected{% endif %}>Cancelado</option>
+          </select>
+        </div>
+
+        <!-- BOTONES -->
+        <div class="d-flex justify-content-between">
+          <a href="{{ url_for('admin_citas') }}" class="btn btn-secondary">Volver</a>
+          <button class="btn btn-success"> Guardar</button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

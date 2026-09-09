@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Resultados{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <h2 class="text-center mb-4">🔎 Resultados de búsqueda</h2>
+
+    {% if resultados %}
+
+        <div class="row justify-content-center">
+            {% for e in resultados %}
+            <div class="col-md-4">
+                <div class="card p-3 mb-3 text-center shadow">
+
+                    <h4>{{ e.nombre }}</h4>
+                    <p>{{ e.descripcion }}</p>
+
+                    <a href="/agendar" class="btn btn-primary">
+                        Agendar cita
+                    </a>
+
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+
+        <p class="text-center">❌ No se encontraron resultados</p>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Citas{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+  <div style="max-width:800px;margin:0 auto 16px">
+    <a href="{{ url_for('inicio') }}" style="color:rgba(255,255,255,0.7);text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:6px;">
+      <i class="fa-solid fa-arrow-left"></i> Volver al inicio
+    </a>
+  </div>
+
+  <h2 class="text-center mb-4 text-white">Mis Citas</h2>
+
+  {% if citas %}
+
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+
+        {% for c in citas %}
+        <div class="card mb-4 shadow-lg border-0">
+
+          <div class="card-body">
+
+            <h5 class="card-title text-primary">
+              {{ c.especialidad }}
+            </h5>
+
+            <hr>
+
+            <p><i class="fa-solid fa-calendar"></i> 
+              <strong>Fecha:</strong> {{ c.fecha }}
+            </p>
+
+            <p><i class="fa-solid fa-clock"></i> 
+              <strong>Hora:</strong> {{ c.hora }}
+            </p>
+
+            <!-- 🔥 ESTADO CON COLOR -->
+            {% if c.estado == "pendiente" %}
+              <span class="badge bg-warning text-dark">Pendiente</span>
+            {% elif c.estado == "atendido" %}
+              <span class="badge bg-success">Atendido</span>
+            {% elif c.estado == "cancelado" %}
+              <span class="badge bg-danger">Cancelado</span>
+            {% endif %}
+
+          </div>
+
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+
+  {% else %}
+
+    <div class="text-center mt-5">
+      <h4 class="text-white">No tienes citas registradas</h4>
+      <a href="{{ url_for('agendar') }}" class="btn btn-primary mt-3">
+        Agendar una cita
+      </a>
+    </div>
+
+  {% endif %}
+
+</div>
+
+{% endblock %}

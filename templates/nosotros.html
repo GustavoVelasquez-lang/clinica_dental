@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+{% block title %}Nosotros — Clinica Sele Dent{% endblock %}
+
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@300;400;500;700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.nos-page {
+  font-family: 'DM Sans', sans-serif;
+  background: #f8f6f2;
+  overflow-x: hidden;
+}
+
+/* ── NAVBAR (misma que index) ── */
+.navbar-nos {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 40px; background: white;
+  border-bottom: 1px solid rgba(10,124,110,0.1);
+  position: sticky; top: 0; z-index: 100;
+}
+.navbar-nos .nav-logo img { height: 40px; }
+.navbar-nos .nav-links { display: flex; list-style: none; gap: 28px; }
+.navbar-nos .nav-links a {
+  text-decoration: none; font-size: 14px; font-weight: 500;
+  color: #2e4a46; transition: color 0.2s;
+}
+.navbar-nos .nav-links a:hover, .navbar-nos .nav-links a.active { color: #0a7c6e; }
+.navbar-nos .nav-right { display: flex; align-items: center; gap: 12px; }
+.navbar-nos .nav-icon-btn {
+  text-decoration: none; font-size: 13px; font-weight: 500;
+  color: #2e4a46; padding: 8px 14px; border-radius: 8px;
+  transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+}
+.navbar-nos .nav-icon-btn:hover { background: #e6f5f3; }
+.btn-agendar-nav-nos {
+  background: #0a7c6e; color: white; text-decoration: none;
+  padding: 10px 22px; border-radius: 50px; font-size: 13px; font-weight: 600;
+  transition: all 0.2s;
+}
+.btn-agendar-nav-nos:hover { background: #065a50; transform: translateY(-1px); }
+
+/* ── HERO ── */
+.nos-hero {
+  text-align: center; padding: 80px 24px 60px;
+  background: linear-gradient(140deg, #065a50 0%, #0a7c6e 100%);
+  color: white; position: relative;
+}
+.nos-hero::after {
+  content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
+  height: 60px; background: #f8f6f2;
+  border-radius: 0 0 50% 50% / 0 0 30px 30px;
+}
+.nos-hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(32px,5vw,48px); font-weight: 700;
+  margin-bottom: 16px;
+}
+.nos-hero h1 em { color: #e8c97a; font-style: italic; }
+.nos-hero p {
+  max-width: 600px; margin: 0 auto; font-size: 16px;
+  color: rgba(255,255,255,0.75); line-height: 1.7;
+}
+
+/* ── SECCIONES ── */
+.nos-section { padding: 60px 24px; max-width: 1100px; margin: 0 auto; }
+.nos-section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(24px,3vw,32px); color: #0f1f1d;
+  text-align: center; margin-bottom: 12px;
+}
+.nos-section-sub {
+  text-align: center; color: #6b8c88; font-size: 14px;
+  max-width: 600px; margin: 0 auto 40px;
+}
+
+/* ── PRESENTACION ── */
+.nos-present {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
+  align-items: center; padding: 0 24px; max-width: 1100px; margin: 0 auto;
+}
+.nos-present-text p { font-size: 15px; color: #2e4a46; line-height: 1.8; margin-bottom: 16px; }
+.nos-present-img img { width: 100%; border-radius: 16px; box-shadow: 0 12px 40px rgba(10,124,110,0.12); }
+
+/* ── MISION / VISION ── */
+.mv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.mv-card {
+  padding: 36px 28px; border-radius: 16px;
+  border: 1px solid rgba(10,124,110,0.1);
+}
+.mv-card.mision { background: #e6f5f3; }
+.mv-card.vision { background: white; }
+.mv-card .mv-icon { font-size: 32px; margin-bottom: 12px; }
+.mv-card h3 { font-size: 18px; color: #0f1f1d; margin-bottom: 8px; }
+.mv-card p { font-size: 14px; color: #2e4a46; line-height: 1.7; }
+
+/* ── VALORES ── */
+.val-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 16px; }
+.val-card {
+  text-align: center; padding: 24px 12px;
+  background: white; border-radius: 12px;
+  border: 1px solid rgba(10,124,110,0.08);
+  transition: all 0.3s;
+}
+.val-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(10,124,110,0.1); }
+.val-card .val-icon { font-size: 36px; margin-bottom: 8px; }
+.val-card h4 { font-size: 13px; color: #0f1f1d; font-weight: 600; }
+
+/* ── EQUIPO ── */
+.equipo-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+.equipo-card {
+  background: white; border-radius: 16px; overflow: hidden;
+  border: 1px solid rgba(10,124,110,0.08);
+  text-align: center; transition: all 0.3s;
+}
+.equipo-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(10,124,110,0.1); }
+.equipo-card img { width: 100%; height: 220px; object-fit: cover; }
+.equipo-card-body { padding: 20px; }
+.equipo-card-body h4 { font-size: 16px; color: #0f1f1d; margin-bottom: 4px; }
+.equipo-card-body p { font-size: 13px; color: #0a7c6e; font-weight: 500; }
+
+/* ── POR QUE ELEGIRNOS ── */
+.pqe-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+.pqe-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 20px; background: white; border-radius: 12px;
+  border: 1px solid rgba(10,124,110,0.08);
+}
+.pqe-item .pqe-icon { font-size: 24px; flex-shrink: 0; }
+.pqe-item h4 { font-size: 14px; color: #0f1f1d; margin-bottom: 4px; }
+.pqe-item p { font-size: 12px; color: #6b8c88; line-height: 1.5; }
+
+/* ── CTA ── */
+.nos-cta {
+  text-align: center; padding: 80px 24px;
+  background: linear-gradient(140deg, #065a50 0%, #0a7c6e 100%);
+  color: white;
+}
+.nos-cta h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(24px,3vw,36px); margin-bottom: 12px;
+}
+.nos-cta p { font-size: 15px; color: rgba(255,255,255,0.75); margin-bottom: 28px; }
+.nos-cta .btn-cta-nos {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: white; color: #0a7c6e; text-decoration: none;
+  padding: 16px 36px; border-radius: 50px;
+  font-size: 16px; font-weight: 600; transition: all 0.3s;
+}
+.nos-cta .btn-cta-nos:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.2); }
+
+/* ── FOOTER ── */
+.nos-footer {
+  text-align: center; padding: 24px; font-size: 13px;
+  color: #6b8c88; background: white;
+  border-top: 1px solid rgba(10,124,110,0.08);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width:768px) {
+  .navbar-nos { flex-wrap: wrap; gap: 12px; padding: 12px 16px; }
+  .navbar-nos .nav-links { order: 3; flex: 1 1 100%; justify-content: center; gap: 16px; }
+  .nos-present { grid-template-columns: 1fr; }
+  .mv-grid { grid-template-columns: 1fr; }
+  .val-grid { grid-template-columns: repeat(3,1fr); }
+  .equipo-grid { grid-template-columns: 1fr; }
+  .pqe-grid { grid-template-columns: 1fr; }
+}
+@media (max-width:480px) {
+  .val-grid { grid-template-columns: repeat(2,1fr); }
+}
+</style>
+
+<div class="nos-page">
+
+  <!-- ══ NAVBAR ══ -->
+  <nav class="navbar-nos">
+    <a href="/" class="nav-logo">
+      <img src="{{ url_for('static', filename='img/trece.png') }}" />
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Inicio</a></li>
+      <li><a href="/#especialidades">Especialidades</a></li>
+      <li><a href="#" class="active">Nosotros</a></li>
+      <li><a href="#">Contacto</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="{{ url_for('mis_citas') }}" class="nav-icon-btn"><i class="fa-solid fa-clipboard"></i> Mis citas</a>
+      <a href="{{ url_for('mi_cuenta') }}" class="nav-icon-btn"><i class="fa-solid fa-user"></i> Mi cuenta</a>
+      <a href="/agendar" class="btn-agendar-nav-nos">Agendar cita</a>
+    </div>
+  </nav>
+
+  <!-- ══ HERO ══ -->
+  <section class="nos-hero">
+    <h1>Conoce mas sobre <em>Sele Dent</em></h1>
+    <p>Mas que una clinica dental, somos un equipo comprometido con tu salud bucal y la confianza de tu sonrisa.</p>
+  </section>
+
+  <!-- ══ 1. PRESENTACION ══ -->
+  <section style="padding: 60px 24px; background: white;">
+    <div class="nos-present">
+      <div class="nos-present-text">
+        <h2 style="font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,30px);color:#0f1f1d;margin-bottom:16px;">
+          Quienes somos
+        </h2>
+        <p>En <strong>Clinica Sele Dent</strong> nos especializamos en brindar atencion odontologica integral, combinando tecnologia moderna con un trato humano y cercano.</p>
+        <p>Nuestro objetivo es cuidar tu salud bucal y devolverte la confianza en tu sonrisa.</p>
+      </div>
+      <div class="nos-present-img">
+        <img src="{{ url_for('static', filename='img/paisaje.jpg') }}" alt="Clinica">
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 2. MISION Y VISION ══ -->
+  <section class="nos-section">
+    <h2 class="nos-section-title">Nuestra Filosofia</h2>
+    <p class="nos-section-sub">Lo que nos guia cada dia para brindarte el mejor servicio</p>
+    <div class="mv-grid">
+      <div class="mv-card mision">
+        <div class="mv-icon">🎯</div>
+        <h3>Mision</h3>
+        <p>Brindar servicios odontologicos de alta calidad, con profesionales capacitados y tecnologia de vanguardia, garantizando la satisfaccion y bienestar de nuestros pacientes.</p>
+      </div>
+      <div class="mv-card vision">
+        <div class="mv-icon">🔭</div>
+        <h3>Vision</h3>
+        <p>Ser una clinica lider en salud dental en Huancayo, reconocida por su excelencia, innovacion y compromiso con nuestros pacientes.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 3. VALORES ══ -->
+  <section class="nos-section" style="background:white;border-radius:24px;">
+    <h2 class="nos-section-title">Nuestros Valores</h2>
+    <p class="nos-section-sub">Principios que nos definen</p>
+    <div class="val-grid">
+      <div class="val-card"><div class="val-icon">🦷</div><h4>Profesionalismo</h4></div>
+      <div class="val-card"><div class="val-icon">❤️</div><h4>Empatia</h4></div>
+      <div class="val-card"><div class="val-icon">⭐</div><h4>Calidad</h4></div>
+      <div class="val-card"><div class="val-icon">🔬</div><h4>Innovacion</h4></div>
+      <div class="val-card"><div class="val-icon">🤝</div><h4>Confianza</h4></div>
+    </div>
+  </section>
+
+  <!-- ══ 4. EQUIPO ══ -->
+  <section class="nos-section">
+    <h2 class="nos-section-title">Nuestro Equipo</h2>
+    <p class="nos-section-sub">Profesionales altamente capacitados para cuidar tu salud bucal</p>
+    <div class="equipo-grid">
+      <div class="equipo-card">
+        <img src="{{ url_for('static', filename='img/uno.jpg') }}" alt="Dr. Juan Perez">
+        <div class="equipo-card-body">
+          <h4>Dr. Juan Perez</h4>
+          <p>Especialista en Ortodoncia</p>
+        </div>
+      </div>
+      <div class="equipo-card">
+        <img src="{{ url_for('static', filename='img/dos.jpg') }}" alt="Dra. Maria Garcia">
+        <div class="equipo-card-body">
+          <h4>Dra. Maria Garcia</h4>
+          <p>Especialista en Endodoncia</p>
+        </div>
+      </div>
+      <div class="equipo-card">
+        <img src="{{ url_for('static', filename='img/tres.jpg') }}" alt="Dr. Carlos Lopez">
+        <div class="equipo-card-body">
+          <h4>Dr. Carlos Lopez</h4>
+          <p>Especialista en Implantes</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 5. POR QUE ELEGIRNOS ══ -->
+  <section style="padding:60px 24px;background:white;">
+    <div style="max-width:1100px;margin:0 auto;">
+      <h2 class="nos-section-title">Por que elegirnos</h2>
+      <p class="nos-section-sub">Razones para confiar en nosotros</p>
+      <div class="pqe-grid">
+        <div class="pqe-item">
+          <div class="pqe-icon">✔️</div>
+          <div><h4>Atencion personalizada</h4><p>Te escuchamos y disenamos el tratamiento ideal para ti.</p></div>
+        </div>
+        <div class="pqe-item">
+          <div class="pqe-icon">✔️</div>
+          <div><h4>Tecnologia moderna</h4><p>Equipos de ultima generacion para diagnosticos precisos.</p></div>
+        </div>
+        <div class="pqe-item">
+          <div class="pqe-icon">✔️</div>
+          <div><h4>Profesionales certificados</h4><p>Especialistas con amplia experiencia y formacion continua.</p></div>
+        </div>
+        <div class="pqe-item">
+          <div class="pqe-icon">✔️</div>
+          <div><h4>Ambiente comodo y seguro</h4><p>Instalaciones modernas pensadas en tu bienestar.</p></div>
+        </div>
+        <div class="pqe-item">
+          <div class="pqe-icon">✔️</div>
+          <div><h4>+3,000 pacientes atendidos</h4><p>Una trayectoria que nos respalda.</p></div>
+        </div>
+        <div class="pqe-item">
+          <div class="pqe-icon">✔️</div>
+          <div><h4>Especialidades variadas</h4><p>{% for e in especialidades %}{{ e.nombre }}{% if not loop.last %}, {% endif %}{% endfor %} y mas.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 6. CTA ══ -->
+  <section class="nos-cta">
+    <h2>Agenda tu cita hoy y comienza a cuidar tu sonrisa</h2>
+    <p>Reserva en linea de forma rapida y sencilla. Te esperamos.</p>
+    <a href="/agendar" class="btn-cta-nos">
+      <i class="fa-solid fa-calendar-check"></i> Agendar cita
+    </a>
+  </section>
+
+  <!-- ══ FOOTER ══ -->
+  <footer class="nos-footer">
+    &copy; 2026 Clinica Sele Dent — Todos los derechos reservados
+  </footer>
+
+</div>
+{% endblock %}

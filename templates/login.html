@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+
+      <div style="margin-bottom:12px">
+        <a href="{{ url_for('inicio') }}" style="color:var(--teal);text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-arrow-left"></i> Volver al inicio
+        </a>
+      </div>
+
+      <div class="card shadow p-4">
+
+        <div class="text-center mb-3">
+          <img class="login-logo-simple" src="{{ url_for('static', filename='img/trece.png') }}" alt="Logo Clinica Sele Dent">
+        </div>
+
+        <h2 class="login-title text-center mb-1">Iniciar sesión</h2>
+        <p class="login-sub text-center mb-4">Ingresa tus credenciales para continuar</p>
+
+        <form method="POST">
+
+          <div class="field-group">
+            <label for="usuario">Usuario</label>
+            <input type="text" name="usuario" id="usuario"
+                  placeholder="Tu nombre de usuario" required autocomplete="username">
+          </div>
+
+          <div class="field-group">
+            <label for="clave">Contraseña</label>
+            <input type="password" name="clave" id="clave"
+                  placeholder="••••••••" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" class="btn-login">Iniciar sesión</button>
+
+          <div class="google-btn-wrap">
+            <div class="divider">
+              <hr><span>o continúa con</span><hr>
+            </div>
+            <a href="{{ url_for('login_google') }}" class="btn-google-custom">
+              <i class="fa-brands fa-google"></i>
+              Ingresar con Google
+            </a>
+          </div>
+
+          <a href="{{ url_for('registro') }}" class="btn-register">Crear cuenta nueva</a>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

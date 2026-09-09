@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+{% endblock %}
+{% block title %}Clínica Sele Dent{% endblock %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<nav class="navbar-sd" id="navbar">
+  <a href="#" class="nav-logo">
+    <img class="logo" src="{{ url_for('static', filename='img/trece.png') }}" />
+  </a>
+  <ul class="nav-links">
+    <li><a href="#" class="a  ctivacion">Inicio</a></li>
+    <li><a href="#especialidades">Especialidades</a></li>
+    <li><a href="{{ url_for('nosotros') }}">Nosotros</a></li>
+    <li><a href="#">Contacto</a></li>
+  </ul>
+
+  <div class="nav-right">
+    <a href="{{ url_for('mis_citas') }}" class="nav-icon-btn">
+      <i class="fa-solid fa-clipboard"></i> Mis citas
+    </a>
+    <a href="{{ url_for('mi_cuenta') }}" class="nav-icon-btn">
+      <i class="fa-solid fa-user"></i> Mi cuenta
+    </a>
+    <a href="/agendar" class="btn-agendar-nav">Agendar cita</a>
+  </div>
+</nav>
+<div class="hero-wrap">
+  <div class="hero-content">
+    <div class="hero-badge"><span></span> Odontología de excelencia</div>
+    <h1>Tu sonrisa merece<br>el <em>mejor</em> cuidado</h1>
+    <p>Tratamientos modernos con tecnología de vanguardia y profesionales especializados para toda la familia.</p>
+    <div class="hero-actions">
+      <a href="/agendar" class="btn-hero-primary">Agendar mi cita</a>
+      <a href="#especialidades" class="btn-hero-secondary">Ver especialidades</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num">8+</div>
+      <div class="hero-stat-label">Años</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">3k+</div>
+      <div class="hero-stat-label">Pacientes</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">12</div>
+      <div class="hero-stat-label">Especialidades</div>
+    </div>
+  </div>
+  <div class="hero-search">
+    <input type="text" id="busqueda" placeholder="Busca una especialidad: ortodoncia, implantes...">
+    <button onclick="buscar()"><i class="fa-solid fa-magnifying-glass"></i> Buscar</button>
+  </div>
+  <div id="carouselExample" class="carousel slide" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+      <button type="button" data-bs-target="#carouselExample" data-bs-slide-to="0" class="active"></button>
+      <button type="button" data-bs-target="#carouselExample" data-bs-slide-to="1"></button>
+      <button type="button" data-bs-target="#carouselExample" data-bs-slide-to="2"></button>
+    </div>
+    <div class="carousel-inner">
+      <div class="carousel-item active">
+        <img src="{{ url_for('static', filename='img/cinco.jpg') }}" alt="Clínica Sele Dent">
+      </div>
+      <div class="carousel-item">
+        <img src="{{ url_for('static', filename='img/uno.jpg') }}" alt="Clínica Sele Dent">
+      </div>
+      <div class="carousel-item">
+        <img src="{{ url_for('static', filename='img/dos.jpg') }}" alt="Clínica Sele Dent">
+      </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+      <span class="carousel-control-next-icon"></span>
+    </button>
+  </div>
+</div>
+<section class="section-about">
+  <div class="about-text">
+    <div class="about-label">Quiénes somos</div>
+    <h2>Clínica <span>Sele Dent</span></h2>
+    <p>
+      Nuestra institución tiene un serio compromiso de brindar calidad y calidez a cada uno de nuestros pacientes. Contamos con la más moderna infraestructura diseñada pensando en la comodidad y confort del paciente, sumados a un staff de profesionales altamente capacitados.
+    </p>
+    <div class="about-pills">
+      <span class="pill"><i class="fa-solid fa-shield-heart"></i> Atención de calidad</span>
+      <span class="pill"><i class="fa-solid fa-microscope"></i> Tecnología de punta</span>
+      <span class="pill"><i class="fa-solid fa-user-doctor"></i> Profesionales especializados</span>
+      <span class="pill"><i class="fa-solid fa-star"></i> +8 años de experiencia</span>
+    </div>
+    <a href="#" class="btn-outline-teal">Conoce nuestro equipo →</a>
+  </div>
+
+  <div class="about-img-wrap">
+    <img src="{{ url_for('static', filename='img/cinco.jpg') }}" alt="Clínica Sele Dent interior">
+    <div class="about-img-badge">
+      <div class="about-img-badge-icon">🦷</div>
+      <div>
+        <strong>3,000+</strong>
+        <span>Pacientes satisfechos</span>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="section-esp" id="especialidades">
+  <div class="section-header">
+    <div class="section-header-left">
+      <div class="label">Nuestros servicios</div>
+      <h2>Especialidades para<br>toda la familia</h2>
+    </div>
+    <p>Un equipo multidisciplinario para atender todas tus necesidades dentales con excelencia.</p>
+  </div>
+
+  <div class="esp-grid">
+    <div class="esp-card">
+      <div class="esp-card-img">
+        <img src="../static/img/endodoncia.jpg" alt="Endodoncia">
+      </div>
+      <div class="esp-card-body">
+        <h4>Endodoncia</h4>
+        <p>Tratamiento de conducto para salvar tu pieza dental y eliminar el dolor de raíz.</p>
+        <a href="/especialidades#endodoncia-tratamiento-de-conducto" class="esp-card-link">Ver más</a>
+      </div>
+    </div>
+
+    <div class="esp-card">
+      <div class="esp-card-img">
+        <img src="../static/img/blanquiamiento.jpg" alt="Blanqueamiento">
+      </div>
+      <div class="esp-card-body">
+        <h4>Blanqueamiento Dental</h4>
+        <p>Tratamientos profesionales para una sonrisa más blanca y radiante en pocas sesiones.</p>
+        <a href="/especialidades#blanqueamiento-dental" class="esp-card-link">Ver más</a>
+      </div>
+    </div>
+
+    <div class="esp-card">
+      <div class="esp-card-img no-img">
+        <img src="../static/img/brakets.jpg" alt="Blanqueamiento">
+      </div>
+      <div class="esp-card-body">
+        <h4>Ortodoncia</h4>
+        <p>Brackets tradicionales e invisibles para alinear tu sonrisa de forma efectiva.</p>
+        <a href="/especialidades#ortodoncia-brackets" class="esp-card-link">Ver más</a>
+      </div>
+    </div>
+
+    <div class="esp-card">
+      <div class="esp-card-img no-img">
+        <span class="esp-icon">✨</span>
+      </div>
+      <div class="esp-card-body">
+        <h4>Implantes Dentales</h4>
+        <p>Implantes de titanio con resultados naturales y duraderos para recuperar tu sonrisa.</p>
+        <a href="/especialidades#implantes-dentales" class="esp-card-link">Ver más</a>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="section-cta">
+  <div>
+    <div class="cta-text-label">Agenda ahora</div>
+    <h2>Tu primera consulta<br>te espera hoy</h2>
+    <p>Reserva en minutos. Atendemos de lunes a sábado con horarios flexibles para adaptarnos a tu vida.</p>
+    <div class="cta-btns">
+      <a href="/agendar" class="btn-cta-white">Agendar mi cita</a>
+      <a href="#ubicacion" class="btn-cta-outline">Ver ubicación</a>
+    </div>
+  </div>
+</div>
+<section class="section-location" id="ubicacion">
+  <div class="location-text">
+    <div class="location-label">Encuéntranos</div>
+    <h2>Estamos en<br>Huancayo, Junín</h2>
+    <p>Visítanos en El Tambo cuando necesites. Contamos con estacionamiento y fácil acceso.</p>
+
+    <div class="info-items">
+      <div class="info-item">
+        <div class="info-item-icon"><i class="fa-solid fa-location-dot"></i></div>
+        <div class="info-item-text">
+          <strong>Dirección</strong>
+          <span>El Tambo, Huancayo, Junín</span>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-item-icon"><i class="fa-solid fa-phone"></i></div>
+        <div class="info-item-text">
+          <strong>Teléfono / WhatsApp</strong>
+          <span>+51 956 536 766</span>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-item-icon"><i class="fa-solid fa-clock"></i></div>
+        <div class="info-item-text">
+          <strong>Horario de atención</strong>
+          <span>Lunes a Sábado, 10:00 am – 5:00 pm</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="map-wrap">
+    <iframe
+      src="https://www.google.com/maps?q=Sele+Dent,+Huancayo&output=embed"
+      allowfullscreen loading="lazy">
+    </iframe>
+  </div>
+</section>
+<footer class="footer-sd">
+  <div class="footer-brand">
+    <div class="footer-logo-icon">
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+        <path d="M13 3C9 3 6 6 6 9.5C6 12 7 14 8 16C9 18 9.5 22 10.5 22C11.5 22 12 19 13 19C14 19 14.5 22 15.5 22C16.5 22 17 18 18 16C19 14 20 12 20 9.5C20 6 17 3 13 3Z" fill="white"/>
+      </svg>
+    </div>
+    <strong style="color:white;font-family:var(--font-d);font-size:17px;">Clínica Sele Dent</strong>
+    <p>Comprometidos con tu salud bucal. Odontología con calidez, profesionalismo y confianza en Huancayo.</p>
+  </div>
+  <div class="footer-col">
+    <h5>Especialidades</h5>
+    <a href="/especialidades#ortodoncia-brackets">Ortodoncia</a>
+    <a href="/especialidades#blanqueamiento-dental">Blanqueamiento</a>
+    <a href="/especialidades#implantes-dentales">Implantes</a>
+    <a href="/especialidades#endodoncia-tratamiento-de-conducto">Endodoncia</a>
+    <a href="/especialidades#extraccion-dental">Extracciones</a>
+  </div>
+  <div class="footer-col">
+    <h5>Clínica</h5>
+    <a href="#">Nosotros</a>
+    <a href="#">Nuestro equipo</a>
+    <a href="#">Contacto</a>
+    <a href="{{ url_for('mis_citas') }}">Mis citas</a>
+  </div>
+  <div class="footer-col">
+    <h5>Contacto</h5>
+    <a href="#">El Tambo, Huancayo</a>
+    <a href="#">+51 956 536 766</a>
+    <a href="#">10am – 5pm, L–S</a>
+  </div>
+</footer>
+<div class="footer-bottom">
+  <span>© 2025 Clínica Sele Dent · Todos los derechos reservados</span>
+  <span>Odontología Integral · Profesionalismo · Confianza</span>
+</div>
+
+<script>
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar')
+      .classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  function buscar() {
+    const texto = document.getElementById("busqueda").value.toLowerCase();
+    const rutas = {
+      "ortodoncia":    "/especialidades#ortodoncia-brackets",
+      "limpieza":      "/especialidades#limpieza-dental",
+      "blanqueamiento":"/especialidades#blanqueamiento-dental",
+      "endodoncia":    "/especialidades#endodoncia-tratamiento-de-conducto",
+      "extraccion":    "/especialidades#extraccion-dental",
+      "implantes":     "/especialidades#implantes-dentales",
+    };
+    const match = Object.keys(rutas).find(k => texto.includes(k));
+    if (match) {
+      window.location.href = rutas[match];
+    } else {
+      alert("❌ No se encontró esa especialidad. Intenta con: ortodoncia, implantes, blanqueamiento...");
+    }
+  }
+
+  document.getElementById("busqueda")
+    .addEventListener("keydown", e => { if (e.key === "Enter") buscar(); });
+</script>
+
+{% endblock %}

@@ -1,0 +1,25 @@
+:root {
+    --teal:      #0a7c6e;
+    --teal-dark: #065a50;
+    --teal-xl:   #e6f5f3;
+    --gold:      #c9a84c;
+    --gold-l:    #e8c97a;
+    --cream:     #f8f6f2;
+    --dark:      #0f1f1d;
+    --mid:       #2e4a46;
+    --muted:     #6b8c88;
+    --red:       #e05252;
+    --green:     #22c55e;
+    --border:    rgba(10,124,110,0.13);
+    --font-d:    'Playfair Display', serif;
+    --font-b:    'DM Sans', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: var(--font-b);
+    background: var(--cream);
+    margin: 0;
+    padding: 0;
+}

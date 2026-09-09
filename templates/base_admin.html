@@ -1,0 +1,522 @@
+{% extends "base.html" %} {% block title %}Dashboard — Sele Dent Admin{%
+endblock %} {% block content %}
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap"
+  rel="stylesheet"
+/>
+
+
+<!-- ══ LAYOUT ══ -->
+<div style="display: flex; min-height: 100vh">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">
+        <svg viewBox="0 0 26 26" fill="none">
+          <path
+            d="M13 3C9 3 6 6 6 9.5C6 12 7 14 8 16C9 18 9.5 22 10.5 22C11.5 22 12 19 13 19C14 19 14.5 22 15.5 22C16.5 22 17 18 18 16C19 14 20 12 20 9.5C20 6 17 3 13 3Z"
+            fill="white"
+          />
+        </svg>
+      </div>
+      <div class="sb-logo-text">
+        <strong>Sele Dent</strong>
+        <small>Panel Admin</small>
+      </div>
+    </div>
+
+    <div class="sb-section">Principal</div>
+    <ul class="sb-nav">
+      <li>
+        <a href="{{ url_for('admin_dashboard') }}" class="active"
+          ><span class="icon">📊</span> Dashboard</a
+        >
+      </li>
+      <li>
+        <a href="{{ url_for('admin_citas') }}"
+          ><span class="icon">📅</span> Citas
+          <span class="badge">{{ citas_pendientes|default(4) }}</span></a
+        >
+      </li>
+      <li>
+        <a href="{{ url_for('admin_pacientes') }}"
+          ><span class="icon">👥</span> Pacientes</a
+        >
+      </li>
+      <li>
+        <a href="{{ url_for('admin_tratamientos') }}"
+          ><span class="icon">🦷</span> Tratamientos</a
+        >
+      </li>
+    </ul>
+
+    <div class="sb-section">Gestión</div>
+    <ul class="sb-nav">
+      <li>
+        <a href="{{ url_for('admin_facturacion') }}"
+          ><span class="icon">💰</span> Facturación</a
+        >
+      </li>
+      <li>
+        <a href="{{ url_for('admin_personal') }}"
+          ><span class="icon">👨‍⚕️</span> Personal</a
+        >
+      </li>
+      <li>
+        <a href="{{ url_for('admin_inventario') }}"
+          ><span class="icon">📦</span> Inventario</a
+        >
+      </li>
+      <li>
+        <a href="{{ url_for('admin_reportes') }}"
+          ><span class="icon">📈</span> Reportes</a
+        >
+      </li>
+    </ul>
+
+    <div class="sb-section">Sistema</div>
+    <ul class="sb-nav">
+      <li>
+        <a href="{{ url_for('admin_config') }}"
+          ><span class="icon">⚙️</span> Configuración</a
+        >
+      </li>
+      <li>
+        <a href="{{ url_for('inicio') }}"
+          ><span class="icon">🏠</span> Volver al inicio</a
+        >
+      </li>
+    </ul>
+
+    <div class="sb-profile">
+      <div class="sb-avatar">
+        {{ current_user.nombre[0]|upper if current_user else 'A' }}
+      </div>
+      <div class="sb-profile-text">
+        <strong
+          >{{ current_user.nombre if current_user else 'Administrador'
+          }}</strong
+        >
+        <small
+          >{{ current_user.email if current_user else 'admin@seledent.pe'
+          }}</small
+        >
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Dashboard</h1>
+        <p id="fechaHoy"></p>
+      </div>
+      <div class="topbar-right">
+        <span class="tb-date" id="diaHoy"></span>
+        <div class="tb-btn">🔔<span class="dot"></span></div>
+        <a href="{{ url_for('logout') }}" class="tb-btn" title="Cerrar sesión"
+          >🚪</a
+        >
+      </div>
+    </div>
+
+    <div class="content" id="dashContent">
+      <!-- KPIs — datos desde Flask -->
+      <div class="kpi-grid">
+        <div class="kpi-card c-teal">
+          <div class="kpi-header">
+            <div class="kpi-icon">📅</div>
+            <span class="kpi-trend trend-up">↑ 12%</span>
+          </div>
+          <div class="kpi-num" data-target="{{ citas_hoy|default(8) }}">0</div>
+          <div class="kpi-label">Citas hoy</div>
+          <div class="kpi-bar">
+            <div class="kpi-bar-fill" data-w="72" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="kpi-card c-gold">
+          <div class="kpi-header">
+            <div class="kpi-icon">📆</div>
+            <span class="kpi-trend trend-up">↑ 8%</span>
+          </div>
+          <div class="kpi-num" data-target="{{ citas_semana|default(34) }}">
+            0
+          </div>
+          <div class="kpi-label">Citas esta semana</div>
+          <div class="kpi-bar">
+            <div class="kpi-bar-fill" data-w="60" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="kpi-card c-red">
+          <div class="kpi-header">
+            <div class="kpi-icon">🆕</div>
+            <span class="kpi-trend trend-up">↑ 5%</span>
+          </div>
+          <div class="kpi-num" data-target="{{ pacientes_nuevos|default(12) }}">
+            0
+          </div>
+          <div class="kpi-label">Pacientes nuevos (mes)</div>
+          <div class="kpi-bar">
+            <div class="kpi-bar-fill" data-w="45" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="kpi-card c-blue">
+          <div class="kpi-header">
+            <div class="kpi-icon">💰</div>
+            <span class="kpi-trend trend-up">↑ 18%</span>
+          </div>
+          <div
+            class="kpi-num"
+            data-target="{{ ingresos_mes|default(4850) }}"
+            data-prefix="S/ "
+          >
+            S/ 0
+          </div>
+          <div class="kpi-label">Ingresos este mes</div>
+          <div class="kpi-bar">
+            <div class="kpi-bar-fill" data-w="83" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <h3>Citas por día</h3>
+              <p>Esta semana vs semana pasada</p>
+            </div>
+            <div class="chart-tabs">
+              <button class="ctab active">Semana</button>
+              <button class="ctab">Mes</button>
+            </div>
+          </div>
+          <div class="bar-chart" id="barChart"></div>
+          <div style="display: flex; gap: 16px; margin-top: 12px">
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 11px;
+                color: var(--muted);
+              "
+            >
+              <span
+                style="
+                  width: 10px;
+                  height: 10px;
+                  background: var(--teal);
+                  border-radius: 2px;
+                  display: inline-block;
+                "
+              ></span>
+              Esta semana
+            </div>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 11px;
+                color: var(--muted);
+              "
+            >
+              <span
+                style="
+                  width: 10px;
+                  height: 10px;
+                  background: rgba(201, 168, 76, 0.7);
+                  border-radius: 2px;
+                  display: inline-block;
+                "
+              ></span>
+              Semana pasada
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <h3>Especialidades</h3>
+              <p>Más solicitadas este mes</p>
+            </div>
+          </div>
+          <div class="donut-wrap">
+            <svg viewBox="0 0 140 140">
+              <circle
+                cx="70"
+                cy="70"
+                r="54"
+                fill="none"
+                stroke="#f0eeea"
+                stroke-width="18"
+              />
+              <circle
+                id="d1"
+                cx="70"
+                cy="70"
+                r="54"
+                fill="none"
+                stroke="#0a7c6e"
+                stroke-width="18"
+                stroke-dasharray="0 339"
+                stroke-dashoffset="-85"
+                stroke-linecap="round"
+                style="
+                  transition: stroke-dasharray 1.4s
+                    cubic-bezier(0.22, 1, 0.36, 1) 0.3s;
+                "
+              />
+              <circle
+                id="d2"
+                cx="70"
+                cy="70"
+                r="54"
+                fill="none"
+                stroke="#c9a84c"
+                stroke-width="18"
+                stroke-dasharray="0 339"
+                stroke-dashoffset="-85"
+                stroke-linecap="round"
+                style="
+                  transition: stroke-dasharray 1.4s
+                    cubic-bezier(0.22, 1, 0.36, 1) 0.5s;
+                "
+              />
+              <circle
+                id="d3"
+                cx="70"
+                cy="70"
+                r="54"
+                fill="none"
+                stroke="#3b7dd8"
+                stroke-width="18"
+                stroke-dasharray="0 339"
+                stroke-dashoffset="-85"
+                stroke-linecap="round"
+                style="
+                  transition: stroke-dasharray 1.4s
+                    cubic-bezier(0.22, 1, 0.36, 1) 0.7s;
+                "
+              />
+              <circle
+                id="d4"
+                cx="70"
+                cy="70"
+                r="54"
+                fill="none"
+                stroke="#e05252"
+                stroke-width="18"
+                stroke-dasharray="0 339"
+                stroke-dashoffset="-85"
+                stroke-linecap="round"
+                style="
+                  transition: stroke-dasharray 1.4s
+                    cubic-bezier(0.22, 1, 0.36, 1) 0.9s;
+                "
+              />
+            </svg>
+            <div class="donut-center">
+              <strong>{{ total_tratamientos|default(48) }}</strong
+              ><span>Tratamientos</span>
+            </div>
+          </div>
+          <div class="esp-legend" id="espLegend"></div>
+        </div>
+      </div>
+
+      <!-- Bottom -->
+      <div class="bottom-row">
+        <div class="citas-card">
+          <h3>Citas de hoy</h3>
+          <p>Próximas citas programadas</p>
+          {% for cita in citas_hoy_lista|default([
+          {'hora':'09:00','paciente':'María
+          García','servicio':'Blanqueamiento','doctor':'Dr.
+          Sele','estado':'ok'}, {'hora':'10:30','paciente':'Carlos
+          Ríos','servicio':'Ortodoncia','doctor':'Dr. Sele','estado':'wait'},
+          {'hora':'11:00','paciente':'Lucía
+          Torres','servicio':'Endodoncia','doctor':'Dr. Sele','estado':'ok'},
+          {'hora':'14:00','paciente':'José
+          Mamani','servicio':'Extracción','doctor':'Dr. Sele','estado':'done'},
+          ]) %}
+          <div class="cita-item">
+            <span class="cita-hora">{{ cita.hora }}</span>
+            <div class="cita-info">
+              <strong>{{ cita.paciente }}</strong>
+              <span>{{ cita.servicio }} · {{ cita.doctor }}</span>
+            </div>
+            <span class="cita-status st-{{ cita.estado }}">
+              {% if cita.estado=='ok' %}Confirmada{% elif cita.estado=='wait'
+              %}Esperando{% else %}Completada{% endif %}
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="ingresos-card">
+          <div class="ingresos-label">Ingresos del mes</div>
+          <div class="ingresos-num">
+            S/ {{ ingresos_mes|default(4850)|int|format_number if format_number
+            is defined else '4,850' }}
+          </div>
+          <div class="ingresos-sub">+18% respecto al mes anterior</div>
+          <div class="ingresos-list" id="ingresosList"></div>
+        </div>
+      </div>
+    </div>
+    <!-- /content -->
+  </div>
+  <!-- /main -->
+</div>
+<!-- /layout -->
+
+<script>
+  /* fecha */
+  const now = new Date();
+  const dias_s = [
+    "Domingo",
+    "Lunes",
+    "Martes",
+    "Miércoles",
+    "Jueves",
+    "Viernes",
+    "Sábado",
+  ];
+  const meses = [
+    "enero",
+    "febrero",
+    "marzo",
+    "abril",
+    "mayo",
+    "junio",
+    "julio",
+    "agosto",
+    "septiembre",
+    "octubre",
+    "noviembre",
+    "diciembre",
+  ];
+  document.getElementById("fechaHoy").textContent = `${
+    dias_s[now.getDay()]
+  }, ${now.getDate()} de ${meses[now.getMonth()]} de ${now.getFullYear()}`;
+  document.getElementById("diaHoy").textContent = `📅 Hoy: ${
+    dias_s[now.getDay()]
+  }`;
+
+  /* bar chart */
+  const diasN = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const actual = [5, 8, 6, 9, 7, 4];
+  const pasado = [4, 6, 5, 7, 5, 3];
+  const maxBar = 10;
+  const barEl = document.getElementById("barChart");
+  diasN.forEach((d, i) => {
+    const g = document.createElement("div");
+    g.className = "bar-group";
+    const hA = Math.round((actual[i] / maxBar) * 140);
+    const hP = Math.round((pasado[i] / maxBar) * 140);
+    g.innerHTML = `<div class="bar-wrap">
+    <div class="bar citas"     data-h="${hA}" style="height:0" title="Esta semana: ${actual[i]}"></div>
+    <div class="bar pacientes" data-h="${hP}" style="height:0" title="Semana pasada: ${pasado[i]}"></div>
+  </div><span class="bar-label">${d}</span>`;
+    barEl.appendChild(g);
+  });
+
+  /* donut */
+  const esp = [
+    { n: "Ortodoncia", pct: 32, color: "#0a7c6e", id: "d1" },
+    { n: "Blanqueamiento", pct: 25, color: "#c9a84c", id: "d2" },
+    { n: "Implantes", pct: 22, color: "#3b7dd8", id: "d3" },
+    { n: "Endodoncia", pct: 21, color: "#e05252", id: "d4" },
+  ];
+  const circ = 2 * Math.PI * 54;
+  let off = 0;
+  esp.forEach((e) => {
+    const len = (e.pct / 100) * circ;
+    const el = document.getElementById(e.id);
+    el.setAttribute("stroke-dashoffset", -(off - circ * 0.25));
+    setTimeout(() => {
+      el.setAttribute("stroke-dasharray", `${len} ${circ - len}`);
+      el.setAttribute("stroke-dashoffset", -(off - circ * 0.25));
+    }, 100);
+    off += len;
+  });
+  const legEl = document.getElementById("espLegend");
+  esp.forEach((e) => {
+    legEl.innerHTML += `<div class="esp-legend-item">
+    <div class="esp-dot" style="background:${e.color}"></div>
+    <span class="esp-legend-name">${e.n}</span>
+    <div class="esp-legend-bar"><div class="esp-legend-bar-fill" data-w="${e.pct}" style="width:0%;background:${e.color}"></div></div>
+    <span class="esp-legend-pct">${e.pct}%</span>
+  </div>`;
+  });
+
+  /* ingresos */
+  const ing = [
+    { n: "Ortodoncia", val: "S/ 1,820", pct: 75 },
+    { n: "Implantes", val: "S/ 1,440", pct: 60 },
+    { n: "Blanqueamiento", val: "S/ 980", pct: 40 },
+    { n: "Otros", val: "S/ 610", pct: 25 },
+  ];
+  const ingEl = document.getElementById("ingresosList");
+  ing.forEach((i) => {
+    ingEl.innerHTML += `<div class="ingreso-item">
+    <span class="ingreso-item-name">${i.n}</span>
+    <div class="ingreso-item-bar-wrap"><div class="ingreso-item-bar" data-w="${i.pct}" style="width:0%"></div></div>
+    <span class="ingreso-item-val">${i.val}</span>
+  </div>`;
+  });
+
+  /* contador */
+  function animateCount(el) {
+    const target = parseInt(el.dataset.target);
+    const prefix = el.dataset.prefix || "";
+    const dur = 1200,
+      step = 16;
+    let cur = 0;
+    const inc = target / (dur / step);
+    const t = setInterval(() => {
+      cur = Math.min(cur + inc, target);
+      el.textContent = prefix + Math.round(cur).toLocaleString("es-PE");
+      if (cur >= target) clearInterval(t);
+    }, step);
+  }
+
+  /* observer */
+  const obs = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        e.target.querySelectorAll(".bar[data-h]").forEach((b) => {
+          setTimeout(() => {
+            b.style.height = b.dataset.h + "px";
+            b.style.transition = "height 1.1s cubic-bezier(.22,1,.36,1)";
+          }, 80);
+        });
+        e.target
+          .querySelectorAll(
+            ".kpi-bar-fill[data-w],.esp-legend-bar-fill[data-w],.ingreso-item-bar[data-w]"
+          )
+          .forEach((b) => {
+            setTimeout(() => {
+              b.style.width = b.dataset.w + "%";
+            }, 200);
+          });
+        e.target.querySelectorAll("[data-target]").forEach(animateCount);
+        obs.unobserve(e.target);
+      });
+    },
+    { threshold: 0.1 }
+  );
+  obs.observe(document.getElementById("dashContent"));
+</script>
+
+{% endblock %}

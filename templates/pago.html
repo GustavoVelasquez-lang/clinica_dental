@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% block title %}Pago - Clinica Dental{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-agendar {
+  display:flex;min-height:100vh;
+  background:var(--cream);
+  font-family:var(--font-b);
+}
+.panel-left {
+  width:38%;
+  background:linear-gradient(140deg,var(--teal-dark) 0%,var(--teal) 100%);
+  padding:48px 40px;
+  display:flex;flex-direction:column;
+  position:relative;overflow:hidden;
+}
+.panel-left::before {
+  content:'';position:absolute;right:-80px;top:-80px;
+  width:320px;height:320px;
+  border:2px solid rgba(255,255,255,0.06);border-radius:50%;
+}
+.panel-left::after {
+  content:'';position:absolute;left:-40px;bottom:-80px;
+  width:220px;height:220px;
+  border:2px solid rgba(255,255,255,0.04);border-radius:50%;
+}
+.panel-right {
+  flex:1;
+  padding:48px 48px;
+  overflow-y:auto;
+}
+.pl-logo {
+  display:flex;align-items:center;gap:12px;
+  text-decoration:none;position:relative;z-index:2;
+}
+.pl-logo-icon {
+  width:40px;height:40px;
+  background:rgba(255,255,255,0.12);
+  border:1px solid rgba(255,255,255,0.2);
+  border-radius:11px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.pl-logo-icon svg { width:22px;height:22px; }
+.pl-logo-text strong { display:block;font-family:var(--font-d);font-size:15px;color:white;line-height:1.1; }
+.pl-logo-text small { font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.1em;text-transform:uppercase; }
+.pl-hero { position:relative;z-index:2; }
+.pl-badge {
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:50px;padding:5px 14px;
+  font-size:10px;font-weight:500;
+  color:rgba(255,255,255,0.7);
+  letter-spacing:0.1em;text-transform:uppercase;
+  margin-bottom:20px;
+}
+.pl-badge span { width:5px;height:5px;background:var(--gold);border-radius:50%; }
+.pl-hero h1 {
+  font-family:var(--font-d);
+  font-size:clamp(24px,4vw,34px);font-weight:700;
+  color:white;line-height:1.2;margin:0 0 12px;
+}
+.pl-hero h1 em { color:var(--gold-l);font-style:italic; }
+.pl-hero p { font-size:14px;color:rgba(255,255,255,0.6);line-height:1.5;margin:0;max-width:380px; }
+.pl-info { margin-top:auto;position:relative;z-index:2;display:flex;flex-direction:column;gap:12px; }
+.pl-info-card { display:flex;align-items:center;gap:12px; }
+.pl-info-icon { width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0; }
+.pl-info-text strong { display:block;font-size:12px;color:rgba(255,255,255,0.85);font-weight:600; }
+.pl-info-text span { font-size:11px;color:rgba(255,255,255,0.4); }
+.form-header { margin-bottom:24px; }
+.form-header h2 { font-family:var(--font-d);font-size:22px;color:var(--dark);margin:0 0 4px; }
+.form-header p { font-size:13px;color:var(--muted);margin:0; }
+.field-group { margin-bottom:18px; }
+.field-label { display:flex;justify-content:space-between;align-items:center;margin-bottom:6px; }
+.field-label label { font-size:12px;font-weight:600;color:var(--dark); }
+.btn-agendar {
+  width:100%;padding:16px;
+  background:var(--teal-dark);color:white;
+  border:none;border-radius:50px;
+  font-size:16px;font-weight:600;font-family:var(--font-b);
+  cursor:pointer;transition:all 0.2s;
+  box-shadow:0 4px 20px rgba(10,124,110,0.25);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-agendar:hover { background:var(--teal);transform:translateY(-1px);box-shadow:0 8px 28px rgba(10,124,110,0.35); }
+@media (max-width:768px) {
+  .page-agendar { flex-direction:column; }
+  .panel-left { width:100%;padding:32px 24px; }
+  .panel-right { padding:28px 20px; }
+  .pl-info { display:none; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-agendar">
+
+  <div class="panel-left">
+    <a href="/" class="pl-logo">
+      <div class="pl-logo-icon">
+        <svg viewBox="0 0 26 26" fill="none">
+          <path d="M13 3C9 3 6 6 6 9.5C6 12 7 14 8 16C9 18 9.5 22 10.5 22C11.5 22 12 19 13 19C14 19 14.5 22 15.5 22C16.5 22 17 18 18 16C19 14 20 12 20 9.5C20 6 17 3 13 3Z" fill="white"/>
+          <path d="M9 8C10.5 7 12 6.5 13 6.5C14 6.5 15.5 7 17 8" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="pl-logo-text">
+        <strong>Clinica Sele Dent</strong>
+        <small>Odontologia Integral</small>
+      </div>
+    </a>
+
+    <div class="pl-hero">
+      <div class="pl-badge"><span></span> Pago seguro</div>
+      <h1>Realiza el adelanto<br>de tu cita de forma<br><em>rapida</em> y sencilla</h1>
+      <p>Paga con Yape y sube tu comprobante para confirmar tu reserva.</p>
+    </div>
+
+    <div class="pl-info">
+      <div class="pl-info-card">
+        <div class="pl-info-icon">📅</div>
+        <div class="pl-info-text">
+          <strong>Lunes a Sabado</strong>
+          <span>10:00 am — 5:00 pm</span>
+        </div>
+      </div>
+      <div class="pl-info-card">
+        <div class="pl-info-icon">📍</div>
+        <div class="pl-info-text">
+          <strong>El Tambo, Huancayo</strong>
+          <span>Junin, Peru</span>
+        </div>
+      </div>
+      <div class="pl-info-card">
+        <div class="pl-info-icon">📞</div>
+        <div class="pl-info-text">
+          <strong>+51 {{ yape_numero }}</strong>
+          <span>WhatsApp disponible</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-right">
+
+    <a href="{{ url_for('mis_citas') }}" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);text-decoration:none;margin-bottom:12px;">
+      <i class="fa-solid fa-arrow-left"></i> Volver a mis citas
+    </a>
+
+    <div class="form-header">
+      <h2>Adelanto de cita — S/ 20.00</h2>
+      <p>Paga con Yape y sube tu comprobante para validar tu reserva</p>
+    </div>
+
+    <div style="background:var(--teal-xl);border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid rgba(10,124,110,0.15);">
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div>
+          <p style="margin:0 0 4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;">Especialidad</p>
+          <p style="margin:0;font-weight:600;color:var(--teal);font-size:15px;">{{ cita.especialidad }}</p>
+        </div>
+        <div>
+          <p style="margin:0 0 4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;">Fecha</p>
+          <p style="margin:0;font-weight:600;color:var(--dark);font-size:15px;">{{ cita.fecha }}</p>
+        </div>
+        <div>
+          <p style="margin:0 0 4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;">Hora</p>
+          <p style="margin:0;font-weight:600;color:var(--dark);font-size:15px;">{{ cita.hora }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-bottom:24px;">
+      <h3 style="font-size:18px;margin:0 0 12px;color:var(--dark);">Paga S/ 20.00 con Yape</h3>
+      <div style="background:white;border:2px dashed var(--border);border-radius:16px;padding:24px;display:inline-block;">
+        <img src="{{ yape_qr }}" alt="QR Yape" style="width:200px;height:200px;object-fit:contain;display:block;margin:0 auto;border-radius:8px;">
+      </div>
+      <p style="margin:12px 0 4px;font-size:15px;color:var(--mid);">
+        <strong>Numero:</strong> {{ yape_numero }}
+      </p>
+      <p style="margin:0;font-size:15px;color:var(--mid);">
+        <strong>Titular:</strong> {{ yape_nombre }}
+      </p>
+      <p style="margin-top:12px;font-size:13px;color:var(--muted);background:#fef3e2;border:1px solid rgba(217,119,6,0.2);border-radius:8px;padding:8px 12px;display:inline-block;">
+        ⚠️ Debes abonar <strong>S/ 20.00</strong> para confirmar tu cita
+      </p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+
+      <div class="field-group">
+        <div class="field-label">
+          <label for="comprobante">Sube tu comprobante de pago</label>
+          <span style="font-size:10px;color:var(--muted);font-weight:500;">PNG o JPG</span>
+        </div>
+
+        <div style="border:2px dashed var(--teal);border-radius:12px;padding:32px 24px;text-align:center;background:var(--teal-xl);cursor:pointer;transition:all 0.2s;" id="dropZone">
+          <div id="dropContent">
+            <div style="font-size:48px;color:var(--teal);margin-bottom:8px;">📤</div>
+            <p style="margin:0 0 4px;font-weight:600;color:var(--teal-dark);font-size:15px;">Arrastra tu captura aqui</p>
+            <p style="margin:0;font-size:13px;color:var(--muted);">o haz clic para seleccionar un archivo</p>
+          </div>
+          <div id="filePreview" style="display:none;">
+            <img id="previewImg" src="" style="max-height:160px;border-radius:8px;margin-bottom:8px;box-shadow:0 2px 12px rgba(0,0,0,0.1);">
+            <p id="fileName" style="margin:0;font-size:14px;font-weight:600;color:var(--teal);"></p>
+          </div>
+          <input type="file" name="comprobante" id="comprobante" accept="image/png,image/jpeg,image/jpg" style="display:none;" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-agendar">
+        <i class="fa-solid fa-check-circle"></i>
+        Confirmar pago — S/ 20.00
+      </button>
+    </form>
+
+  </div>
+</div>
+
+<script>
+document.getElementById('comprobante').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    document.getElementById('dropContent').style.display = 'none';
+    document.getElementById('filePreview').style.display = 'block';
+    document.getElementById('previewImg').src = ev.target.result;
+    document.getElementById('fileName').textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById('dropZone').addEventListener('click', function() {
+  document.getElementById('comprobante').click();
+});
+</script>
+{% endblock %}

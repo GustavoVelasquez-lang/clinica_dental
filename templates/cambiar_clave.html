@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Cambiar Clave{% endblock %}
+
+{% block content %}
+<div class="col-md-4">
+  <h3>Cambiar Contraseña</h3>
+
+  <!-- 🔥 MENSAJES -->
+  {% with messages = get_flashed_messages() %}
+    {% for msg in messages %}
+      <div class="alert alert-danger">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="POST">
+    
+    <div class="mb-3">
+      <label class="form-label">Nueva contraseña</label>
+      <div class="input-group">
+        <input type="password" id="nueva" name="nueva" class="form-control" required>
+        <button type="button" onclick="togglePassword('nueva')"><i class="fa-solid fa-eye"></i></button>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Confirmar contraseña</label>
+      <div class="input-group">
+        <input type="password" id="confirmar" name="confirmar" class="form-control" required>
+        <button type="button" onclick="togglePassword('confirmar')"><i class="fa-solid fa-eye"></i></button>
+      </div>
+    </div>
+
+    <button class="btn btn-warning">Actualizar</button>
+  </form>
+</div>
+
+<!-- 🔥 SCRIPT -->
+<script>
+function togglePassword(id) {
+  const input = document.getElementById(id);
+  input.type = input.type === "password" ? "text" : "password";
+}
+</script>
+
+{% endblock %}
