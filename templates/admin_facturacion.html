@@ -1,0 +1,105 @@
+{% extends "base_admin.html" %}
+{% block title %}Facturación — Sele Dent Admin{% endblock %}
+
+{% block topbar_titulo %}Facturación{% endblock %}
+
+{% block admin_content %}
+<div class="kpi-grid" style="margin-bottom:28px;">
+  <div class="kpi-card c-teal">
+    <div class="kpi-header"><div class="kpi-icon">💳</div></div>
+    <div class="kpi-num">S/ {{ "{:,.0f}".format(total_pagado).replace(",", " ") }}</div>
+    <div class="kpi-label">Total pagado (pagos registrados)</div>
+  </div>
+  <div class="kpi-card c-gold">
+    <div class="kpi-header"><div class="kpi-icon">🧾</div></div>
+    <div class="kpi-num">S/ {{ "{:,.0f}".format(total_adelantos).replace(",", " ") }}</div>
+    <div class="kpi-label">Total en adelantos (citas)</div>
+  </div>
+  <div class="kpi-card c-blue">
+    <div class="kpi-header"><div class="kpi-icon">📁</div></div>
+    <div class="kpi-num">{{ pagos_lista|length }}</div>
+    <div class="kpi-label">Pagos registrados</div>
+  </div>
+</div>
+
+<div class="chart-card" style="margin-bottom:28px;">
+  <div class="chart-header">
+    <div><h3>Pagos registrados</h3><p>Movimientos del libro de facturación</p></div>
+  </div>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead>
+      <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">#</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Paciente</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Especialidad</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Fecha cita</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Tipo</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Método</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Monto</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Fecha pago</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in pagos_lista %}
+      <tr style="border-bottom:1px solid rgba(10,124,110,0.06);">
+        <td style="padding:12px;color:var(--muted);">{{ p.id }}</td>
+        <td style="padding:12px;font-weight:500;color:var(--dark);">{{ p.paciente }}</td>
+        <td style="padding:12px;color:var(--mid);">{{ p.especialidad }}</td>
+        <td style="padding:12px;color:var(--mid);">{{ p.fecha_cita }}</td>
+        <td style="padding:12px;">
+          <span style="background:var(--teal-xl);color:var(--teal);font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;text-transform:capitalize;">{{ p.tipo }}</span>
+        </td>
+        <td style="padding:12px;color:var(--mid);">{{ p.metodo }}</td>
+        <td style="padding:12px;font-weight:600;color:var(--dark);">S/ {{ p.monto }}</td>
+        <td style="padding:12px;color:var(--muted);">{{ (p.fecha or '—')|string }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" style="padding:48px;text-align:center;color:var(--muted);">No hay pagos registrados aún.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="chart-card">
+  <div class="chart-header">
+    <div><h3>Adelantos / comprobantes por confirmar</h3><p>Citas con adelanto o comprobante enviado</p></div>
+  </div>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead>
+      <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Cita</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Paciente</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Especialidad</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Fecha</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Adelanto</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Estado pago</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Comprobante</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in adelantos %}
+      <tr style="border-bottom:1px solid rgba(10,124,110,0.06);">
+        <td style="padding:12px;color:var(--muted);">#{{ a.id }}</td>
+        <td style="padding:12px;font-weight:500;color:var(--dark);">{{ a.paciente }}</td>
+        <td style="padding:12px;color:var(--mid);">{{ a.especialidad }}</td>
+        <td style="padding:12px;color:var(--mid);">{{ a.fecha }} {{ a.hora }}</td>
+        <td style="padding:12px;font-weight:600;color:var(--dark);">S/ {{ a.adelanto }}</td>
+        <td style="padding:12px;">
+          <span style="background:#fef3e2;color:#d97706;font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;text-transform:capitalize;">{{ a.estado_pago }}</span>
+        </td>
+        <td style="padding:12px;">
+          {% if a.comprobante %}
+            <a href="{{ url_for('static', filename=a.comprobante.replace('static/', '')) }}" target="_blank"
+               style="font-size:12px;font-weight:500;color:var(--teal);background:var(--teal-xl);padding:5px 12px;border-radius:6px;text-decoration:none;">👁️ Ver</a>
+          {% else %}
+            <span style="font-size:11px;color:var(--muted);">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" style="padding:48px;text-align:center;color:var(--muted);">No hay adelantos pendientes.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

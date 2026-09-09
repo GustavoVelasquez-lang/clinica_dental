@@ -1,0 +1,118 @@
+{% extends "base_admin.html" %}
+{% block title %}Reportes — Sele Dent Admin{% endblock %}
+
+{% block topbar_titulo %}Reportes{% endblock %}
+
+{% block admin_content %}
+<div class="kpi-grid" style="margin-bottom:28px;">
+  <div class="kpi-card c-teal">
+    <div class="kpi-header"><div class="kpi-icon">📅</div></div>
+    <div class="kpi-num">{{ total_citas }}</div>
+    <div class="kpi-label">Total de citas</div>
+  </div>
+  <div class="kpi-card c-gold">
+    <div class="kpi-header"><div class="kpi-icon">👥</div></div>
+    <div class="kpi-num">{{ total_pacientes }}</div>
+    <div class="kpi-label">Pacientes registrados</div>
+  </div>
+  <div class="kpi-card c-blue">
+    <div class="kpi-header"><div class="kpi-icon">💰</div></div>
+    <div class="kpi-num" data-prefix="S/ ">S/ {{ "{:,.0f}".format(total_ingresos).replace(",", " ") }}</div>
+    <div class="kpi-label">Ingresos totales (adelantos)</div>
+  </div>
+</div>
+
+<div class="charts-row" style="margin-bottom:28px;">
+  <div class="chart-card">
+    <div class="chart-header"><div><h3>Citas por mes</h3><p>Últimos 6 meses</p></div></div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
+          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Mes</th>
+          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Citas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in citas_por_mes %}
+        <tr style="border-bottom:1px solid rgba(10,124,110,0.06);">
+          <td style="padding:12px;color:var(--dark);font-weight:500;">{{ m.mes }}</td>
+          <td style="padding:12px;color:var(--mid);">{{ m.n }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="2" style="padding:36px;text-align:center;color:var(--muted);">Sin datos.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header"><div><h3>Pacientes nuevos por mes</h3><p>Últimos 6 meses</p></div></div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
+          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Mes</th>
+          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Pacientes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in pacientes_por_mes %}
+        <tr style="border-bottom:1px solid rgba(10,124,110,0.06);">
+          <td style="padding:12px;color:var(--dark);font-weight:500;">{{ m.mes }}</td>
+          <td style="padding:12px;color:var(--mid);">{{ m.n }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="2" style="padding:36px;text-align:center;color:var(--muted);">Sin datos.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="charts-row">
+  <div class="chart-card">
+    <div class="chart-header"><div><h3>Citas por estado</h3><p>Resumen del estado de las citas</p></div></div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
+          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Estado</th>
+          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Cantidad</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in citas_por_estado %}
+        <tr style="border-bottom:1px solid rgba(10,124,110,0.06);">
+          <td style="padding:12px;color:var(--dark);font-weight:500;text-transform:capitalize;">{{ e.estado }}</td>
+          <td style="padding:12px;color:var(--mid);">{{ e.n }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="2" style="padding:36px;text-align:center;color:var(--muted);">Sin datos.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header"><div><h3>Ingresos por especialidad</h3><p>Adelantos acumulados</p></div></div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
+          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Especialidad</th>
+          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Citas</th>
+          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Ingreso</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in ingresos_por_especialidad %}
+        <tr style="border-bottom:1px solid rgba(10,124,110,0.06);">
+          <td style="padding:12px;color:var(--dark);font-weight:500;">{{ e.nombre }}</td>
+          <td style="padding:12px;color:var(--mid);">{{ e.citas }}</td>
+          <td style="padding:12px;font-weight:600;color:var(--dark);">S/ {{ e.ingreso }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3" style="padding:36px;text-align:center;color:var(--muted);">Sin datos.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

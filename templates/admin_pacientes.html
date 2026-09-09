@@ -1,0 +1,74 @@
+{% extends "base_admin.html" %}
+{% block title %}Pacientes — Sele Dent Admin{% endblock %}
+
+{% block topbar_titulo %}Gestión de Pacientes{% endblock %}
+
+{% block admin_content %}
+<div class="chart-card">
+  <div class="chart-header">
+    <div>
+      <h3>Pacientes registrados</h3>
+      <p>{{ pacientes|length }} paciente(s) en el sistema</p>
+    </div>
+  </div>
+
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead>
+      <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">#</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Paciente</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Documento</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Correo</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Citas</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Registro</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Estado</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in pacientes %}
+      <tr style="border-bottom:1px solid rgba(10,124,110,0.06);"
+          onmouseover="this.style.background='rgba(10,124,110,0.03)'"
+          onmouseout="this.style.background='transparent'">
+        <td style="padding:12px;color:var(--muted);">{{ p.id }}</td>
+        <td style="padding:12px;font-weight:500;color:var(--dark);">
+          {{ p.nombre }} {{ p.apepaterno or '' }} {{ p.apematerno or '' }}
+        </td>
+        <td style="padding:12px;color:var(--mid);">{{ p.tipo_documento }} {{ p.numero_documento }}</td>
+        <td style="padding:12px;color:var(--mid);">{{ p.correo }}</td>
+        <td style="padding:12px;">
+          <span style="background:var(--teal-xl);color:var(--teal);font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;">{{ p.total_citas }}</span>
+          <span style="font-size:11px;color:var(--muted);">
+            ({{ p.citas_activas }} activas)
+          </span>
+        </td>
+        <td style="padding:12px;color:var(--mid);">{{ (p.fecha_registro or '—')|string }}</td>
+        <td style="padding:12px;">
+          {% if p.estado == 'ACTIVO' %}
+            <span style="background:#e8f7f5;color:var(--teal);font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;">Activo</span>
+          {% else %}
+            <span style="background:#fdf0f0;color:#e05252;font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;">Inactivo</span>
+          {% endif %}
+        </td>
+        <td style="padding:12px;">
+          <a href="{{ url_for('admin_paciente_estado', id=p.id) }}"
+             onclick="return confirm('¿Cambiar el estado de este paciente?')"
+             style="font-size:12px;font-weight:500;
+                    {% if p.estado == 'ACTIVO' %}color:#e05252;background:#fdf0f0;
+                    {% else %}color:var(--teal);background:var(--teal-xl);{% endif %}
+                    padding:5px 12px;border-radius:6px;text-decoration:none;">
+            {% if p.estado == 'ACTIVO' %}🚫 Desactivar{% else %}✅ Activar{% endif %}
+          </a>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="8" style="padding:48px;text-align:center;color:var(--muted);">
+          No hay pacientes registrados aún.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

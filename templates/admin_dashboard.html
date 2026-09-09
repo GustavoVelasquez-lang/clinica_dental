@@ -1,0 +1,232 @@
+{% extends "base_admin.html" %}
+{% block title %}Dashboard — Sele Dent Admin{% endblock %}
+
+{% block topbar_titulo %}Dashboard{% endblock %}
+
+{% block admin_content %}
+<!-- KPIs — datos desde Flask -->
+<div class="kpi-grid">
+  <div class="kpi-card c-teal">
+    <div class="kpi-header">
+      <div class="kpi-icon">📅</div>
+      <span class="kpi-trend trend-up">Hoy</span>
+    </div>
+    <div class="kpi-num" data-target="{{ citas_hoy }}">0</div>
+    <div class="kpi-label">Citas hoy</div>
+    <div class="kpi-bar">
+      <div class="kpi-bar-fill" data-w="72" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <div class="kpi-card c-gold">
+    <div class="kpi-header">
+      <div class="kpi-icon">📆</div>
+      <span class="kpi-trend trend-up">Semana</span>
+    </div>
+    <div class="kpi-num" data-target="{{ citas_semana }}">0</div>
+    <div class="kpi-label">Citas esta semana</div>
+    <div class="kpi-bar">
+      <div class="kpi-bar-fill" data-w="60" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <div class="kpi-card c-red">
+    <div class="kpi-header">
+      <div class="kpi-icon">🆕</div>
+      <span class="kpi-trend trend-up">Mes</span>
+    </div>
+    <div class="kpi-num" data-target="{{ pacientes_nuevos }}">0</div>
+    <div class="kpi-label">Pacientes nuevos (mes)</div>
+    <div class="kpi-bar">
+      <div class="kpi-bar-fill" data-w="45" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <div class="kpi-card c-blue">
+    <div class="kpi-header">
+      <div class="kpi-icon">💰</div>
+      <span class="kpi-trend trend-up">Mes</span>
+    </div>
+    <div class="kpi-num" data-target="{{ ingresos_mes|round|int }}" data-prefix="S/ ">
+      S/ 0
+    </div>
+    <div class="kpi-label">Ingresos este mes</div>
+    <div class="kpi-bar">
+      <div class="kpi-bar-fill" data-w="83" style="width: 0%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="charts-row">
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <h3>Citas por día</h3>
+        <p>Estos 7 días vs la semana pasada</p>
+      </div>
+    </div>
+    <div class="bar-chart" id="barChart"></div>
+    <div style="display:flex;gap:16px;margin-top:12px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)">
+        <span style="width:10px;height:10px;background:var(--teal);border-radius:2px;display:inline-block;"></span>
+        Actual
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)">
+        <span style="width:10px;height:10px;background:rgba(201,168,76,0.7);border-radius:2px;display:inline-block;"></span>
+        Semana pasada
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <h3>Especialidades</h3>
+        <p>Más solicitadas este mes</p>
+      </div>
+    </div>
+    <div class="donut-wrap">
+      <svg viewBox="0 0 140 140">
+        <circle cx="70" cy="70" r="54" fill="none" stroke="#f0eeea" stroke-width="18"/>
+        <circle id="d1" cx="70" cy="70" r="54" fill="none" stroke="#0a7c6e" stroke-width="18" stroke-dasharray="0 339" stroke-dashoffset="-85" stroke-linecap="round" style="transition:stroke-dasharray 1.4s cubic-bezier(0.22,1,0.36,1) 0.3s"/>
+        <circle id="d2" cx="70" cy="70" r="54" fill="none" stroke="#c9a84c" stroke-width="18" stroke-dasharray="0 339" stroke-dashoffset="-85" stroke-linecap="round" style="transition:stroke-dasharray 1.4s cubic-bezier(0.22,1,0.36,1) 0.5s"/>
+        <circle id="d3" cx="70" cy="70" r="54" fill="none" stroke="#3b7dd8" stroke-width="18" stroke-dasharray="0 339" stroke-dashoffset="-85" stroke-linecap="round" style="transition:stroke-dasharray 1.4s cubic-bezier(0.22,1,0.36,1) 0.7s"/>
+        <circle id="d4" cx="70" cy="70" r="54" fill="none" stroke="#e05252" stroke-width="18" stroke-dasharray="0 339" stroke-dashoffset="-85" stroke-linecap="round" style="transition:stroke-dasharray 1.4s cubic-bezier(0.22,1,0.36,1) 0.9s"/>
+      </svg>
+      <div class="donut-center">
+        <strong>{{ total_tratamientos }}</strong><span>Citas</span>
+      </div>
+    </div>
+    <div class="esp-legend" id="espLegend"></div>
+  </div>
+</div>
+
+<!-- Bottom -->
+<div class="bottom-row">
+  <div class="citas-card">
+    <h3>Citas de hoy</h3>
+    <p>Próximas citas programadas</p>
+    {% if citas_hoy_lista %}
+    {% for cita in citas_hoy_lista %}
+    <div class="cita-item">
+      <span class="cita-hora">{{ cita.hora }}</span>
+      <div class="cita-info">
+        <strong>{{ cita.paciente }}</strong>
+        <span>{{ cita.servicio }}</span>
+      </div>
+      <span class="cita-status
+        {%- if cita.estado == 'confirmada' %} st-ok
+        {%- elif cita.estado == 'pendiente' %} st-wait
+        {%- else %} st-done{% endif %}">
+        {{ cita.estado|capitalize }}
+      </span>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p style="color:var(--muted);font-size:12px;">Sin citas programadas para hoy.</p>
+    {% endif %}
+  </div>
+
+  <div class="ingresos-card">
+    <div class="ingresos-label">Ingresos del mes</div>
+    <div class="ingresos-num">S/ {{ "{:,.0f}".format(ingresos_mes).replace(",", " ") }}</div>
+    <div class="ingresos-sub">Total adelantos/pagos registrados</div>
+    <div class="ingresos-list" id="ingresosList"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block admin_js %}
+<script>
+  /* bar chart */
+  const diasN = {{ dias_labels|tojson }};
+  const actual = {{ citas_actual|tojson }};
+  const pasado = {{ citas_pasado|tojson }};
+  const maxBar = Math.max(1, ...actual, ...pasado);
+  const barEl = document.getElementById("barChart");
+  diasN.forEach((d, i) => {
+    const g = document.createElement("div");
+    g.className = "bar-group";
+    const hA = Math.round((actual[i] / maxBar) * 140);
+    const hP = Math.round((pasado[i] / maxBar) * 140);
+    g.innerHTML = `<div class="bar-wrap">
+      <div class="bar citas" data-h="${hA}" style="height:0" title="Actual: ${actual[i]}"></div>
+      <div class="bar pacientes" data-h="${hP}" style="height:0" title="Semana pasada: ${pasado[i]}"></div>
+    </div><span class="bar-label">${d}</span>`;
+    barEl.appendChild(g);
+  });
+
+  /* donut */
+  const esp = {{ esp_donut|tojson }};
+  const circ = 2 * Math.PI * 54;
+  let off = 0;
+  esp.forEach((e) => {
+    const len = (e.pct / 100) * circ;
+    const el = document.getElementById(e.id);
+    setTimeout(() => {
+      el.setAttribute("stroke-dasharray", `${len} ${circ - len}`);
+      el.setAttribute("stroke-dashoffset", -(off - circ * 0.25));
+    }, 100);
+    off += len;
+  });
+  const legEl = document.getElementById("espLegend");
+  if (esp.length === 0) {
+    legEl.innerHTML = '<span style="font-size:12px;color:var(--muted);">Sin datos este mes.</span>';
+  }
+  esp.forEach((e) => {
+    legEl.innerHTML += `<div class="esp-legend-item">
+      <div class="esp-dot" style="background:${e.color}"></div>
+      <span class="esp-legend-name">${e.nombre}</span>
+      <div class="esp-legend-bar"><div class="esp-legend-bar-fill" data-w="${e.pct}" style="width:0%;background:${e.color}"></div></div>
+      <span class="esp-legend-pct">${e.pct}%</span>
+    </div>`;
+  });
+
+  /* ingresos */
+  const ing = {{ ingresos_lista|tojson }};
+  const ingEl = document.getElementById("ingresosList");
+  if (ing.length === 0) {
+    ingEl.innerHTML = '<span style="font-size:12px;color:rgba(255,255,255,0.6);">Sin ingresos este mes.</span>';
+  }
+  ing.forEach((i) => {
+    ingEl.innerHTML += `<div class="ingreso-item">
+      <span class="ingreso-item-name">${i.nombre}</span>
+      <div class="ingreso-item-bar-wrap"><div class="ingreso-item-bar" data-w="${i.pct}" style="width:0%"></div></div>
+      <span class="ingreso-item-val">${i.val}</span>
+    </div>`;
+  });
+
+  /* contador */
+  function animateCount(el) {
+    const target = parseInt(el.dataset.target);
+    const prefix = el.dataset.prefix || "";
+    const dur = 1200, step = 16;
+    let cur = 0;
+    const inc = target / (dur / step);
+    const t = setInterval(() => {
+      cur = Math.min(cur + inc, target);
+      el.textContent = prefix + Math.round(cur).toLocaleString("es-PE");
+      if (cur >= target) clearInterval(t);
+    }, step);
+  }
+
+  /* observer */
+  const obs = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        e.target.querySelectorAll(".bar[data-h]").forEach((b) => {
+          setTimeout(() => { b.style.height = b.dataset.h + "px"; b.style.transition = "height 1.1s cubic-bezier(.22,1,.36,1)"; }, 80);
+        });
+        e.target.querySelectorAll(".kpi-bar-fill[data-w],.esp-legend-bar-fill[data-w],.ingreso-item-bar[data-w]")
+          .forEach((b) => { setTimeout(() => { b.style.width = b.dataset.w + "%"; }, 200); });
+        e.target.querySelectorAll("[data-target]").forEach(animateCount);
+        obs.unobserve(e.target);
+      });
+    },
+    { threshold: 0.1 }
+  );
+  obs.observe(document.getElementById("dashContent"));
+</script>
+{% endblock %}

@@ -1,63 +1,53 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
+{% block title %}Editar Cita — Sele Dent Admin{% endblock %}
 
-{% block title %}Editar Cita{% endblock %}
+{% block topbar_titulo %}Editar Cita #{{ cita.id }}{% endblock %}
 
-{% block content %}
-
-<div class="container mt-5 d-flex justify-content-center">
-
-  <div class="col-md-6">
-    <div class="card shadow p-4">
-
-      <h3 class="text-center mb-4">Editar Cita</h3>
-
-      <form method="POST">
-
-        <!-- FECHA -->
-        <div class="mb-3">
-          <label>Fecha</label>
-          <input type="date" name="fecha" value="{{ cita.fecha }}" class="form-control" required>
-        </div>
-
-        <!-- HORA -->
-        <div class="mb-3">
-          <label>Hora</label>
-          <input type="time" name="hora" value="{{ cita.hora }}" class="form-control" required>
-        </div>
-
-        {% if cita.comprobante %}
-        <div class="mb-3">
-          <label>Comprobante de pago</label>
-          <div>
-            <a href="{{ url_for('static', filename=cita.comprobante.replace('static/', '')) }}" target="_blank" class="btn btn-sm btn-outline-info">
-              👁️ Ver comprobante
-            </a>
-          </div>
-        </div>
-        {% endif %}
-
-        <!-- ESTADO -->
-        <div class="mb-3">
-          <label>Estado</label>
-          <select name="estado" class="form-control">
-            <option value="pendiente" {% if cita.estado == "pendiente" %}selected{% endif %}>Pendiente</option>
-            <option value="confirmada" {% if cita.estado == "confirmada" %}selected{% endif %}>Confirmada (pago validado)</option>
-            <option value="atendido" {% if cita.estado == "atendido" %}selected{% endif %}>Atendido</option>
-            <option value="cancelado" {% if cita.estado == "cancelado" %}selected{% endif %}>Cancelado</option>
-          </select>
-        </div>
-
-        <!-- BOTONES -->
-        <div class="d-flex justify-content-between">
-          <a href="{{ url_for('admin_citas') }}" class="btn btn-secondary">Volver</a>
-          <button class="btn btn-success"> Guardar</button>
-        </div>
-
-      </form>
-
+{% block admin_content %}
+<div class="chart-card" style="max-width:640px;">
+  <div class="chart-header">
+    <div>
+      <h3>Editar Cita</h3>
+      <p>Modifica la fecha, hora y estado de la cita</p>
     </div>
   </div>
 
-</div>
+  <form method="POST" style="display:flex;flex-direction:column;gap:16px;">
+    <div>
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Fecha</label>
+      <input type="date" name="fecha" value="{{ cita.fecha }}" required
+             style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+    </div>
+    <div>
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Hora</label>
+      <input type="time" name="hora" value="{{ cita.hora }}" required
+             style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+    </div>
 
+    {% if cita.comprobante %}
+    <div>
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Comprobante de pago</label>
+      <a href="{{ url_for('static', filename=cita.comprobante.replace('static/', '')) }}" target="_blank"
+         style="font-size:12px;font-weight:500;color:var(--teal);background:var(--teal-xl);padding:7px 14px;border-radius:6px;text-decoration:none;">👁️ Ver comprobante</a>
+    </div>
+    {% endif %}
+
+    <div>
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Estado</label>
+      <select name="estado" style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;background:white;">
+        <option value="pendiente" {% if cita.estado == "pendiente" %}selected{% endif %}>Pendiente</option>
+        <option value="confirmada" {% if cita.estado == "confirmada" %}selected{% endif %}>Confirmada (pago validado)</option>
+        <option value="atendida" {% if cita.estado in ["atendida", "atendido"] %}selected{% endif %}>Atendida</option>
+        <option value="cancelada" {% if cita.estado in ["cancelada", "cancelado"] %}selected{% endif %}>Cancelada</option>
+      </select>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <a href="{{ url_for('admin_citas') }}"
+         style="font-size:13px;font-weight:500;color:var(--muted);background:#f0f0f0;padding:10px 18px;border-radius:8px;text-decoration:none;">Volver</a>
+      <button type="submit"
+              style="font-size:13px;font-weight:500;color:white;background:var(--teal);padding:10px 22px;border:none;border-radius:8px;cursor:pointer;">💾 Guardar</button>
+    </div>
+  </form>
+</div>
 {% endblock %}

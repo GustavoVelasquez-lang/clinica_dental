@@ -66,7 +66,7 @@ def enviar_recordatorios():
         citas = cursor.fetchall()
 
         for cita in citas:
-            nombre_completo = f"{cita['nombre']} {cita['apePaterno']} {cita['apeMaterno']}".strip()
+            nombre_completo = f"{cita['nombre']} {cita['apepaterno']} {cita['apematerno']}".strip()
             fecha_str = cita['fecha'].strftime("%d/%m/%Y") if hasattr(cita['fecha'], 'strftime') else str(cita['fecha'])
             hora_str = str(cita['hora'])[:5]
 

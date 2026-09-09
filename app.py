@@ -9,7 +9,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from authlib.common.security import generate_token
 from authlib.integrations.flask_client import OAuth
 from db import get_connection
-from dotenv import dotenv_values, load_dotenv
+from dotenv import dotenv_values, load_dotenv, set_key
 from email_utils import enviar_comprobante_admin, enviar_confirmacion_cita
 from flask import (Flask, flash, jsonify, redirect, render_template, request,
                    session, url_for)
@@ -23,6 +23,22 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.secret_key = "clave_secreta_segura"
 bcrypt = Bcrypt(app)
+
+
+@app.context_processor
+def inject_admin_context():
+    """Variables globales disponibles en todas las vistas (sidebar admin)."""
+    if session.get("rol") != "admin":
+        return {}
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) AS n FROM citas WHERE estado = 'pendiente'")
+        pendientes = cur.fetchone()["n"]
+        conn.close()
+        return {"citas_pendientes": pendientes}
+    except Exception:
+        return {"citas_pendientes": 0}
 # -------------------------------
 # DECORADOR: LOGIN REQUERIDO
 # -------------------------------
@@ -117,7 +133,7 @@ def agendar():
             conn.close()
 
             if paciente and paciente["correo"]:
-                nombre_pac = f"{paciente['nombre']} {paciente['apePaterno']} {paciente['apeMaterno']}".strip()
+nombre_pac = f"{paciente['nombre']} {paciente['apepaterno']} {paciente['apematerno']}".strip()
                 enviar_confirmacion_cita(
                     destinatario=paciente["correo"],
                     nombre_paciente=nombre_pac,
@@ -282,7 +298,7 @@ def logout():
 def inicio():
     # 🔥 Si es admin → lo mandas directo al panel
     if session.get("rol") == "admin":
-        return redirect(url_for("admin_citas"))
+        return redirect(url_for("admin_dashboard"))
 
     # 👤 Si es paciente → index normal
     return render_template("index.html")
@@ -345,7 +361,7 @@ def login():
         session["rol"] = user["rol"]
 
         if user["rol"] == "admin":
-            return redirect(url_for("admin_citas"))
+            return redirect(url_for("admin_dashboard"))
         else:
             return redirect(url_for("inicio"))
 
@@ -641,6 +657,460 @@ def editar_cita(id):
     return render_template("editar_cita.html", cita=cita)
 
 
+# ════════════════════════════════════════════════════
+# ⚙️ PANEL DE ADMINISTRACIÓN
+# ════════════════════════════════════════════════════
+
+@app.route("/admin/dashboard")
+@admin_required
+def admin_dashboard():
+    hoy = date.today()
+    lunes = hoy - timedelta(days=hoy.weekday())
+    inicio_mes = hoy.replace(day=1)
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    # ── KPIs ──
+    cur.execute("SELECT COALESCE(COUNT(*),0) AS n FROM citas WHERE fecha = %s AND estado <> 'cancelada'", (hoy,))
+    citas_hoy = cur.fetchone()["n"]
+
+    cur.execute("SELECT COALESCE(COUNT(*),0) AS n FROM citas WHERE fecha BETWEEN %s AND %s AND estado <> 'cancelada'",
+                (lunes, lunes + timedelta(days=6)))
+    citas_semana = cur.fetchone()["n"]
+
+    cur.execute("SELECT COALESCE(COUNT(*),0) AS n FROM usuarios WHERE id_rol = 2 AND fecha_registro >= %s", (inicio_mes,))
+    pacientes_nuevos = cur.fetchone()["n"]
+
+    cur.execute("""
+        SELECT COALESCE(SUM(adelanto),0) AS total
+        FROM citas WHERE fecha BETWEEN %s AND %s AND estado_pago <> 'pendiente'
+    """, (inicio_mes, hoy))
+    ingresos_mes = float(cur.fetchone()["total"])
+
+    # ── Citas de hoy ──
+    cur.execute("""
+        SELECT c.id, c.hora, c.estado, u.nombre AS paciente, e.nombre AS servicio
+        FROM citas c
+        JOIN usuarios u ON c.paciente_id = u.id
+        JOIN especialidades e ON c.especialidad_id = e.id
+        WHERE c.fecha = %s AND c.estado <> 'cancelada'
+        ORDER BY c.hora
+    """, (hoy,))
+    citas_hoy_lista = cur.fetchall()
+
+    # ── Citas por día (esta semana vs pasada) ──
+    cur.execute("""
+        SELECT fecha, COUNT(*) AS n FROM citas
+        WHERE fecha BETWEEN %s AND %s AND estado <> 'cancelada'
+        GROUP BY fecha
+    """, (lunes - timedelta(days=7), lunes + timedelta(days=6)))
+    por_fecha = {r["fecha"]: r["n"] for r in cur.fetchall()}
+
+    citas_actual = [por_fecha.get(lunes + timedelta(days=d), 0) for d in range(7)]
+    citas_pasado = [por_fecha.get(lunes - timedelta(days=7) + timedelta(days=d), 0) for d in range(7)]
+
+    # ── Especialidades top del mes (donut) ──
+    cur.execute("""
+        SELECT e.nombre AS nombre, COUNT(*) AS n
+        FROM citas c JOIN especialidades e ON c.especialidad_id = e.id
+        WHERE c.fecha BETWEEN %s AND %s AND c.estado <> 'cancelada'
+        GROUP BY e.nombre ORDER BY n DESC LIMIT 4
+    """, (inicio_mes, hoy))
+    top_esp = cur.fetchall()
+    total_tratamientos = sum(r["n"] for r in top_esp)
+    colores = ["#0a7c6e", "#c9a84c", "#3b7dd8", "#e05252"]
+    esp_donut = []
+    for i, r in enumerate(top_esp):
+        pct = round(r["n"] * 100 / total_tratamientos, 1) if total_tratamientos else 0
+        esp_donut.append({
+            "nombre": r["nombre"],
+            "pct": pct,
+            "color": colores[i % 4],
+            "id": f"d{i + 1}"
+        })
+
+    # ── Ingresos por especialidad (mes) ──
+    cur.execute("""
+        SELECT e.nombre AS nombre, COALESCE(SUM(c.adelanto),0) AS total
+        FROM citas c JOIN especialidades e ON c.especialidad_id = e.id
+        WHERE c.fecha BETWEEN %s AND %s AND c.estado_pago <> 'pendiente'
+        GROUP BY e.nombre ORDER BY total DESC LIMIT 4
+    """, (inicio_mes, hoy))
+    top_ing = cur.fetchall()
+    ing_max = max((float(r["total"]) for r in top_ing), default=1)
+    ingresos_lista = [{
+        "nombre": r["nombre"],
+        "val": f"S/ {float(r['total']):,.0f}".replace(",", " "),
+        "pct": round(float(r["total"]) * 100 / ing_max) if ing_max else 0
+    } for r in top_ing]
+
+    conn.close()
+
+    return render_template("admin_dashboard.html",
+                           citas_hoy=citas_hoy,
+                           citas_semana=citas_semana,
+                           pacientes_nuevos=pacientes_nuevos,
+                           ingresos_mes=ingresos_mes,
+                           citas_hoy_lista=citas_hoy_lista,
+                           dias_labels=["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+                           citas_actual=citas_actual,
+                           citas_pasado=citas_pasado,
+                           esp_donut=esp_donut,
+                           total_tratamientos=total_tratamientos,
+                           ingresos_lista=ingresos_lista)
+
+
+@app.route("/admin/pacientes")
+@admin_required
+def admin_pacientes():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT u.id, u.tipo_documento, u.numero_documento, u.nombre,
+               u.apepaterno, u.apematerno, u.correo, u.estado, u.fecha_registro,
+               COUNT(c.id) AS total_citas,
+               COUNT(c.id) FILTER (WHERE c.estado NOT IN ('cancelada', 'cancelado')) AS citas_activas
+        FROM usuarios u
+        LEFT JOIN citas c ON c.paciente_id = u.id
+        WHERE u.id_rol = 2
+        GROUP BY u.id
+        ORDER BY u.fecha_registro DESC
+    """)
+    pacientes = cur.fetchall()
+    conn.close()
+    return render_template("admin_pacientes.html", pacientes=pacientes, active="pacientes")
+
+
+@app.route("/admin/paciente/<int:id>/estado")
+@admin_required
+def admin_paciente_estado(id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT estado FROM usuarios WHERE id = %s", (id,))
+    u = cur.fetchone()
+    if u:
+        nuevo = "INACTIVO" if u["estado"] == "ACTIVO" else "ACTIVO"
+        cur.execute("UPDATE usuarios SET estado = %s WHERE id = %s", (nuevo, id))
+        conn.commit()
+        flash(f"Estado del paciente actualizado a {nuevo}", "success")
+    conn.close()
+    return redirect(url_for("admin_pacientes"))
+
+
+@app.route("/admin/tratamientos", methods=["GET", "POST"])
+@admin_required
+def admin_tratamientos():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        accion = request.form.get("accion")
+
+        if accion == "especialidad":
+            nombre = request.form.get("nombre", "").strip()
+            descripcion = request.form.get("descripcion", "").strip()
+            if nombre:
+                cur.execute("""
+                    INSERT INTO especialidades (nombre, descripcion)
+                    VALUES (%s, %s) ON CONFLICT (nombre) DO NOTHING
+                """, (nombre, descripcion))
+                conn.commit()
+                flash("Especialidad registrada", "success")
+            else:
+                flash("Debes indicar el nombre de la especialidad", "danger")
+
+        elif accion == "tratamiento":
+            nombre = request.form.get("nombre", "").strip()
+            especialidad_id = request.form.get("especialidad_id")
+            precio = request.form.get("precio_base")
+            descripcion = request.form.get("descripcion", "").strip()
+            if nombre and especialidad_id:
+                try:
+                    cur.execute("""
+                        INSERT INTO tratamientos (id_especialidad, nombre, descripcion, precio_base)
+                        VALUES (%s, %s, %s, %s)
+                    """, (especialidad_id, nombre, descripcion or None, precio or None))
+                    conn.commit()
+                    flash("Tratamiento registrado", "success")
+                except Exception as e:
+                    conn.rollback()
+                    flash(f"Error al registrar tratamiento: {e}", "danger")
+            else:
+                flash("Nombre y especialidad son obligatorios", "danger")
+
+        conn.close()
+        return redirect(url_for("admin_tratamientos"))
+
+    cur.execute("SELECT id, nombre FROM especialidades ORDER BY nombre")
+    especialidades = cur.fetchall()
+
+    cur.execute("""
+        SELECT t.id_tratamiento, t.nombre, t.descripcion, t.precio_base,
+               e.id AS especialidad_id, e.nombre AS especialidad
+        FROM tratamientos t
+        JOIN especialidades e ON t.id_especialidad = e.id
+        ORDER BY e.nombre, t.nombre
+    """)
+    tratamientos = cur.fetchall()
+
+    cur.execute("""
+        SELECT e.id, e.nombre, e.descripcion, e.estado, COUNT(t.id_tratamiento) AS n_tratamientos
+        FROM especialidades e LEFT JOIN tratamientos t ON t.id_especialidad = e.id
+        GROUP BY e.id ORDER BY e.nombre
+    """)
+    lista_especialidades = cur.fetchall()
+
+    conn.close()
+    return render_template("admin_tratamientos.html",
+                           especialidades=especialidades,
+                           tratamientos=tratamientos,
+                           lista_especialidades=lista_especialidades)
+
+
+@app.route("/admin/tratamiento/eliminar/<int:id>")
+@admin_required
+def eliminar_tratamiento(id):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("DELETE FROM tratamientos WHERE id_tratamiento = %s", (id,))
+        conn.commit()
+        flash("Tratamiento eliminado", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"No se pudo eliminar el tratamiento: {e}", "danger")
+    conn.close()
+    return redirect(url_for("admin_tratamientos"))
+
+
+@app.route("/admin/facturacion")
+@admin_required
+def admin_facturacion():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT p.id, p.tipo, p.monto, p.fecha, u.nombre AS paciente,
+               e.nombre AS especialidad, c.fecha AS fecha_cita,
+               COALESCE(mp.nombre, 'Yape') AS metodo
+        FROM pagos p
+        JOIN citas c ON p.id_cita = c.id
+        JOIN usuarios u ON c.paciente_id = u.id
+        JOIN especialidades e ON c.especialidad_id = e.id
+        LEFT JOIN comprobantes_pago cp ON cp.id_pago = p.id
+        LEFT JOIN metodos_pago mp ON mp.id_metodo_pago = cp.id_metodo_pago
+        ORDER BY p.fecha DESC
+    """)
+    pagos_lista = cur.fetchall()
+    total_pagado = sum(float(r["monto"]) for r in pagos_lista)
+
+    cur.execute("""
+        SELECT c.id, u.nombre AS paciente, e.nombre AS especialidad,
+               c.fecha, c.hora, c.adelanto, c.estado_pago, c.comprobante
+        FROM citas c
+        JOIN usuarios u ON c.paciente_id = u.id
+        JOIN especialidades e ON c.especialidad_id = e.id
+        WHERE c.adelanto > 0 OR c.comprobante IS NOT NULL
+        ORDER BY c.fecha DESC
+    """)
+    adelantos = cur.fetchall()
+    total_adelantos = sum(float(r["adelanto"]) for r in adelantos)
+
+    conn.close()
+    return render_template("admin_facturacion.html",
+                           pagos_lista=pagos_lista,
+                           total_pagado=total_pagado,
+                           adelantos=adelantos,
+                           total_adelantos=total_adelantos)
+
+
+@app.route("/admin/personal")
+@admin_required
+def admin_personal():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT DISTINCT u.id, u.nombre, u.apepaterno, u.apematerno, u.correo,
+               u.tipo_documento, u.numero_documento, u.estado,
+               ARRAY(
+                   SELECT e.nombre FROM odontologo_especialidad oe
+                   JOIN especialidades e ON oe.especialidad_id = e.id
+                   WHERE oe.odontologo_id = u.id
+               ) AS especialidades
+        FROM usuarios u
+        WHERE u.id IN (
+            SELECT DISTINCT odontologo_id FROM citas WHERE odontologo_id IS NOT NULL
+            UNION SELECT DISTINCT odontologo_id FROM horarios WHERE odontologo_id IS NOT NULL
+            UNION SELECT DISTINCT odontologo_id FROM odontologo_especialidad WHERE odontologo_id IS NOT NULL
+        )
+        ORDER BY u.nombre
+    """)
+    personal = cur.fetchall()
+    conn.close()
+    return render_template("admin_personal.html", personal=personal)
+
+
+@app.route("/admin/inventario", methods=["GET", "POST"])
+@admin_required
+def admin_inventario():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        accion = request.form.get("accion")
+
+        if accion == "agregar":
+            nombre = request.form.get("nombre", "").strip()
+            if nombre:
+                try:
+                    cur.execute("""
+                        INSERT INTO inventario (nombre, categoria, cantidad, stock_minimo, precio_compra, proveedor)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (
+                        nombre,
+                        request.form.get("categoria", "").strip() or None,
+                        request.form.get("cantidad") or 0,
+                        request.form.get("stock_minimo") or 0,
+                        request.form.get("precio_compra") or None,
+                        request.form.get("proveedor", "").strip() or None,
+                    ))
+                    conn.commit()
+                    flash("Producto agregado al inventario", "success")
+                except Exception as e:
+                    conn.rollback()
+                    flash(f"Error al agregar producto: {e}", "danger")
+            else:
+                flash("El nombre del producto es obligatorio", "danger")
+
+        elif accion == "actualizar":
+            try:
+                cur.execute("""
+                    UPDATE inventario SET cantidad = %s, stock_minimo = %s
+                    WHERE id = %s
+                """, (request.form.get("cantidad") or 0,
+                      request.form.get("stock_minimo") or 0,
+                      request.form.get("id")))
+                conn.commit()
+                flash("Stock actualizado", "success")
+            except Exception as e:
+                conn.rollback()
+                flash(f"Error al actualizar stock: {e}", "danger")
+
+        conn.close()
+        return redirect(url_for("admin_inventario"))
+
+    cur.execute("SELECT * FROM inventario ORDER BY nombre")
+    inventario = cur.fetchall()
+
+    cur.execute("SELECT COALESCE(SUM(cantidad),0) AS total FROM inventario")
+    total_items = cur.fetchone()["total"]
+    cur.execute("SELECT COALESCE(SUM(cantidad * precio_compra),0) AS total FROM inventario WHERE precio_compra IS NOT NULL")
+    valor_stock = float(cur.fetchone()["total"])
+    cur.execute("SELECT COUNT(*) AS n FROM inventario WHERE cantidad <= stock_minimo")
+    stock_bajo = cur.fetchone()["n"]
+
+    conn.close()
+    return render_template("admin_inventario.html",
+                           inventario=inventario,
+                           total_items=total_items,
+                           valor_stock=valor_stock,
+                           stock_bajo=stock_bajo)
+
+
+@app.route("/admin/inventario/eliminar/<int:id>")
+@admin_required
+def eliminar_inventario(id):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("DELETE FROM inventario WHERE id = %s", (id,))
+        conn.commit()
+        flash("Producto eliminado", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error al eliminar producto: {e}", "danger")
+    conn.close()
+    return redirect(url_for("admin_inventario"))
+
+
+@app.route("/admin/reportes")
+@admin_required
+def admin_reportes():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT COALESCE(estado,'sin estado') AS estado, COUNT(*) AS n FROM citas GROUP BY estado ORDER BY n DESC")
+    citas_por_estado = cur.fetchall()
+
+    cur.execute("""
+        SELECT to_char(fecha, 'YYYY-MM') AS mes, COUNT(*) AS n
+        FROM citas
+        WHERE fecha >= date_trunc('month', CURRENT_DATE) - (INTERVAL '5 months')
+        GROUP BY mes ORDER BY mes
+    """)
+    citas_por_mes = cur.fetchall()
+
+    cur.execute("""
+        SELECT e.nombre AS nombre, COUNT(c.id) AS citas, COALESCE(SUM(c.adelanto),0) AS ingreso
+        FROM especialidades e
+        LEFT JOIN citas c ON c.especialidad_id = e.id
+        GROUP BY e.nombre ORDER BY ingreso DESC, citas DESC
+    """)
+    ingresos_por_especialidad = cur.fetchall()
+
+    cur.execute("""
+        SELECT to_char(fecha_registro, 'YYYY-MM') AS mes, COUNT(*) AS n
+        FROM usuarios
+        WHERE id_rol = 2 AND fecha_registro >= date_trunc('month', CURRENT_DATE) - (INTERVAL '5 months')
+        GROUP BY mes ORDER BY mes
+    """)
+    pacientes_por_mes = cur.fetchall()
+
+    cur.execute("SELECT COALESCE(COUNT(*),0) AS n FROM citas")
+    total_citas = cur.fetchone()["n"]
+    cur.execute("SELECT COALESCE(COUNT(*),0) AS n FROM usuarios WHERE id_rol = 2")
+    total_pacientes = cur.fetchone()["n"]
+    cur.execute("SELECT COALESCE(SUM(adelanto),0) AS total FROM citas WHERE estado_pago <> 'pendiente'")
+    total_ingresos = float(cur.fetchone()["total"])
+
+    conn.close()
+    return render_template("admin_reportes.html",
+                           citas_por_estado=citas_por_estado,
+                           citas_por_mes=citas_por_mes,
+                           ingresos_por_especialidad=ingresos_por_especialidad,
+                           pacientes_por_mes=pacientes_por_mes,
+                           total_citas=total_citas,
+                           total_pacientes=total_pacientes,
+                           total_ingresos=total_ingresos)
+
+
+@app.route("/admin/config", methods=["GET", "POST"])
+@admin_required
+def admin_config():
+    env_path = os.path.join(app.root_path, ".env")
+
+    if request.method == "POST":
+        acciones = {
+            "YAPE_NUMERO": request.form.get("yape_numero", "").strip(),
+            "YAPE_NOMBRE": request.form.get("yape_nombre", "").strip(),
+            "YAPE_QR": request.form.get("yape_qr", "").strip(),
+        }
+        for clave, valor in acciones.items():
+            if valor:
+                try:
+                    set_key(env_path, clave, valor)
+                except Exception as e:
+                    flash(f"Error guardando {clave}: {e}", "danger")
+        flash("Configuración guardada correctamente", "success")
+        return redirect(url_for("admin_config"))
+
+    config = dotenv_values(env_path)
+    return render_template("admin_config.html",
+                           yape_numero=config.get("YAPE_NUMERO", "956536766"),
+                           yape_nombre=config.get("YAPE_NOMBRE", "Clinica Dental"),
+                           yape_qr=config.get("YAPE_QR", "static/img/qr_yape.jpg"))
+
 
 oauth = OAuth(app)
 
@@ -709,7 +1179,7 @@ def authorize_google():
 
         # Redireccionar según el rol recuperado
         if usuario_db['rol'] == 'admin':
-            return redirect(url_for('admin_citas'))
+            return redirect(url_for('admin_dashboard'))
         else:
             return redirect(url_for('inicio'))
 

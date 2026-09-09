@@ -133,6 +133,17 @@ CREATE TABLE IF NOT EXISTS odontologo_especialidad (
     estado         VARCHAR(10) DEFAULT 'activo' CHECK (estado IN ('activo', 'inactivo'))
 );
 
+CREATE TABLE IF NOT EXISTS inventario (
+    id                 INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre             VARCHAR(150) NOT NULL,
+    categoria          VARCHAR(50),
+    cantidad           INT DEFAULT 0,
+    stock_minimo       INT DEFAULT 0,
+    precio_compra      NUMERIC(10,2),
+    proveedor          VARCHAR(100),
+    fecha_actualizacion TIMESTAMP DEFAULT now()
+);
+
 -- -----------------------------------------------------
 -- DATOS REFERENCIALES
 -- -----------------------------------------------------

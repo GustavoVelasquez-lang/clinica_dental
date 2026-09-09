@@ -1,0 +1,117 @@
+{% extends "base_admin.html" %}
+{% block title %}Inventario — Sele Dent Admin{% endblock %}
+
+{% block topbar_titulo %}Inventario{% endblock %}
+
+{% block admin_content %}
+<div class="kpi-grid" style="margin-bottom:28px;">
+  <div class="kpi-card c-teal">
+    <div class="kpi-header"><div class="kpi-icon">📦</div></div>
+    <div class="kpi-num">{{ total_items }}</div>
+    <div class="kpi-label">Unidades totales</div>
+  </div>
+  <div class="kpi-card c-gold">
+    <div class="kpi-header"><div class="kpi-icon">💵</div></div>
+    <div class="kpi-num" data-prefix="S/ ">S/ {{ "{:,.0f}".format(valor_stock).replace(",", " ") }}</div>
+    <div class="kpi-label">Valor del stock</div>
+  </div>
+  <div class="kpi-card c-red">
+    <div class="kpi-header"><div class="kpi-icon">⚠️</div></div>
+    <div class="kpi-num">{{ stock_bajo }}</div>
+    <div class="kpi-label">Productos con stock bajo</div>
+  </div>
+  <div class="kpi-card c-blue">
+    <div class="kpi-header"><div class="kpi-icon">🧾</div></div>
+    <div class="kpi-num">{{ inventario|length }}</div>
+    <div class="kpi-label">Productos registrados</div>
+  </div>
+</div>
+
+<div class="chart-card" style="margin-bottom:28px;">
+  <div class="chart-header">
+    <div><h3>Agregar producto</h3><p>Registra un nuevo insumo al inventario</p></div>
+  </div>
+  <form method="POST" style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;">
+    <input type="hidden" name="accion" value="agregar">
+    <div style="flex:1;min-width:160px;">
+      <label style="font-size:12px;color:var(--muted);display:block;">Nombre *</label>
+      <input type="text" name="nombre" required style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+    </div>
+    <div style="flex:1;min-width:130px;">
+      <label style="font-size:12px;color:var(--muted);display:block;">Categoría</label>
+      <input type="text" name="categoria" style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+    </div>
+    <div style="width:110px;">
+      <label style="font-size:12px;color:var(--muted);display:block;">Cantidad</label>
+      <input type="number" name="cantidad" min="0" value="0" style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+    </div>
+    <div style="width:110px;">
+      <label style="font-size:12px;color:var(--muted);display:block;">Stock mínimo</label>
+      <input type="number" name="stock_minimo" min="0" value="0" style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+    </div>
+    <div style="width:120px;">
+      <label style="font-size:12px;color:var(--muted);display:block;">Precio compra (S/)</label>
+      <input type="number" name="precio_compra" step="0.01" min="0" style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+    </div>
+    <div style="flex:1;min-width:150px;">
+      <label style="font-size:12px;color:var(--muted);display:block;">Proveedor</label>
+      <input type="text" name="proveedor" style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+    </div>
+    <button type="submit" style="font-size:13px;font-weight:500;color:white;background:var(--teal);padding:10px 20px;border:none;border-radius:8px;cursor:pointer;">＋ Agregar</button>
+  </form>
+</div>
+
+<div class="chart-card">
+  <div class="chart-header">
+    <div><h3>Stock actual</h3><p>Listado del inventario</p></div>
+  </div>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead>
+      <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">#</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Producto</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Categoría</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Precio compra</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Proveedor</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Stock</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in inventario %}
+      <tr style="border-bottom:1px solid rgba(10,124,110,0.06);">
+        <td style="padding:12px;color:var(--muted);">{{ i.id }}</td>
+        <td style="padding:12px;font-weight:500;color:var(--dark);">{{ i.nombre }}</td>
+        <td style="padding:12px;color:var(--mid);">{{ i.categoria or '—' }}</td>
+        <td style="padding:12px;color:var(--mid);">
+          {% if i.precio_compra is not none %}S/ {{ i.precio_compra }}{% else %}—{% endif %}
+        </td>
+        <td style="padding:12px;color:var(--mid);">{{ i.proveedor or '—' }}</td>
+        <td style="padding:12px;">
+          {% set bajo = i.cantidad is not none and i.stock_minimo is not none and i.cantidad <= i.stock_minimo %}
+          {% if bajo %}
+            <span style="background:#fdf0f0;color:#e05252;font-size:12px;font-weight:600;padding:3px 10px;border-radius:6px;">{{ i.cantidad }} ⚠️</span>
+          {% else %}
+            <span style="background:var(--teal-xl);color:var(--teal);font-size:12px;font-weight:600;padding:3px 10px;border-radius:6px;">{{ i.cantidad }}</span>
+          {% endif %}
+        </td>
+        <td style="padding:12px;">
+          <form method="POST" style="display:inline-flex;gap:6px;align-items:center;">
+            <input type="hidden" name="accion" value="actualizar">
+            <input type="hidden" name="id" value="{{ i.id }}">
+            <input type="number" name="cantidad" value="{{ i.cantidad }}" min="0"
+                   style="width:70px;padding:6px 8px;border:1px solid rgba(10,124,110,0.15);border-radius:6px;font-size:12px;">
+            <button type="submit" style="font-size:12px;font-weight:500;color:var(--teal);background:var(--teal-xl);padding:6px 12px;border:none;border-radius:6px;cursor:pointer;">Actualizar</button>
+          </form>
+          <a href="{{ url_for('eliminar_inventario', id=i.id) }}"
+             onclick="return confirm('¿Eliminar este producto?')"
+             style="font-size:12px;font-weight:500;color:#e05252;background:#fdf0f0;padding:6px 12px;border-radius:6px;text-decoration:none;margin-left:6px;">🗑️</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" style="padding:48px;text-align:center;color:var(--muted);">Inventario vacío. Agrega tu primer producto.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

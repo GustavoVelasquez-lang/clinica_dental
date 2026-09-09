@@ -1,0 +1,62 @@
+{% extends "base_admin.html" %}
+{% block title %}Personal — Sele Dent Admin{% endblock %}
+
+{% block topbar_titulo %}Personal Odontológico{% endblock %}
+
+{% block admin_content %}
+<div class="chart-card">
+  <div class="chart-header">
+    <div>
+      <h3>Odontólogos del centro</h3>
+      <p>Profesionales vinculados a citas, horarios o especialidades</p>
+    </div>
+  </div>
+
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead>
+      <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">#</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Nombre</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Documento</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Correo</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Especialidades</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in personal %}
+      <tr style="border-bottom:1px solid rgba(10,124,110,0.06);">
+        <td style="padding:12px;color:var(--muted);">{{ p.id }}</td>
+        <td style="padding:12px;font-weight:500;color:var(--dark);">
+          {{ p.nombre }} {{ p.apepaterno or '' }} {{ p.apematerno or '' }}
+        </td>
+        <td style="padding:12px;color:var(--mid);">{{ p.tipo_documento }} {{ p.numero_documento }}</td>
+        <td style="padding:12px;color:var(--mid);">{{ p.correo }}</td>
+        <td style="padding:12px;color:var(--mid);">
+          {% if p.especialidades and p.especialidades|length %}
+            {% for e in p.especialidades %}
+              <span style="background:var(--teal-xl);color:var(--teal);font-size:11px;font-weight:600;padding:3px 10px;border-radius:50px;margin-right:4px;">{{ e }}</span>
+            {% endfor %}
+          {% else %}
+            <span style="font-size:11px;color:var(--muted);">Sin especialidades asignadas</span>
+          {% endif %}
+        </td>
+        <td style="padding:12px;">
+          {% if p.estado == 'ACTIVO' %}
+            <span style="background:#e8f7f5;color:var(--teal);font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;">Activo</span>
+          {% else %}
+            <span style="background:#fdf0f0;color:#e05252;font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;">Inactivo</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="6" style="padding:48px;text-align:center;color:var(--muted);">
+          No hay odontólogos vinculados aún. Asocia un odontólogo a una cita o a una especialidad para que aparezca aquí.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

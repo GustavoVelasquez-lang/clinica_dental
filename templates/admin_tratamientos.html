@@ -1,0 +1,112 @@
+{% extends "base_admin.html" %}
+{% block title %}Tratamientos — Sele Dent Admin{% endblock %}
+
+{% block topbar_titulo %}Tratamientos y Especialidades{% endblock %}
+
+{% block admin_content %}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;">
+  <div class="chart-card">
+    <div class="chart-header">
+      <div><h3>Nueva especialidad</h3><p>Registra una nueva especialidad</p></div>
+    </div>
+    <form method="POST" style="display:flex;flex-direction:column;gap:12px;">
+      <input type="hidden" name="accion" value="especialidad">
+      <div>
+        <label style="font-size:12px;color:var(--muted);">Nombre</label>
+        <input type="text" name="nombre" required
+               style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--muted);">Descripción</label>
+        <textarea name="descripcion" rows="2"
+                  style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;resize:vertical;"></textarea>
+      </div>
+      <button type="submit" style="align-self:flex-start;font-size:13px;font-weight:500;color:white;background:var(--teal);padding:9px 18px;border:none;border-radius:8px;cursor:pointer;">＋ Agregar especialidad</button>
+    </form>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <div><h3>Nuevo tratamiento</h3><p>Vincula un tratamiento a una especialidad</p></div>
+    </div>
+    <form method="POST" style="display:flex;flex-direction:column;gap:12px;">
+      <input type="hidden" name="accion" value="tratamiento">
+      <div>
+        <label style="font-size:12px;color:var(--muted);">Nombre del tratamiento</label>
+        <input type="text" name="nombre" required
+               style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--muted);">Especialidad</label>
+        <select name="especialidad_id" required style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;background:white;">
+          <option value="">Selecciona…</option>
+          {% for e in especialidades %}
+          <option value="{{ e.id }}">{{ e.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--muted);">Precio base (S/)</label>
+        <input type="number" name="precio_base" step="0.01" min="0"
+               style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--muted);">Descripción</label>
+        <textarea name="descripcion" rows="2"
+                  style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;resize:vertical;"></textarea>
+      </div>
+      <button type="submit" style="align-self:flex-start;font-size:13px;font-weight:500;color:white;background:var(--teal);padding:9px 18px;border:none;border-radius:8px;cursor:pointer;">＋ Agregar tratamiento</button>
+    </form>
+  </div>
+</div>
+
+<div class="chart-card">
+  <div class="chart-header">
+    <div>
+      <h3>Catálogo de especialidades y tratamientos</h3>
+      <p>Listado completo</p>
+    </div>
+  </div>
+
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead>
+      <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Especialidad</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Tratamientos</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Descripción</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Precio base</th>
+        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tratamientos %}
+      <tr style="border-bottom:1px solid rgba(10,124,110,0.06);">
+        <td style="padding:12px;font-weight:500;color:var(--dark);">{{ t.especialidad }}</td>
+        <td style="padding:12px;color:var(--mid);">{{ t.nombre }}</td>
+        <td style="padding:12px;color:var(--muted);">{{ t.descripcion or '—' }}</td>
+        <td style="padding:12px;">
+          {% if t.precio_base is not none %}
+            <span style="background:var(--teal-xl);color:var(--teal);font-size:12px;font-weight:600;padding:3px 10px;border-radius:6px;">S/ {{ t.precio_base }}</span>
+          {% else %}
+            <span style="font-size:11px;color:var(--muted);">—</span>
+          {% endif %}
+        </td>
+        <td style="padding:12px;">
+          <a href="{{ url_for('eliminar_tratamiento', id=t.id_tratamiento) }}"
+             onclick="return confirm('¿Eliminar este tratamiento?')"
+             style="font-size:12px;font-weight:500;color:#e05252;background:#fdf0f0;padding:5px 12px;border-radius:6px;text-decoration:none;">
+            🗑️ Eliminar
+          </a>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="5" style="padding:48px;text-align:center;color:var(--muted);">
+          No hay tratamientos registrados aún.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

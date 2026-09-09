@@ -12,4 +12,4 @@ def get_connection():
         url = url.replace("postgres://", "postgresql://", 1)
     if "sslmode=" not in url:
         url += ("&" if "?" in url else "?") + "sslmode=require"
-    return psycopg2.connect(url, cursor_factory=RealDictCursor)
+    return psycopg2.connect(url, sslmode="require", cursor_factory=RealDictCursor)
