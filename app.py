@@ -133,7 +133,7 @@ def agendar():
             conn.close()
 
             if paciente and paciente["correo"]:
-nombre_pac = f"{paciente['nombre']} {paciente['apepaterno']} {paciente['apematerno']}".strip()
+                nombre_pac = f"{paciente['nombre']} {paciente['apepaterno']} {paciente['apematerno']}".strip()
                 enviar_confirmacion_cita(
                     destinatario=paciente["correo"],
                     nombre_paciente=nombre_pac,
@@ -207,7 +207,7 @@ def pago(cita_id):
             """, (session["usuario_id"],))
             paciente = cursor.fetchone()
 
-            nombre_pac = f"{paciente['nombre']} {paciente['apePaterno']} {paciente['apeMaterno']}".strip()
+            nombre_pac = f"{paciente['nombre']} {paciente['apepaterno']} {paciente['apematerno']}".strip()
 
             enviar_comprobante_admin(
                 nombre_paciente=nombre_pac,
