@@ -4,7 +4,7 @@
 {% block topbar_titulo %}Editar Cita #{{ cita.id }}{% endblock %}
 
 {% block admin_content %}
-<div class="chart-card" style="max-width:640px;">
+<div class="chart-card card-max">
   <div class="chart-header">
     <div>
       <h3>Editar Cita</h3>
@@ -12,29 +12,27 @@
     </div>
   </div>
 
-  <form method="POST" style="display:flex;flex-direction:column;gap:16px;">
+  <form method="POST" class="frm-stack">
     <div>
-      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Fecha</label>
-      <input type="date" name="fecha" value="{{ cita.fecha }}" required
-             style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+      <label class="lab">Fecha</label>
+      <input type="date" name="fecha" value="{{ cita.fecha }}" required class="inp">
     </div>
     <div>
-      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Hora</label>
-      <input type="time" name="hora" value="{{ cita.hora }}" required
-             style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+      <label class="lab">Hora</label>
+      <input type="time" name="hora" value="{{ cita.hora }}" required class="inp">
     </div>
 
     {% if cita.comprobante %}
     <div>
-      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Comprobante de pago</label>
+      <label class="lab">Comprobante de pago</label>
       <a href="{{ url_for('static', filename=cita.comprobante.replace('static/', '')) }}" target="_blank"
-         style="font-size:12px;font-weight:500;color:var(--teal);background:var(--teal-xl);padding:7px 14px;border-radius:6px;text-decoration:none;">👁️ Ver comprobante</a>
+         class="btn-a btn-teal">👁️ Ver comprobante</a>
     </div>
     {% endif %}
 
     <div>
-      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Estado</label>
-      <select name="estado" style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;background:white;">
+      <label class="lab">Estado</label>
+      <select name="estado" class="sel">
         <option value="pendiente" {% if cita.estado == "pendiente" %}selected{% endif %}>Pendiente</option>
         <option value="confirmada" {% if cita.estado == "confirmada" %}selected{% endif %}>Confirmada (pago validado)</option>
         <option value="atendida" {% if cita.estado in ["atendida", "atendido"] %}selected{% endif %}>Atendida</option>
@@ -42,11 +40,9 @@
       </select>
     </div>
 
-    <div style="display:flex;gap:10px;justify-content:flex-end;">
-      <a href="{{ url_for('admin_citas') }}"
-         style="font-size:13px;font-weight:500;color:var(--muted);background:#f0f0f0;padding:10px 18px;border-radius:8px;text-decoration:none;">Volver</a>
-      <button type="submit"
-              style="font-size:13px;font-weight:500;color:white;background:var(--teal);padding:10px 22px;border:none;border-radius:8px;cursor:pointer;">💾 Guardar</button>
+    <div class="flex" style="justify-content:flex-end;">
+      <a href="{{ url_for('admin_citas') }}" class="btn-a btn-ghost btn-xl">Volver</a>
+      <button type="submit" class="btn-a btn-solid btn-xl">💾 Guardar</button>
     </div>
   </form>
 </div>

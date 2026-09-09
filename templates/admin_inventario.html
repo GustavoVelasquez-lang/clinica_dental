@@ -31,33 +31,35 @@
   <div class="chart-header">
     <div><h3>Agregar producto</h3><p>Registra un nuevo insumo al inventario</p></div>
   </div>
-  <form method="POST" style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;">
+  <form method="POST" class="frm-grid">
     <input type="hidden" name="accion" value="agregar">
-    <div style="flex:1;min-width:160px;">
-      <label style="font-size:12px;color:var(--muted);display:block;">Nombre *</label>
-      <input type="text" name="nombre" required style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+    <div class="frm-col" style="min-width:160px;">
+      <label class="lab">Nombre *</label>
+      <input type="text" name="nombre" required class="inp">
     </div>
-    <div style="flex:1;min-width:130px;">
-      <label style="font-size:12px;color:var(--muted);display:block;">Categoría</label>
-      <input type="text" name="categoria" style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+    <div class="frm-col" style="min-width:130px;">
+      <label class="lab">Categoría</label>
+      <input type="text" name="categoria" class="inp">
     </div>
-    <div style="width:110px;">
-      <label style="font-size:12px;color:var(--muted);display:block;">Cantidad</label>
-      <input type="number" name="cantidad" min="0" value="0" style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+    <div class="frm-col-w">
+      <label class="lab">Cantidad</label>
+      <input type="number" name="cantidad" min="0" value="0" class="inp">
     </div>
-    <div style="width:110px;">
-      <label style="font-size:12px;color:var(--muted);display:block;">Stock mínimo</label>
-      <input type="number" name="stock_minimo" min="0" value="0" style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+    <div class="frm-col-w">
+      <label class="lab">Stock mínimo</label>
+      <input type="number" name="stock_minimo" min="0" value="0" class="inp">
     </div>
-    <div style="width:120px;">
-      <label style="font-size:12px;color:var(--muted);display:block;">Precio compra (S/)</label>
-      <input type="number" name="precio_compra" step="0.01" min="0" style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+    <div class="frm-col-w">
+      <label class="lab">Precio compra (S/)</label>
+      <input type="number" name="precio_compra" step="0.01" min="0" class="inp">
     </div>
-    <div style="flex:1;min-width:150px;">
-      <label style="font-size:12px;color:var(--muted);display:block;">Proveedor</label>
-      <input type="text" name="proveedor" style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+    <div class="frm-col" style="min-width:150px;">
+      <label class="lab">Proveedor</label>
+      <input type="text" name="proveedor" class="inp">
     </div>
-    <button type="submit" style="font-size:13px;font-weight:500;color:white;background:var(--teal);padding:10px 20px;border:none;border-radius:8px;cursor:pointer;">＋ Agregar</button>
+    <div>
+      <button type="submit" class="btn-a btn-solid btn-xl">＋ Agregar</button>
+    </div>
   </form>
 </div>
 
@@ -65,51 +67,49 @@
   <div class="chart-header">
     <div><h3>Stock actual</h3><p>Listado del inventario</p></div>
   </div>
-  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+  <table class="tb">
     <thead>
-      <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">#</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Producto</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Categoría</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Precio compra</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Proveedor</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Stock</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Acciones</th>
+      <tr>
+        <th>#</th>
+        <th>Producto</th>
+        <th>Categoría</th>
+        <th>Precio compra</th>
+        <th>Proveedor</th>
+        <th>Stock</th>
+        <th>Acciones</th>
       </tr>
     </thead>
     <tbody>
       {% for i in inventario %}
-      <tr style="border-bottom:1px solid rgba(10,124,110,0.06);">
-        <td style="padding:12px;color:var(--muted);">{{ i.id }}</td>
-        <td style="padding:12px;font-weight:500;color:var(--dark);">{{ i.nombre }}</td>
-        <td style="padding:12px;color:var(--mid);">{{ i.categoria or '—' }}</td>
-        <td style="padding:12px;color:var(--mid);">
+      <tr>
+        <td class="tb-muted">{{ i.id }}</td>
+        <td class="tb-strong">{{ i.nombre }}</td>
+        <td>{{ i.categoria or '—' }}</td>
+        <td>
           {% if i.precio_compra is not none %}S/ {{ i.precio_compra }}{% else %}—{% endif %}
         </td>
-        <td style="padding:12px;color:var(--mid);">{{ i.proveedor or '—' }}</td>
-        <td style="padding:12px;">
+        <td>{{ i.proveedor or '—' }}</td>
+        <td>
           {% set bajo = i.cantidad is not none and i.stock_minimo is not none and i.cantidad <= i.stock_minimo %}
           {% if bajo %}
-            <span style="background:#fdf0f0;color:#e05252;font-size:12px;font-weight:600;padding:3px 10px;border-radius:6px;">{{ i.cantidad }} ⚠️</span>
+            <span class="pill-stock-bajo">{{ i.cantidad }} ⚠️</span>
           {% else %}
-            <span style="background:var(--teal-xl);color:var(--teal);font-size:12px;font-weight:600;padding:3px 10px;border-radius:6px;">{{ i.cantidad }}</span>
+            <span class="pill-stock-alto">{{ i.cantidad }}</span>
           {% endif %}
         </td>
-        <td style="padding:12px;">
-          <form method="POST" style="display:inline-flex;gap:6px;align-items:center;">
+        <td>
+          <form method="POST" class="flex">
             <input type="hidden" name="accion" value="actualizar">
             <input type="hidden" name="id" value="{{ i.id }}">
-            <input type="number" name="cantidad" value="{{ i.cantidad }}" min="0"
-                   style="width:70px;padding:6px 8px;border:1px solid rgba(10,124,110,0.15);border-radius:6px;font-size:12px;">
-            <button type="submit" style="font-size:12px;font-weight:500;color:var(--teal);background:var(--teal-xl);padding:6px 12px;border:none;border-radius:6px;cursor:pointer;">Actualizar</button>
+            <input type="number" name="cantidad" value="{{ i.cantidad }}" min="0" class="inp inp-sm">
+            <button type="submit" class="btn-a btn-teal">Actualizar</button>
           </form>
           <a href="{{ url_for('eliminar_inventario', id=i.id) }}"
-             onclick="return confirm('¿Eliminar este producto?')"
-             style="font-size:12px;font-weight:500;color:#e05252;background:#fdf0f0;padding:6px 12px;border-radius:6px;text-decoration:none;margin-left:6px;">🗑️</a>
+             onclick="return confirm('¿Eliminar este producto?')" class="btn-a btn-red">🗑️</a>
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="7" style="padding:48px;text-align:center;color:var(--muted);">Inventario vacío. Agrega tu primer producto.</td></tr>
+      <tr><td colspan="7" class="empty">Inventario vacío. Agrega tu primer producto.</td></tr>
       {% endfor %}
     </tbody>
   </table>

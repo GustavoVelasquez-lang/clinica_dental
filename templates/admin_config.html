@@ -4,32 +4,29 @@
 {% block topbar_titulo %}Configuración{% endblock %}
 
 {% block admin_content %}
-<div class="chart-card" style="max-width:720px;">
+<div class="chart-card card-max">
   <div class="chart-header">
     <div><h3>Configuración del sistema</h3><p>Datos de pago y archivo .env</p></div>
   </div>
 
-  <form method="POST" style="display:flex;flex-direction:column;gap:16px;">
+  <form method="POST" class="frm-stack">
     <div>
-      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Número Yape</label>
-      <input type="text" name="yape_numero" value="{{ yape_numero }}"
-             style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+      <label class="lab">Número Yape</label>
+      <input type="text" name="yape_numero" value="{{ yape_numero }}" class="inp">
     </div>
     <div>
-      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Titular Yape</label>
-      <input type="text" name="yape_nombre" value="{{ yape_nombre }}"
-             style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
+      <label class="lab">Titular Yape</label>
+      <input type="text" name="yape_nombre" value="{{ yape_nombre }}" class="inp">
     </div>
     <div>
-      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Imagen QR (ruta o URL)</label>
-      <input type="text" name="yape_qr" value="{{ yape_qr }}"
-             style="width:100%;padding:10px 12px;border:1px solid rgba(10,124,110,0.15);border-radius:8px;font-size:13px;">
-      <p style="font-size:11px;color:var(--muted);margin-top:4px;">
+      <label class="lab">Imagen QR (ruta o URL)</label>
+      <input type="text" name="yape_qr" value="{{ yape_qr }}" class="inp">
+      <p class="mt-4" style="font-size:11px;color:var(--muted);">
         Ej: <code>static/img/qr_yape.jpg</code> o <code>https://...</code>
       </p>
     </div>
     <div>
-      <button type="submit" style="font-size:13px;font-weight:500;color:white;background:var(--teal);padding:10px 22px;border:none;border-radius:8px;cursor:pointer;">💾 Guardar cambios</button>
+      <button type="submit" class="btn-a btn-solid btn-xl">💾 Guardar cambios</button>
     </div>
   </form>
 </div>

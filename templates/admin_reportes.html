@@ -25,21 +25,21 @@
 <div class="charts-row" style="margin-bottom:28px;">
   <div class="chart-card">
     <div class="chart-header"><div><h3>Citas por mes</h3><p>Últimos 6 meses</p></div></div>
-    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <table class="tb">
       <thead>
-        <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
-          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Mes</th>
-          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Citas</th>
+        <tr>
+          <th>Mes</th>
+          <th>Citas</th>
         </tr>
       </thead>
       <tbody>
         {% for m in citas_por_mes %}
-        <tr style="border-bottom:1px solid rgba(10,124,110,0.06);">
-          <td style="padding:12px;color:var(--dark);font-weight:500;">{{ m.mes }}</td>
-          <td style="padding:12px;color:var(--mid);">{{ m.n }}</td>
+        <tr>
+          <td class="tb-strong">{{ m.mes }}</td>
+          <td>{{ m.n }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="2" style="padding:36px;text-align:center;color:var(--muted);">Sin datos.</td></tr>
+        <tr><td colspan="2" class="empty">Sin datos.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -47,21 +47,21 @@
 
   <div class="chart-card">
     <div class="chart-header"><div><h3>Pacientes nuevos por mes</h3><p>Últimos 6 meses</p></div></div>
-    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <table class="tb">
       <thead>
-        <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
-          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Mes</th>
-          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Pacientes</th>
+        <tr>
+          <th>Mes</th>
+          <th>Pacientes</th>
         </tr>
       </thead>
       <tbody>
         {% for m in pacientes_por_mes %}
-        <tr style="border-bottom:1px solid rgba(10,124,110,0.06);">
-          <td style="padding:12px;color:var(--dark);font-weight:500;">{{ m.mes }}</td>
-          <td style="padding:12px;color:var(--mid);">{{ m.n }}</td>
+        <tr>
+          <td class="tb-strong">{{ m.mes }}</td>
+          <td>{{ m.n }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="2" style="padding:36px;text-align:center;color:var(--muted);">Sin datos.</td></tr>
+        <tr><td colspan="2" class="empty">Sin datos.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -71,21 +71,21 @@
 <div class="charts-row">
   <div class="chart-card">
     <div class="chart-header"><div><h3>Citas por estado</h3><p>Resumen del estado de las citas</p></div></div>
-    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <table class="tb">
       <thead>
-        <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
-          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Estado</th>
-          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Cantidad</th>
+        <tr>
+          <th>Estado</th>
+          <th>Cantidad</th>
         </tr>
       </thead>
       <tbody>
         {% for e in citas_por_estado %}
-        <tr style="border-bottom:1px solid rgba(10,124,110,0.06);">
-          <td style="padding:12px;color:var(--dark);font-weight:500;text-transform:capitalize;">{{ e.estado }}</td>
-          <td style="padding:12px;color:var(--mid);">{{ e.n }}</td>
+        <tr>
+          <td class="tb-strong" style="text-transform:capitalize;">{{ e.estado }}</td>
+          <td>{{ e.n }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="2" style="padding:36px;text-align:center;color:var(--muted);">Sin datos.</td></tr>
+        <tr><td colspan="2" class="empty">Sin datos.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -93,23 +93,23 @@
 
   <div class="chart-card">
     <div class="chart-header"><div><h3>Ingresos por especialidad</h3><p>Adelantos acumulados</p></div></div>
-    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <table class="tb">
       <thead>
-        <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
-          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Especialidad</th>
-          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Citas</th>
-          <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;">Ingreso</th>
+        <tr>
+          <th>Especialidad</th>
+          <th>Citas</th>
+          <th>Ingreso</th>
         </tr>
       </thead>
       <tbody>
         {% for e in ingresos_por_especialidad %}
-        <tr style="border-bottom:1px solid rgba(10,124,110,0.06);">
-          <td style="padding:12px;color:var(--dark);font-weight:500;">{{ e.nombre }}</td>
-          <td style="padding:12px;color:var(--mid);">{{ e.citas }}</td>
-          <td style="padding:12px;font-weight:600;color:var(--dark);">S/ {{ e.ingreso }}</td>
+        <tr>
+          <td class="tb-strong">{{ e.nombre }}</td>
+          <td>{{ e.citas }}</td>
+          <td class="tb-strong">S/ {{ e.ingreso }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="3" style="padding:36px;text-align:center;color:var(--muted);">Sin datos.</td></tr>
+        <tr><td colspan="3" class="empty">Sin datos.</td></tr>
         {% endfor %}
       </tbody>
     </table>

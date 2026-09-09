@@ -5,12 +5,10 @@
 
 {% block admin_content %}
 
-<div style="display:flex;justify-content:flex-end;margin-bottom:12px;gap:8px">
+<div class="page-actions">
   <a href="{{ url_for('admin_enviar_recordatorios') }}"
      onclick="return confirm('¿Enviar recordatorios ahora para citas en 3, 2 y 1 día?')"
-     style="font-size:13px;font-weight:500;color:white;background:#0d6efd;padding:8px 18px;border-radius:8px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
-    📧 Enviar recordatorios ahora
-  </a>
+     class="btn-a btn-blue btn-xl">📧 Enviar recordatorios ahora</a>
 </div>
 
 <div class="chart-card">
@@ -21,44 +19,32 @@
     </div>
   </div>
 
-  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+  <table class="tb">
     <thead>
-      <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">#</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Paciente</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Correo</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Especialidad</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Cita</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Enviado</th>
+      <tr>
+        <th>#</th>
+        <th>Paciente</th>
+        <th>Correo</th>
+        <th>Especialidad</th>
+        <th>Cita</th>
+        <th>Enviado</th>
       </tr>
     </thead>
     <tbody>
       {% for r in recordatorios %}
-      <tr style="border-bottom:1px solid rgba(10,124,110,0.06);transition:background 0.15s;"
-          onmouseover="this.style.background='rgba(10,124,110,0.03)'"
-          onmouseout="this.style.background='transparent'">
-        <td style="padding:12px 12px;color:var(--muted);">{{ r.id }}</td>
-        <td style="padding:12px 12px;font-weight:500;color:var(--dark);">
-          {{ r.nombre }} {{ r.apepaterno or '' }} {{ r.apematerno or '' }}
+      <tr>
+        <td class="tb-muted">{{ r.id }}</td>
+        <td class="tb-strong">{{ r.nombre }} {{ r.apepaterno or '' }} {{ r.apematerno or '' }}</td>
+        <td>{{ r.correo }}</td>
+        <td>{{ r.especialidad }}</td>
+        <td class="tb-nowrap">
+          <span class="pill-time">{{ r.fecha }} · {{ r.hora }}</span>
+          <div class="mt-4 tb-muted"><strong>{{ r.dias_antes }}</strong> día(s) antes</div>
         </td>
-        <td style="padding:12px 12px;color:var(--mid);">{{ r.correo }}</td>
-        <td style="padding:12px 12px;color:var(--mid);">{{ r.especialidad }}</td>
-        <td style="padding:12px 12px;">
-          <span style="background:var(--teal-xl);color:var(--teal);font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;">
-            {{ r.fecha }} · {{ r.hora }}
-          </span>
-          <div style="margin-top:4px;font-size:11px;color:var(--muted);">
-            <strong>{{ r.dias_antes }}</strong> día(s) antes
-          </div>
-        </td>
-        <td style="padding:12px 12px;color:var(--mid);">{{ r.enviado }}</td>
+        <td>{{ r.enviado }}</td>
       </tr>
       {% else %}
-      <tr>
-        <td colspan="6" style="padding:48px;text-align:center;color:var(--muted);">
-          Aún no se han enviado recordatorios.
-        </td>
-      </tr>
+      <tr><td colspan="6" class="empty">Aún no se han enviado recordatorios.</td></tr>
       {% endfor %}
     </tbody>
   </table>

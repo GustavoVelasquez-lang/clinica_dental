@@ -5,12 +5,10 @@
 
 {% block admin_content %}
 
-<div style="display:flex;justify-content:flex-end;margin-bottom:12px;gap:8px">
+<div class="page-actions">
   <a href="{{ url_for('admin_enviar_recordatorios') }}"
      onclick="return confirm('¿Enviar recordatorios ahora para citas en 3, 2 y 1 día?')"
-     style="font-size:13px;font-weight:500;color:white;background:#0d6efd;padding:8px 18px;border-radius:8px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
-    📧 Enviar recordatorios ahora
-  </a>
+     class="btn-a btn-blue btn-xl">📧 Enviar recordatorios ahora</a>
 </div>
 
 <div class="chart-card">
@@ -21,85 +19,60 @@
     </div>
   </div>
 
-  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+  <table class="tb">
     <thead>
-      <tr style="border-bottom:2px solid rgba(10,124,110,0.1);">
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">#</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Paciente</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Especialidad</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Fecha</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Hora</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Estado / Pago</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Comprobante</th>
-        <th style="padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Acciones</th>
+      <tr>
+        <th>#</th>
+        <th>Paciente</th>
+        <th>Especialidad</th>
+        <th>Fecha</th>
+        <th>Hora</th>
+        <th>Estado / Pago</th>
+        <th>Comprobante</th>
+        <th>Acciones</th>
       </tr>
     </thead>
     <tbody>
       {% for cita in citas %}
-      <tr style="border-bottom:1px solid rgba(10,124,110,0.06);transition:background 0.15s;"
-          onmouseover="this.style.background='rgba(10,124,110,0.03)'"
-          onmouseout="this.style.background='transparent'">
-        <td style="padding:12px 12px;color:var(--muted);">{{ cita.id }}</td>
-        <td style="padding:12px 12px;font-weight:500;color:var(--dark);">{{ cita.paciente }}</td>
-        <td style="padding:12px 12px;color:var(--mid);">{{ cita.especialidad }}</td>
-        <td style="padding:12px 12px;color:var(--mid);">{{ cita.fecha }}</td>
-        <td style="padding:12px 12px;">
-          <span style="background:var(--teal-xl);color:var(--teal);font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;">
-            {{ cita.hora }}
-          </span>
-        </td>
-        <td style="padding:12px 12px;">
-          <div style="display:flex;flex-direction:column;gap:4px;">
+      <tr>
+        <td class="tb-muted">{{ cita.id }}</td>
+        <td class="tb-strong">{{ cita.paciente }}</td>
+        <td>{{ cita.especialidad }}</td>
+        <td>{{ cita.fecha }}</td>
+        <td><span class="pill-time">{{ cita.hora }}</span></td>
+        <td>
+          <div class="flexwrap">
             {% if cita.estado == 'pendiente' %}
-              <span style="background:#fef3e2;color:#d97706;font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;display:inline-block;width:fit-content;">Pendiente</span>
+              <span class="pill pill-amber">Pendiente</span>
             {% elif cita.estado == 'confirmada' %}
-              <span style="background:#e8f7f5;color:var(--teal);font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;display:inline-block;width:fit-content;">Confirmada</span>
+              <span class="pill pill-teal">Confirmada</span>
             {% elif cita.estado in ['completada', 'atendida', 'atendido'] %}
-              <span style="background:#f0f0f0;color:#888;font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;display:inline-block;width:fit-content;">Completada</span>
+              <span class="pill pill-gray">Completada</span>
             {% else %}
-              <span style="background:#fdf0f0;color:#e05252;font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;display:inline-block;width:fit-content;">{{ cita.estado }}</span>
+              <span class="pill pill-red">{{ cita.estado }}</span>
             {% endif %}
             {% if cita.comprobante %}
-              <span style="background:#e8f7f5;color:#0a7c6e;font-size:10px;font-weight:600;padding:3px 10px;border-radius:50px;display:inline-block;width:fit-content;">Pago enviado</span>
+              <span class="pill pill-teal">Pago enviado</span>
             {% endif %}
           </div>
         </td>
-        <td style="padding:12px 12px;">
+        <td>
           {% if cita.comprobante %}
-            <a href="{{ url_for('static', filename=cita.comprobante.replace('static/', '')) }}" target="_blank"
-               style="font-size:12px;font-weight:500;color:var(--teal);background:var(--teal-xl);padding:5px 12px;border-radius:6px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;"
-               onmouseover="this.style.background='var(--teal)';this.style.color='white'"
-               onmouseout="this.style.background='var(--teal-xl)';this.style.color='var(--teal)'">
-              👁️ Ver
-            </a>
+            <a href="{{ url_for('static', filename=cita.comprobante.replace('static/', '')) }}" target="_blank" class="btn-a btn-teal">👁️ Ver</a>
           {% else %}
-            <span style="font-size:11px;color:var(--muted);">—</span>
+            <span class="tb-muted">—</span>
           {% endif %}
         </td>
-        <td style="padding:12px 12px;">
-          <div style="display:flex;gap:8px;">
-            <a href="{{ url_for('editar_cita', id=cita.id) }}"
-               style="font-size:12px;font-weight:500;color:var(--teal);background:var(--teal-xl);padding:5px 12px;border-radius:6px;text-decoration:none;transition:all 0.2s;"
-               onmouseover="this.style.background='var(--teal)';this.style.color='white'"
-               onmouseout="this.style.background='var(--teal-xl)';this.style.color='var(--teal)'">
-              ✏️ Editar
-            </a>
+        <td>
+          <div class="flex">
+            <a href="{{ url_for('editar_cita', id=cita.id) }}" class="btn-a btn-teal">✏️ Editar</a>
             <a href="{{ url_for('eliminar_cita', id=cita.id) }}"
-               onclick="return confirm('¿Eliminar esta cita?')"
-               style="font-size:12px;font-weight:500;color:#e05252;background:#fdf0f0;padding:5px 12px;border-radius:6px;text-decoration:none;transition:all 0.2s;"
-               onmouseover="this.style.background='#e05252';this.style.color='white'"
-               onmouseout="this.style.background='#fdf0f0';this.style.color='#e05252'">
-              🗑️ Eliminar
-            </a>
+               onclick="return confirm('¿Eliminar esta cita?')" class="btn-a btn-red">🗑️ Eliminar</a>
           </div>
         </td>
       </tr>
       {% else %}
-      <tr>
-        <td colspan="8" style="padding:48px;text-align:center;color:var(--muted);">
-          No hay citas registradas aún.
-        </td>
-      </tr>
+      <tr><td colspan="8" class="empty">No hay citas registradas aún.</td></tr>
       {% endfor %}
     </tbody>
   </table>
