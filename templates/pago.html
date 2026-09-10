@@ -148,7 +148,7 @@
     </a>
 
     <div class="form-header">
-      <h2>Adelanto de cita — S/ 20.00</h2>
+      <h2>Adelanto de cita — S/ {{ adelanto_monto }}</h2>
       <p>Paga con Yape y sube tu comprobante para validar tu reserva</p>
     </div>
 
@@ -170,7 +170,7 @@
     </div>
 
     <div style="text-align:center;margin-bottom:24px;">
-      <h3 style="font-size:18px;margin:0 0 12px;color:var(--dark);">Paga S/ 20.00 con Yape</h3>
+      <h3 style="font-size:18px;margin:0 0 12px;color:var(--dark);">Paga S/ {{ adelanto_monto }} con Yape</h3>
       <div style="background:white;border:2px dashed var(--border);border-radius:16px;padding:24px;display:inline-block;">
         <img src="{{ yape_qr }}" alt="QR Yape" style="width:200px;height:200px;object-fit:contain;display:block;margin:0 auto;border-radius:8px;">
       </div>
@@ -181,11 +181,12 @@
         <strong>Titular:</strong> {{ yape_nombre }}
       </p>
       <p style="margin-top:12px;font-size:13px;color:var(--muted);background:#fef3e2;border:1px solid rgba(217,119,6,0.2);border-radius:8px;padding:8px 12px;display:inline-block;">
-        ⚠️ Debes abonar <strong>S/ 20.00</strong> para confirmar tu cita
+        ⚠️ Debes abonar <strong>S/ {{ adelanto_monto }}</strong> para confirmar tu cita
       </p>
     </div>
 
     <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
       <div class="field-group">
         <div class="field-label">
@@ -209,7 +210,7 @@
 
       <button type="submit" class="btn-agendar">
         <i class="fa-solid fa-check-circle"></i>
-        Confirmar pago — S/ 20.00
+        Confirmar pago — S/ {{ adelanto_monto }}
       </button>
     </form>
 

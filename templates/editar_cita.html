@@ -8,11 +8,12 @@
   <div class="chart-header">
     <div>
       <h3>Editar Cita</h3>
-      <p>Modifica la fecha, hora y estado de la cita</p>
+      <p>{{ cita.paciente_nombre }} - {{ cita.especialidad }}</p>
     </div>
   </div>
 
   <form method="POST" class="frm-stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div>
       <label class="lab">Fecha</label>
       <input type="date" name="fecha" value="{{ cita.fecha }}" required class="inp">
@@ -26,7 +27,7 @@
     <div>
       <label class="lab">Comprobante de pago</label>
       <a href="{{ url_for('static', filename=cita.comprobante.replace('static/', '')) }}" target="_blank"
-         class="btn-a btn-teal">👁️ Ver comprobante</a>
+         class="btn-a btn-teal">Ver comprobante</a>
     </div>
     {% endif %}
 
@@ -40,9 +41,18 @@
       </select>
     </div>
 
+    <div>
+      <label class="lab">Estado de pago</label>
+      <select name="estado_pago" class="sel">
+        <option value="pendiente" {% if cita.estado_pago == "pendiente" %}selected{% endif %}>Pendiente</option>
+        <option value="pagado" {% if cita.estado_pago == "pagado" %}selected{% endif %}>Pagado</option>
+        <option value="rechazado" {% if cita.estado_pago == "rechazado" %}selected{% endif %}>Rechazado</option>
+      </select>
+    </div>
+
     <div class="flex" style="justify-content:flex-end;">
       <a href="{{ url_for('admin_citas') }}" class="btn-a btn-ghost btn-xl">Volver</a>
-      <button type="submit" class="btn-a btn-solid btn-xl">💾 Guardar</button>
+      <button type="submit" class="btn-a btn-solid btn-xl">Guardar</button>
     </div>
   </form>
 </div>

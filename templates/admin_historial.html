@@ -1,0 +1,142 @@
+{% extends "base_admin.html" %}
+{% block title %}Historial Clinico — {{ paciente.nombre }}{% endblock %}
+
+{% block topbar_titulo %}Historial Clinico — {{ paciente.nombre }} {{ paciente.apepaterno }}{% endblock %}
+
+{% block admin_content %}
+
+<div style="margin-bottom:20px;">
+  <a href="{{ url_for('admin_pacientes') }}" style="color:var(--muted);text-decoration:none;font-size:13px;">
+    <i class="fa-solid fa-arrow-left"></i> Volver a pacientes
+  </a>
+</div>
+
+<div class="kpi-grid" style="margin-bottom:28px;">
+  <div class="kpi-card c-teal">
+    <div class="kpi-header"><div class="kpi-icon">👤</div></div>
+    <div class="kpi-num">{{ paciente.nombre }} {{ paciente.apepaterno }}</div>
+    <div class="kpi-label">DNI: {{ paciente.numero_documento }}</div>
+  </div>
+  <div class="kpi-card c-blue">
+    <div class="kpi-header"><div class="kpi-icon">📧</div></div>
+    <div class="kpi-num" style="font-size:14px;">{{ paciente.correo }}</div>
+    <div class="kpi-label">Correo electronico</div>
+  </div>
+  <div class="kpi-card c-gold">
+    <div class="kpi-header"><div class="kpi-icon">📅</div></div>
+    <div class="kpi-num">{{ historial_citas|length }}</div>
+    <div class="kpi-label">Citas totales</div>
+  </div>
+  <div class="kpi-card c-red">
+    <div class="kpi-header"><div class="kpi-icon">📋</div></div>
+    <div class="kpi-num">{{ historial_clinico|length }}</div>
+    <div class="kpi-label">Registros clinicos</div>
+  </div>
+</div>
+
+<div class="chart-card" style="margin-bottom:28px;">
+  <div class="chart-header">
+    <div><h3>Registrar historial clinico</h3><p>Agregar un nuevo registro clinico</p></div>
+  </div>
+  <form method="POST" action="{{ url_for('registrar_historial', paciente_id=paciente.id) }}" class="frm-stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div>
+      <label class="lab">Cita asociada (opcional)</label>
+      <select name="cita_id" class="sel">
+        <option value="">Sin cita asociada</option>
+        {% for c in historial_citas %}
+          <option value="{{ c.id }}">#{{ c.id }} - {{ c.especialidad }} - {{ c.fecha }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="lab">Diagnostico *</label>
+      <textarea name="diagnostico" rows="3" class="txa" required placeholder="Describe el diagnostico del paciente..."></textarea>
+    </div>
+    <div>
+      <label class="lab">Tratamiento indicado</label>
+      <textarea name="tratamiento" rows="2" class="txa" placeholder="Tratamiento prescrito..."></textarea>
+    </div>
+    <div>
+      <label class="lab">Observaciones</label>
+      <textarea name="observaciones" rows="2" class="txa" placeholder="Notas adicionales..."></textarea>
+    </div>
+    <div>
+      <button type="submit" class="btn-a btn-solid btn-xl">Registrar historial</button>
+    </div>
+  </form>
+</div>
+
+<div class="chart-card" style="margin-bottom:28px;">
+  <div class="chart-header">
+    <div><h3>Historial clinico</h3><p>Registros clinicos del paciente</p></div>
+  </div>
+  <table class="tb">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Diagnostico</th>
+        <th>Tratamiento</th>
+        <th>Especialidad</th>
+        <th>Odontologo</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for h in historial_clinico %}
+      <tr>
+        <td class="tb-muted">{{ h.fecha }}</td>
+        <td class="tb-strong">{{ h.diagnostico }}</td>
+        <td>{{ h.tratamiento or '-' }}</td>
+        <td><span class="pill pill-teal">{{ h.especialidad or '-' }}</span></td>
+        <td>{{ h.odontologo or '-' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="empty">No hay registros clinicos.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="chart-card">
+  <div class="chart-header">
+    <div><h3>Citas del paciente</h3><p>Todas las citas registradas</p></div>
+  </div>
+  <table class="tb">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Especialidad</th>
+        <th>Fecha</th>
+        <th>Hora</th>
+        <th>Estado</th>
+        <th>Odontologo</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in historial_citas %}
+      <tr>
+        <td class="tb-muted">{{ c.id }}</td>
+        <td><span class="pill pill-teal">{{ c.especialidad }}</span></td>
+        <td>{{ c.fecha }}</td>
+        <td>{{ c.hora }}</td>
+        <td>
+          {% if c.estado == 'pendiente' %}
+            <span class="pill pill-amber">Pendiente</span>
+          {% elif c.estado == 'confirmada' %}
+            <span class="pill pill-teal">Confirmada</span>
+          {% elif c.estado in ['completada','atendida','atendido'] %}
+            <span class="pill pill-gray">Completada</span>
+          {% else %}
+            <span class="pill pill-red">{{ c.estado }}</span>
+          {% endif %}
+        </td>
+        <td>{{ c.odontologo }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="empty">No hay citas.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block title %}Mis Citas{% endblock %}
 
 {% block content %}
@@ -30,21 +29,37 @@
 
             <hr>
 
-            <p><i class="fa-solid fa-calendar"></i> 
+            <p><i class="fa-solid fa-calendar"></i>
               <strong>Fecha:</strong> {{ c.fecha }}
             </p>
 
-            <p><i class="fa-solid fa-clock"></i> 
+            <p><i class="fa-solid fa-clock"></i>
               <strong>Hora:</strong> {{ c.hora }}
             </p>
 
-            <!-- 🔥 ESTADO CON COLOR -->
             {% if c.estado == "pendiente" %}
               <span class="badge bg-warning text-dark">Pendiente</span>
-            {% elif c.estado == "atendido" %}
+            {% elif c.estado == "confirmada" %}
+              <span class="badge bg-info">Confirmada</span>
+            {% elif c.estado == "atendido" or c.estado == "completada" %}
               <span class="badge bg-success">Atendido</span>
-            {% elif c.estado == "cancelado" %}
+            {% elif c.estado == "cancelado" or c.estado == "cancelada" %}
               <span class="badge bg-danger">Cancelado</span>
+            {% endif %}
+
+            {% if c.estado not in ['cancelada', 'cancelado', 'atendida', 'atendido', 'completada'] %}
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+              <a href="{{ url_for('reprogramar_cita', cita_id=c.id) }}" class="btn btn-outline-primary btn-sm">
+                <i class="fa-solid fa-calendar-days"></i> Reprogramar
+              </a>
+              <form method="POST" action="{{ url_for('cancelar_cita', cita_id=c.id) }}" style="display:inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" onclick="return confirm('Seguro que deseas cancelar esta cita?')"
+                   class="btn btn-outline-danger btn-sm">
+                  <i class="fa-solid fa-xmark"></i> Cancelar
+                </button>
+              </form>
+            </div>
             {% endif %}
 
           </div>
@@ -54,6 +69,20 @@
 
       </div>
     </div>
+
+    {% if total_pages is defined and total_pages > 1 %}
+    <div class="row justify-content-center">
+      <div class="col-md-8 d-flex justify-content-center gap-2">
+        {% if page > 1 %}
+          <a href="?page={{ page-1 }}" class="btn btn-outline-light btn-sm">Anterior</a>
+        {% endif %}
+        <span class="text-white" style="padding:6px 12px;font-size:13px;">Pagina {{ page }} de {{ total_pages }}</span>
+        {% if page < total_pages %}
+          <a href="?page={{ page+1 }}" class="btn btn-outline-light btn-sm">Siguiente</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
 
   {% else %}
 

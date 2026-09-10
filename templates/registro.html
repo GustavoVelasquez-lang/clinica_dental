@@ -26,6 +26,7 @@
         <p class="login-sub text-center mb-4">Regístrate para poder agendar tus citas</p>
 
         <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
           <div class="field-group">
             <label for="dni">DNI</label>

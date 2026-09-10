@@ -1,0 +1,55 @@
+{% extends "base_admin.html" %}
+{% block title %}Nuevo Odontologo — Sele Dent Admin{% endblock %}
+
+{% block topbar_titulo %}Registrar Odontologo{% endblock %}
+
+{% block admin_content %}
+<div class="chart-card card-max">
+  <div class="chart-header">
+    <div>
+      <h3>Nuevo odontologo</h3>
+      <p>Registra un profesional y asocia sus especialidades</p>
+    </div>
+  </div>
+
+  <form method="POST" class="frm-stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div>
+      <label class="lab">DNI *</label>
+      <input type="text" name="dni" maxlength="8" required class="inp" placeholder="8 digitos" pattern="\d{8}">
+    </div>
+    <div>
+      <label class="lab">Nombre *</label>
+      <input type="text" name="nombre" required class="inp">
+    </div>
+    <div>
+      <label class="lab">Apellido Paterno *</label>
+      <input type="text" name="apepaterno" required class="inp">
+    </div>
+    <div>
+      <label class="lab">Apellido Materno</label>
+      <input type="text" name="apematerno" class="inp">
+    </div>
+    <div>
+      <label class="lab">Correo electronico *</label>
+      <input type="email" name="correo" required class="inp">
+    </div>
+    <div>
+      <label class="lab">Especialidades</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
+        {% for e in especialidades %}
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mid);cursor:pointer;">
+          <input type="checkbox" name="especialidades" value="{{ e.id }}"> {{ e.nombre }}
+        </label>
+        {% endfor %}
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:4px;">La contrasena por defecto sera el DNI del odontologo.</p>
+    </div>
+
+    <div class="flex" style="justify-content:flex-end;">
+      <a href="{{ url_for('admin_personal') }}" class="btn-a btn-ghost btn-xl">Volver</a>
+      <button type="submit" class="btn-a btn-solid btn-xl">Registrar odontologo</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

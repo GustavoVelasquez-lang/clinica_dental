@@ -465,6 +465,7 @@ textarea.field-input {
     {% endwith %}
 
     <form method="POST" id="formCita">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
       <!-- ── 1. ESPECIALIDAD ── -->
       <div class="field-group">

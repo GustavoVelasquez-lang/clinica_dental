@@ -30,17 +30,19 @@
     <li><a href="{{ url_for('admin_tratamientos') }}" class="{{ 'active' if request.endpoint in ['admin_tratamientos','eliminar_tratamiento'] else '' }}"><span class="icon">🦷</span> Tratamientos</a></li>
   </ul>
 
-  <div class="sb-section">Gestión</div>
+  <div class="sb-section">Gestion</div>
   <ul class="sb-nav">
-    <li><a href="{{ url_for('admin_facturacion') }}" class="{{ 'active' if request.endpoint == 'admin_facturacion' else '' }}"><span class="icon">💰</span> Facturación</a></li>
-    <li><a href="{{ url_for('admin_personal') }}" class="{{ 'active' if request.endpoint == 'admin_personal' else '' }}"><span class="icon">👨‍⚕️</span> Personal</a></li>
+    <li><a href="{{ url_for('admin_facturacion') }}" class="{{ 'active' if request.endpoint == 'admin_facturacion' else '' }}"><span class="icon">💰</span> Facturacion</a></li>
+    <li><a href="{{ url_for('admin_personal') }}" class="{{ 'active' if request.endpoint in ['admin_personal','admin_crear_odontologo'] else '' }}"><span class="icon">👨‍⚕️</span> Personal</a></li>
+    <li><a href="{{ url_for('admin_horarios') }}" class="{{ 'active' if request.endpoint == 'admin_horarios' else '' }}"><span class="icon">🕐</span> Horarios</a></li>
     <li><a href="{{ url_for('admin_inventario') }}" class="{{ 'active' if request.endpoint in ['admin_inventario','eliminar_inventario'] else '' }}"><span class="icon">📦</span> Inventario</a></li>
     <li><a href="{{ url_for('admin_reportes') }}" class="{{ 'active' if request.endpoint == 'admin_reportes' else '' }}"><span class="icon">📈</span> Reportes</a></li>
   </ul>
 
   <div class="sb-section">Sistema</div>
   <ul class="sb-nav">
-    <li><a href="{{ url_for('admin_config') }}" class="{{ 'active' if request.endpoint == 'admin_config' else '' }}"><span class="icon">⚙️</span> Configuración</a></li>
+    <li><a href="{{ url_for('admin_config') }}" class="{{ 'active' if request.endpoint == 'admin_config' else '' }}"><span class="icon">⚙️</span> Configuracion</a></li>
+    <li><a href="{{ url_for('admin_auditoria') }}" class="{{ 'active' if request.endpoint == 'admin_auditoria' else '' }}"><span class="icon">🔍</span> Auditoria</a></li>
     <li><a href="{{ url_for('inicio') }}"><span class="icon">🏠</span> Volver al inicio</a></li>
   </ul>
 
