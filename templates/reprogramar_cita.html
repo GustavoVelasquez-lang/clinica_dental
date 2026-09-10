@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Reprogramar Cita — Clinica Sele Dent{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+
+      <div style="margin-bottom:12px">
+        <a href="{{ url_for('mis_citas') }}" style="color:var(--teal);text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-arrow-left"></i> Volver a mis citas
+        </a>
+      </div>
+
+      <div class="card shadow p-4">
+        <h2 class="text-center mb-3" style="color:var(--teal);">Reprogramar Cita</h2>
+        <p class="text-center mb-4" style="color:var(--muted);font-size:14px;">
+          Cita actual: <strong>{{ cita.especialidad }}</strong> - {{ cita.fecha }} {{ cita.hora }}
+        </p>
+
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="field-group">
+            <label for="fecha">Nueva fecha</label>
+            <input type="date" name="fecha" id="fecha" required class="form-control">
+          </div>
+
+          <div class="field-group">
+            <label for="hora">Nueva hora</label>
+            <select name="hora" id="hora" required class="form-select">
+              <option value="">Seleccionar hora...</option>
+              <option value="09:00:00">09:00 am</option>
+              <option value="10:00:00">10:00 am</option>
+              <option value="11:00:00">11:00 am</option>
+              <option value="12:00:00">12:00 pm</option>
+              <option value="15:00:00">03:00 pm</option>
+              <option value="16:00:00">04:00 pm</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 mt-3">Reprogramar cita</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const hoy = new Date();
+  const manana = new Date(hoy);
+  manana.setDate(hoy.getDate() + 1);
+  document.getElementById('fecha').min = manana.toISOString().split('T')[0];
+</script>
+{% endblock %}
