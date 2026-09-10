@@ -1,14 +1,16 @@
-{% extends "base_admin.html" %}
+{% extends "base.html" %}
 {% block title %}Citas — Sele Dent Admin{% endblock %}
 
-{% block topbar_titulo %}Gestión de Citas{% endblock %}
+{% block topbar_titulo %}Gestion de Citas{% endblock %}
 
 {% block admin_content %}
 
 <div class="page-actions">
-  <a href="{{ url_for('admin_enviar_recordatorios') }}"
-     onclick="return confirm('¿Enviar recordatorios ahora para citas en 3, 2 y 1 día?')"
-     class="btn-a btn-blue btn-xl">📧 Enviar recordatorios ahora</a>
+  <form method="POST" action="{{ url_for('admin_enviar_recordatorios') }}" style="display:inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" onclick="return confirm('Enviar recordatorios ahora para citas en 3, 2 y 1 dia?')"
+       class="btn-a btn-blue btn-xl">Enviar recordatorios ahora</button>
+  </form>
 </div>
 
 <div class="chart-card">
@@ -58,24 +60,38 @@
         </td>
         <td>
           {% if cita.comprobante %}
-            <a href="{{ url_for('static', filename=cita.comprobante.replace('static/', '')) }}" target="_blank" class="btn-a btn-teal">👁️ Ver</a>
+            <a href="{{ url_for('static', filename=cita.comprobante.replace('static/', '')) }}" target="_blank" class="btn-a btn-teal">Ver</a>
           {% else %}
-            <span class="tb-muted">—</span>
+            <span class="tb-muted">-</span>
           {% endif %}
         </td>
         <td>
           <div class="flex">
-            <a href="{{ url_for('editar_cita', id=cita.id) }}" class="btn-a btn-teal">✏️ Editar</a>
-            <a href="{{ url_for('eliminar_cita', id=cita.id) }}"
-               onclick="return confirm('¿Eliminar esta cita?')" class="btn-a btn-red">🗑️ Eliminar</a>
+            <a href="{{ url_for('editar_cita', id=cita.id) }}" class="btn-a btn-teal">Editar</a>
+            <form method="POST" action="{{ url_for('eliminar_cita', id=cita.id) }}" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" onclick="return confirm('Eliminar esta cita?')" class="btn-a btn-red">Eliminar</button>
+            </form>
           </div>
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="8" class="empty">No hay citas registradas aún.</td></tr>
+      <tr><td colspan="8" class="empty">No hay citas registradas aun.</td></tr>
       {% endfor %}
     </tbody>
   </table>
+
+  {% if total_pages is defined and total_pages > 1 %}
+  <div style="display:flex;justify-content:center;gap:8px;margin-top:20px;">
+    {% if page > 1 %}
+      <a href="?page={{ page-1 }}" class="btn-a btn-teal">Anterior</a>
+    {% endif %}
+    <span style="padding:8px 16px;color:var(--muted);font-size:13px;">Pagina {{ page }} de {{ total_pages }}</span>
+    {% if page < total_pages %}
+      <a href="?page={{ page+1 }}" class="btn-a btn-teal">Siguiente</a>
+    {% endif %}
+  </div>
+  {% endif %}
 </div>
 
 {% endblock %}

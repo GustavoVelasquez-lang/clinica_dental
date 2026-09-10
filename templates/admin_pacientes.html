@@ -1,14 +1,14 @@
 {% extends "base_admin.html" %}
 {% block title %}Pacientes — Sele Dent Admin{% endblock %}
 
-{% block topbar_titulo %}Gestión de Pacientes{% endblock %}
+{% block topbar_titulo %}Gestion de Pacientes{% endblock %}
 
 {% block admin_content %}
 <div class="chart-card">
   <div class="chart-header">
     <div>
       <h3>Pacientes registrados</h3>
-      <p>{{ pacientes|length }} paciente(s) en el sistema</p>
+      <p>{{ pacientes|length }} paciente(s) en esta pagina</p>
     </div>
   </div>
 
@@ -36,7 +36,7 @@
           <span class="pill-time">{{ p.total_citas }}</span>
           <span class="tb-muted">({{ p.citas_activas }} activas)</span>
         </td>
-        <td>{{ (p.fecha_registro or '—')|string }}</td>
+        <td>{{ (p.fecha_registro or '-')|string }}</td>
         <td>
           {% if p.estado == 'ACTIVO' %}
             <span class="pill pill-teal">Activo</span>
@@ -45,17 +45,34 @@
           {% endif %}
         </td>
         <td>
-          <a href="{{ url_for('admin_paciente_estado', id=p.id) }}"
-             onclick="return confirm('¿Cambiar el estado de este paciente?')"
-             class="btn-a {% if p.estado == 'ACTIVO' %}btn-red{% else %}btn-teal{% endif %}">
-            {% if p.estado == 'ACTIVO' %}🚫 Desactivar{% else %}✅ Activar{% endif %}
-          </a>
+          <div class="flex" style="flex-wrap:wrap;gap:4px;">
+            <form method="POST" action="{{ url_for('admin_paciente_estado', id=p.id) }}" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" onclick="return confirm('Cambiar el estado de este paciente?')"
+                 class="btn-a {% if p.estado == 'ACTIVO' %}btn-red{% else %}btn-teal{% endif %}">
+                {% if p.estado == 'ACTIVO' %}Desactivar{% else %}Activar{% endif %}
+              </button>
+            </form>
+            <a href="{{ url_for('admin_historial', paciente_id=p.id) }}" class="btn-a btn-blue">Historial</a>
+          </div>
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="8" class="empty">No hay pacientes registrados aún.</td></tr>
+      <tr><td colspan="8" class="empty">No hay pacientes registrados aun.</td></tr>
       {% endfor %}
     </tbody>
   </table>
+
+  {% if total_pages is defined and total_pages > 1 %}
+  <div style="display:flex;justify-content:center;gap:8px;margin-top:20px;">
+    {% if page > 1 %}
+      <a href="?page={{ page-1 }}" class="btn-a btn-teal">Anterior</a>
+    {% endif %}
+    <span style="padding:8px 16px;color:var(--muted);font-size:13px;">Pagina {{ page }} de {{ total_pages }}</span>
+    {% if page < total_pages %}
+      <a href="?page={{ page+1 }}" class="btn-a btn-teal">Siguiente</a>
+    {% endif %}
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

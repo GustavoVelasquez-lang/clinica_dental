@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% block title %}Facturación — Sele Dent Admin{% endblock %}
+{% block title %}Facturacion — Sele Dent Admin{% endblock %}
 
-{% block topbar_titulo %}Facturación{% endblock %}
+{% block topbar_titulo %}Facturacion{% endblock %}
 
 {% block admin_content %}
 <div class="kpi-grid mb-0" style="margin-bottom:28px;">
@@ -24,7 +24,7 @@
 
 <div class="chart-card mb-0" style="margin-bottom:28px;">
   <div class="chart-header">
-    <div><h3>Pagos registrados</h3><p>Movimientos del libro de facturación</p></div>
+    <div><h3>Pagos registrados</h3><p>Movimientos del libro de facturacion</p></div>
   </div>
   <table class="tb">
     <thead>
@@ -34,7 +34,7 @@
         <th>Especialidad</th>
         <th>Fecha cita</th>
         <th>Tipo</th>
-        <th>Método</th>
+        <th>Metodo</th>
         <th>Monto</th>
         <th>Fecha pago</th>
       </tr>
@@ -49,10 +49,10 @@
         <td><span class="pill pill-teal">{{ p.tipo }}</span></td>
         <td>{{ p.metodo }}</td>
         <td class="tb-strong">S/ {{ p.monto }}</td>
-        <td class="tb-muted">{{ (p.fecha or '—')|string }}</td>
+        <td class="tb-muted">{{ (p.fecha or '-')|string }}</td>
       </tr>
       {% else %}
-      <tr><td colspan="8" class="empty">No hay pagos registrados aún.</td></tr>
+      <tr><td colspan="8" class="empty">No hay pagos registrados aun.</td></tr>
       {% endfor %}
     </tbody>
   </table>
@@ -60,7 +60,7 @@
 
 <div class="chart-card">
   <div class="chart-header">
-    <div><h3>Adelantos / comprobantes por confirmar</h3><p>Citas con adelanto o comprobante enviado</p></div>
+    <div><h3>Adelantos / comprobantes por confirmar</h3><p>Citas con comprobante enviado pendiente de revision</p></div>
   </div>
   <table class="tb">
     <thead>
@@ -72,6 +72,7 @@
         <th>Adelanto</th>
         <th>Estado pago</th>
         <th>Comprobante</th>
+        <th>Acciones</th>
       </tr>
     </thead>
     <tbody>
@@ -84,19 +85,57 @@
           <span class="pill-time">{{ a.fecha }} · {{ a.hora }}</span>
         </td>
         <td class="tb-strong">S/ {{ a.adelanto }}</td>
-        <td><span class="pill pill-amber">{{ a.estado_pago }}</span></td>
+        <td>
+          {% if a.estado_pago == 'pagado' %}
+            <span class="pill pill-teal">Pagado</span>
+          {% elif a.estado_pago == 'rechazado' %}
+            <span class="pill pill-red">Rechazado</span>
+          {% else %}
+            <span class="pill pill-amber">Pendiente</span>
+          {% endif %}
+        </td>
         <td>
           {% if a.comprobante %}
-            <a href="{{ url_for('static', filename=a.comprobante.replace('static/', '')) }}" target="_blank" class="btn-a btn-teal">👁️ Ver</a>
+            <a href="{{ url_for('static', filename=a.comprobante.replace('static/', '')) }}" target="_blank" class="btn-a btn-teal">Ver</a>
           {% else %}
-            <span class="tb-muted">—</span>
+            <span class="tb-muted">-</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if a.comprobante and a.estado_pago != 'pagado' %}
+          <div class="flex" style="gap:4px;">
+            <form method="POST" action="{{ url_for('validar_pago', cita_id=a.id) }}" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="accion" value="aprobar">
+              <button type="submit" onclick="return confirm('Aprobar este pago?')" class="btn-a btn-teal">Aprobar</button>
+            </form>
+            <form method="POST" action="{{ url_for('validar_pago', cita_id=a.id) }}" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="accion" value="rechazar">
+              <button type="submit" onclick="return confirm('Rechazar este pago?')" class="btn-a btn-red">Rechazar</button>
+            </form>
+          </div>
+          {% else %}
+            <span class="tb-muted">-</span>
           {% endif %}
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="7" class="empty">No hay adelantos pendientes.</td></tr>
+      <tr><td colspan="8" class="empty">No hay adelantos pendientes.</td></tr>
       {% endfor %}
     </tbody>
   </table>
+
+  {% if total_pages is defined and total_pages > 1 %}
+  <div style="display:flex;justify-content:center;gap:8px;margin-top:20px;">
+    {% if page > 1 %}
+      <a href="?page={{ page-1 }}" class="btn-a btn-teal">Anterior</a>
+    {% endif %}
+    <span style="padding:8px 16px;color:var(--muted);font-size:13px;">Pagina {{ page }} de {{ total_pages }}</span>
+    {% if page < total_pages %}
+      <a href="?page={{ page+1 }}" class="btn-a btn-teal">Siguiente</a>
+    {% endif %}
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

@@ -6,16 +6,18 @@
 {% block admin_content %}
 
 <div class="page-actions">
-  <a href="{{ url_for('admin_enviar_recordatorios') }}"
-     onclick="return confirm('¿Enviar recordatorios ahora para citas en 3, 2 y 1 día?')"
-     class="btn-a btn-blue btn-xl">📧 Enviar recordatorios ahora</a>
+  <form method="POST" action="{{ url_for('admin_enviar_recordatorios') }}" style="display:inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" onclick="return confirm('Enviar recordatorios ahora para citas en 3, 2 y 1 dia?')"
+       class="btn-a btn-blue btn-xl">Enviar recordatorios ahora</button>
+  </form>
 </div>
 
 <div class="chart-card">
   <div class="chart-header">
     <div>
       <h3>Correos de recordatorio enviados</h3>
-      <p>A quién, qué y cuándo se notificó</p>
+      <p>A quien, que y cuando se notifico</p>
     </div>
   </div>
 
@@ -39,15 +41,27 @@
         <td>{{ r.especialidad }}</td>
         <td class="tb-nowrap">
           <span class="pill-time">{{ r.fecha }} · {{ r.hora }}</span>
-          <div class="mt-4 tb-muted"><strong>{{ r.dias_antes }}</strong> día(s) antes</div>
+          <div class="mt-4 tb-muted"><strong>{{ r.dias_antes }}</strong> dia(s) antes</div>
         </td>
         <td>{{ r.enviado }}</td>
       </tr>
       {% else %}
-      <tr><td colspan="6" class="empty">Aún no se han enviado recordatorios.</td></tr>
+      <tr><td colspan="6" class="empty">Aun no se han enviado recordatorios.</td></tr>
       {% endfor %}
     </tbody>
   </table>
+
+  {% if total_pages is defined and total_pages > 1 %}
+  <div style="display:flex;justify-content:center;gap:8px;margin-top:20px;">
+    {% if page > 1 %}
+      <a href="?page={{ page-1 }}" class="btn-a btn-teal">Anterior</a>
+    {% endif %}
+    <span style="padding:8px 16px;color:var(--muted);font-size:13px;">Pagina {{ page }} de {{ total_pages }}</span>
+    {% if page < total_pages %}
+      <a href="?page={{ page+1 }}" class="btn-a btn-teal">Siguiente</a>
+    {% endif %}
+  </div>
+  {% endif %}
 </div>
 
 {% endblock %}

@@ -32,13 +32,14 @@
     <div><h3>Agregar producto</h3><p>Registra un nuevo insumo al inventario</p></div>
   </div>
   <form method="POST" class="frm-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="accion" value="agregar">
     <div class="frm-col" style="min-width:160px;">
       <label class="lab">Nombre *</label>
       <input type="text" name="nombre" required class="inp">
     </div>
     <div class="frm-col" style="min-width:130px;">
-      <label class="lab">Categoría</label>
+      <label class="lab">Categoria</label>
       <input type="text" name="categoria" class="inp">
     </div>
     <div class="frm-col-w">
@@ -46,7 +47,7 @@
       <input type="number" name="cantidad" min="0" value="0" class="inp">
     </div>
     <div class="frm-col-w">
-      <label class="lab">Stock mínimo</label>
+      <label class="lab">Stock minimo</label>
       <input type="number" name="stock_minimo" min="0" value="0" class="inp">
     </div>
     <div class="frm-col-w">
@@ -58,7 +59,7 @@
       <input type="text" name="proveedor" class="inp">
     </div>
     <div>
-      <button type="submit" class="btn-a btn-solid btn-xl">＋ Agregar</button>
+      <button type="submit" class="btn-a btn-solid btn-xl">+ Agregar</button>
     </div>
   </form>
 </div>
@@ -72,7 +73,7 @@
       <tr>
         <th>#</th>
         <th>Producto</th>
-        <th>Categoría</th>
+        <th>Categoria</th>
         <th>Precio compra</th>
         <th>Proveedor</th>
         <th>Stock</th>
@@ -84,11 +85,11 @@
       <tr>
         <td class="tb-muted">{{ i.id }}</td>
         <td class="tb-strong">{{ i.nombre }}</td>
-        <td>{{ i.categoria or '—' }}</td>
+        <td>{{ i.categoria or '-' }}</td>
         <td>
-          {% if i.precio_compra is not none %}S/ {{ i.precio_compra }}{% else %}—{% endif %}
+          {% if i.precio_compra is not none %}S/ {{ i.precio_compra }}{% else %}-{% endif %}
         </td>
-        <td>{{ i.proveedor or '—' }}</td>
+        <td>{{ i.proveedor or '-' }}</td>
         <td>
           {% set bajo = i.cantidad is not none and i.stock_minimo is not none and i.cantidad <= i.stock_minimo %}
           {% if bajo %}
@@ -98,18 +99,21 @@
           {% endif %}
         </td>
         <td>
-          <form method="POST" class="flex">
+          <form method="POST" class="flex" style="display:inline-flex;gap:4px;align-items:center;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="accion" value="actualizar">
             <input type="hidden" name="id" value="{{ i.id }}">
             <input type="number" name="cantidad" value="{{ i.cantidad }}" min="0" class="inp inp-sm">
             <button type="submit" class="btn-a btn-teal">Actualizar</button>
           </form>
-          <a href="{{ url_for('eliminar_inventario', id=i.id) }}"
-             onclick="return confirm('¿Eliminar este producto?')" class="btn-a btn-red">🗑️</a>
+          <form method="POST" action="{{ url_for('eliminar_inventario', id=i.id) }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" onclick="return confirm('Eliminar este producto?')" class="btn-a btn-red">Eliminar</button>
+          </form>
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="7" class="empty">Inventario vacío. Agrega tu primer producto.</td></tr>
+      <tr><td colspan="7" class="empty">Inventario vacio. Agrega tu primer producto.</td></tr>
       {% endfor %}
     </tbody>
   </table>

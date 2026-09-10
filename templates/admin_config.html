@@ -10,8 +10,9 @@
   </div>
 
   <form method="POST" class="frm-stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div>
-      <label class="lab">Número Yape</label>
+      <label class="lab">Numero Yape</label>
       <input type="text" name="yape_numero" value="{{ yape_numero }}" class="inp">
     </div>
     <div>
@@ -26,7 +27,11 @@
       </p>
     </div>
     <div>
-      <button type="submit" class="btn-a btn-solid btn-xl">💾 Guardar cambios</button>
+      <label class="lab">Monto del adelanto (S/)</label>
+      <input type="number" name="adelanto_monto" value="{{ adelanto_monto }}" step="0.01" min="0" class="inp">
+    </div>
+    <div>
+      <button type="submit" class="btn-a btn-solid btn-xl">Guardar cambios</button>
     </div>
   </form>
 </div>

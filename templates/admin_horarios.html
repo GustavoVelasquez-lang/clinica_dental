@@ -1,0 +1,85 @@
+{% extends "base_admin.html" %}
+{% block title %}Horarios — Sele Dent Admin{% endblock %}
+
+{% block topbar_titulo %}Gestion de Horarios{% endblock %}
+
+{% block admin_content %}
+
+<div class="chart-card" style="margin-bottom:28px;">
+  <div class="chart-header">
+    <div><h3>Nuevo horario</h3><p>Asigna un bloque horario a un odontologo</p></div>
+  </div>
+  <form method="POST" class="frm-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="frm-col" style="min-width:200px;">
+      <label class="lab">Odontologo *</label>
+      <select name="odontologo_id" required class="sel">
+        <option value="">Seleccionar...</option>
+        {% for o in odontologos %}
+          <option value="{{ o.id }}">{{ o.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="frm-col" style="min-width:140px;">
+      <label class="lab">Dia *</label>
+      <select name="dia_semana" required class="sel">
+        <option value="1">Lunes</option>
+        <option value="2">Martes</option>
+        <option value="3">Miercoles</option>
+        <option value="4">Jueves</option>
+        <option value="5">Viernes</option>
+        <option value="6">Sabado</option>
+        <option value="0">Domingo</option>
+      </select>
+    </div>
+    <div class="frm-col-w">
+      <label class="lab">Hora inicio *</label>
+      <input type="time" name="hora_inicio" required class="inp">
+    </div>
+    <div class="frm-col-w">
+      <label class="lab">Hora fin *</label>
+      <input type="time" name="hora_fin" required class="inp">
+    </div>
+    <div>
+      <button type="submit" class="btn-a btn-solid btn-xl">+ Agregar horario</button>
+    </div>
+  </form>
+</div>
+
+<div class="chart-card">
+  <div class="chart-header">
+    <div><h3>Horarios registrados</h3><p>Disponibilidad de los odontologos</p></div>
+  </div>
+  <table class="tb">
+    <thead>
+      <tr>
+        <th>Odontologo</th>
+        <th>Dia</th>
+        <th>Desde</th>
+        <th>Hasta</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% set dias = {0:'Domingo',1:'Lunes',2:'Martes',3:'Miercoles',4:'Jueves',5:'Viernes',6:'Sabado'} %}
+      {% for h in horarios %}
+      <tr>
+        <td class="tb-strong">{{ h.odontologo_nombre }}</td>
+        <td><span class="pill pill-teal">{{ dias.get(h.dia_semana|int, h.dia_semana) }}</span></td>
+        <td>{{ h.hora_inicio }}</td>
+        <td>{{ h.hora_fin }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('eliminar_horario', id=h.id) }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" onclick="return confirm('Eliminar este horario?')" class="btn-a btn-red">Eliminar</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="empty">No hay horarios registrados.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

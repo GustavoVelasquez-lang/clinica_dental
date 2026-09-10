@@ -11,17 +11,18 @@
       <div><h3>Nueva especialidad</h3><p>Registra una nueva especialidad</p></div>
     </div>
     <form method="POST" class="frm-stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="accion" value="especialidad">
       <div>
         <label class="lab">Nombre</label>
         <input type="text" name="nombre" required class="inp" placeholder="Ej: Ortodoncia">
       </div>
       <div>
-        <label class="lab">Descripción</label>
+        <label class="lab">Descripcion</label>
         <textarea name="descripcion" rows="2" class="txa"></textarea>
       </div>
       <div>
-        <button type="submit" class="btn-a btn-solid">＋ Agregar especialidad</button>
+        <button type="submit" class="btn-a btn-solid">+ Agregar especialidad</button>
       </div>
     </form>
   </div>
@@ -31,6 +32,7 @@
       <div><h3>Nuevo tratamiento</h3><p>Vincula un tratamiento a una especialidad</p></div>
     </div>
     <form method="POST" class="frm-stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="accion" value="tratamiento">
       <div>
         <label class="lab">Nombre</label>
@@ -49,11 +51,11 @@
         <input type="number" name="precio_base" step="0.01" min="0" class="inp">
       </div>
       <div>
-        <label class="lab">Descripción</label>
+        <label class="lab">Descripcion</label>
         <textarea name="descripcion" rows="2" class="txa"></textarea>
       </div>
       <div>
-        <button type="submit" class="btn-a btn-solid">＋ Agregar tratamiento</button>
+        <button type="submit" class="btn-a btn-solid">+ Agregar tratamiento</button>
       </div>
     </form>
   </div>
@@ -62,8 +64,8 @@
 <div class="chart-card">
   <div class="chart-header">
     <div>
-      <h3>Catálogo de especialidades y tratamientos</h3>
-      <p>Lo que ofrecerá el consultorio</p>
+      <h3>Catalogo de especialidades y tratamientos</h3>
+      <p>Lo que ofrecera el consultorio</p>
     </div>
   </div>
   <table class="tb">
@@ -72,7 +74,7 @@
         <th>Especialidad</th>
         <th>Tratamiento</th>
         <th>Precio base</th>
-        <th>Descripción</th>
+        <th>Descripcion</th>
         <th>Acciones</th>
       </tr>
     </thead>
@@ -85,17 +87,19 @@
           {% if t.precio_base is not none %}
             <span class="pill-precio">S/ {{ t.precio_base }}</span>
           {% else %}
-            <span class="tb-muted">—</span>
+            <span class="tb-muted">-</span>
           {% endif %}
         </td>
-        <td class="tb-muted">{{ t.descripcion or '—' }}</td>
+        <td class="tb-muted">{{ t.descripcion or '-' }}</td>
         <td>
-          <a href="{{ url_for('eliminar_tratamiento', id=t.id_tratamiento) }}"
-             onclick="return confirm('¿Eliminar este tratamiento?')" class="btn-a btn-red">🗑️</a>
+          <form method="POST" action="{{ url_for('eliminar_tratamiento', id=t.id_tratamiento) }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" onclick="return confirm('Eliminar este tratamiento?')" class="btn-a btn-red">Eliminar</button>
+          </form>
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="5" class="empty">Aún no se han registrado tratamientos.</td></tr>
+      <tr><td colspan="5" class="empty">Aun no se han registrado tratamientos.</td></tr>
       {% endfor %}
     </tbody>
   </table>
