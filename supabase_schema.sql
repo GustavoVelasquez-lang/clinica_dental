@@ -168,7 +168,6 @@ INSERT INTO metodos_pago (nombre) VALUES
     ('Efectivo')
 ON CONFLICT DO NOTHING;
 
--- Admin inicial (contraseña: Admin123! — cámbiala al primer ingreso)
 INSERT INTO usuarios (
     tipo_documento, numero_documento, nombre, apepaterno, apematerno,
     correo, contrasenia, estado, id_rol

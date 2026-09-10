@@ -1,6 +1,4 @@
-/* ════════════════════════════════════════
-   VARIABLES & RESET
-════════════════════════════════════════ */
+
 :root {
     --teal:      #0a7c6e;
     --teal-dark: #065a50;
@@ -43,9 +41,7 @@
     display: block;
   }
   
-  /* ════════════════════════════════════════
-     ANIMACIONES
-  ════════════════════════════════════════ */
+  
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(28px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -58,9 +54,7 @@
   .hero-stats     { animation: fadeUp 0.7s ease 0.6s  both; }
   .hero-search    { animation: fadeUp 0.7s ease 0.7s  both; }
   
-  /* ════════════════════════════════════════
-     NAVBAR
-  ════════════════════════════════════════ */
+  
   .navbar-sd {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -172,9 +166,7 @@
     transform: translateY(-1px);
   }
   
-  /* ════════════════════════════════════════
-     HERO / CARRUSEL
-  ════════════════════════════════════════ */
+  
   .hero-wrap {
     position: relative;
     margin-top: 72px;
@@ -196,7 +188,7 @@
     filter: brightness(0.55);
   }
   
-  /* Overlay gradiente */
+  
   .hero-wrap::after {
     content: '';
     position: absolute;
@@ -210,7 +202,7 @@
     );
   }
   
-  /* Contenido flotante */
+  
   .hero-content {
     position: absolute;
     top: 50%;
@@ -305,7 +297,7 @@
   .btn-hero-secondary:hover { gap: 13px; color: white; }
   .btn-hero-secondary::after { content: '→'; font-size: 17px; }
   
-  /* Barra de búsqueda */
+  
   .hero-search {
     position: absolute;
     bottom: 48px;
@@ -347,7 +339,7 @@
   
   .hero-search button:hover { background: var(--teal-dark); }
   
-  /* Stats flotantes */
+  
   .hero-stats {
     position: absolute;
     bottom: 130px;
@@ -382,7 +374,7 @@
     margin-top: 3px;
   }
   
-  /* Controles del carrusel */
+  
   .carousel-control-prev,
   .carousel-control-next {
     width: 48px;
@@ -421,9 +413,7 @@
     border-radius: 4px;
   }
   
-  /* ════════════════════════════════════════
-     SOBRE NOSOTROS
-  ════════════════════════════════════════ */
+  
   .section-about {
     padding: 100px 80px;
     display: grid;
@@ -565,9 +555,7 @@
     letter-spacing: 0.06em;
   }
   
-  /* ════════════════════════════════════════
-     ESPECIALIDADES
-  ════════════════════════════════════════ */
+  
   .section-esp {
     padding: 100px 80px;
     background: var(--cream);
@@ -661,7 +649,7 @@
     background: linear-gradient(to top, rgba(6,90,80,0.4) 0%, transparent 60%);
   }
   
-  /* Cards sin imagen */
+  
   .esp-card-img.no-img {
     background: linear-gradient(135deg, rgba(10,124,110,0.08), rgba(10,124,110,0.18));
     display: flex;
@@ -705,9 +693,7 @@
   .esp-card-link:hover { gap: 10px; }
   .esp-card-link::after { content: '→'; }
   
-  /* ════════════════════════════════════════
-     CTA AGENDAR
-  ════════════════════════════════════════ */
+  
   .section-cta {
     margin: 0 80px 80px;
     background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 60%, #1aa090 100%);
@@ -818,9 +804,7 @@
     color: white;
   }
   
-  /* ════════════════════════════════════════
-     UBICACIÓN
-  ════════════════════════════════════════ */
+  
   .section-location {
     padding: 100px 80px;
     background: white;
@@ -925,9 +909,7 @@
     border: none;
   }
   
-  /* ════════════════════════════════════════
-     FOOTER
-  ════════════════════════════════════════ */
+  
   .footer-sd {
     background: var(--dark);
     padding: 64px 80px 32px;
@@ -988,9 +970,7 @@
     gap: 8px;
   }
   
-  /* ════════════════════════════════════════
-     RESPONSIVE
-  ════════════════════════════════════════ */
+  
   @media (max-width: 1100px) {
     .esp-grid { grid-template-columns: repeat(2, 1fr); }
     .footer-sd { grid-template-columns: 1fr 1fr; }
