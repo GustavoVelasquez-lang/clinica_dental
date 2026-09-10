@@ -22,7 +22,7 @@
     overflow-y: auto;
   }
 
-  /* ── página ── */
+  
   .cuenta-page {
     min-height: 100vh;
     background: var(--cream);
@@ -33,7 +33,7 @@
     justify-content: flex-start;
   }
 
-  /* ── tarjeta principal ── */
+  
   .cuenta-card {
     width: 100%;
     max-width: 700px;
@@ -44,7 +44,7 @@
     box-shadow: 0 20px 60px rgba(10,124,110,0.1);
   }
 
-  /* cabecera verde */
+  
   .cuenta-header {
     background: linear-gradient(140deg, var(--teal-dark) 0%, var(--teal) 100%);
     padding: 36px 32px 48px;
@@ -67,7 +67,7 @@
     border-radius: 50%;
   }
 
-  /* avatar */
+  
   .cuenta-avatar {
     width: 80px; height: 80px;
     border-radius: 50%;
@@ -101,14 +101,14 @@
     background: var(--gold); border-radius: 50%;
   }
 
-  /* solapamiento de la card del avatar */
+  
   .cuenta-body {
     padding: 0 32px 32px;
     margin-top: -20px;
     position: relative; z-index: 2;
   }
 
-  /* tarjetita interna de datos */
+  
   .datos-card {
     background: var(--cream);
     border-radius: 16px;
@@ -143,7 +143,7 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 
-  /* botones */
+  
   .btn-teal {
     display: flex; align-items: center; justify-content: center; gap: 8px;
     width: 100%; padding: 13px;
@@ -179,7 +179,7 @@
     transform: translateY(-1px);
   }
 
-  /* volver */
+  
   .btn-back {
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 13px; font-weight: 500; color: var(--muted);
@@ -189,7 +189,7 @@
   .btn-back:hover { color: var(--teal); }
   .btn-back i { font-size: 15px; }
 
-  /* ── Sección de citas ── */
+  
   .citas-section {
     margin-bottom: 24px;
   }
@@ -264,7 +264,7 @@
   }
   .citas-empty p { margin: 0; }
 
-  /* responsive */
+  
   @media (max-width: 500px) {
     .cuenta-page { padding: 24px 12px; }
     .cuenta-card { border-radius: 16px; }
@@ -278,7 +278,7 @@
     .cita-item-right { align-self: flex-end; }
   }
 
-  /* animación */
+  
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(24px); }
     to   { opacity: 1; transform: translateY(0); }

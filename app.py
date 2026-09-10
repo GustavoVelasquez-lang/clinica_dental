@@ -39,9 +39,9 @@ def inject_admin_context():
         return {"citas_pendientes": pendientes}
     except Exception:
         return {"citas_pendientes": 0}
-# -------------------------------
-# DECORADOR: LOGIN REQUERIDO
-# -------------------------------
+                                 
+                            
+                                 
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -58,7 +58,7 @@ def agendar():
     conn = get_connection()
     cursor = conn.cursor()
 
-    # 🔥 traer especialidades
+                            
     cursor.execute("SELECT id, nombre FROM especialidades")
     especialidades = cursor.fetchall()
 
@@ -68,19 +68,19 @@ def agendar():
         especialidad_id = request.form.get("especialidad")
         hora = request.form.get("hora")
 
-        # ❌ validar fecha vacía
+                               
         if not fecha_str:
             flash("❌ Debes seleccionar una fecha", "danger")
             return redirect(url_for("agendar"))
 
-        # ❌ convertir fecha
+                           
         try:
             fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
         except ValueError:
             flash("❌ Fecha inválida", "danger")
             return redirect(url_for("agendar"))
 
-        # ❌ solo desde mañana
+                             
         mañana = date.today() + timedelta(days=1)
         if fecha < mañana:
             flash("❌ Solo puedes agendar desde mañana", "danger")
@@ -89,7 +89,7 @@ def agendar():
             flash("❌ Solo pacientes pueden agendar citas", "danger")
             return redirect(url_for("inicio"))
 
-        # 🔥 VALIDAR DISPONIBILIDAD (CLAVE DEL SISTEMA)
+                                                      
         cursor.execute("""
             SELECT id FROM citas
             WHERE especialidad_id = %s AND fecha = %s AND hora = %s
@@ -101,7 +101,7 @@ def agendar():
             flash("❌ Esa hora ya está ocupada", "danger")
             return redirect(url_for("agendar"))
 
-        # 💾 INSERTAR CITA
+                         
         cursor.execute("""
             INSERT INTO citas 
             (paciente_id, especialidad_id, fecha, hora, estado, estado_pago)
@@ -118,7 +118,7 @@ def agendar():
         conn.commit()
         conn.close()
 
-        # 📧 notificar al paciente la confirmación de su cita
+                                                            
         try:
             conn = get_connection()
             cursor = conn.cursor()
@@ -290,25 +290,25 @@ def registro():
 
 @app.route("/logout")
 def logout():
-    session.clear()  # 🔥 borra toda la sesión
+    session.clear()                          
     return redirect(url_for("login"))
 
 
 @app.route("/")
 def inicio():
-    # 🔥 Si es admin → lo mandas directo al panel
+                                                
     if session.get("rol") == "admin":
         return redirect(url_for("admin_dashboard"))
 
-    # 👤 Si es paciente → index normal
+                                     
     return render_template("index.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    ip = request.remote_addr  # 🔥 obtener IP
+    ip = request.remote_addr                
 
-    # 🔒 Verificar si está baneado
+                                 
     baneada, minutos = esta_baneada(ip)
     if baneada:
         flash(f"🚫 IP bloqueada. Intenta en {minutos} minutos", "danger")
@@ -330,19 +330,19 @@ def login():
         user = cursor.fetchone()
         conn.close()
 
-        # ❌ usuario no existe
+                             
         if not user:
             baneada, restantes = registrar_intento_fallido(ip)
             flash(f"❌ Usuario no existe ({restantes} intentos restantes)", "danger")
             return redirect(url_for("login"))
 
-        # ❌ usuario inactivo
+                            
         if user["estado"] != "ACTIVO":
             baneada, restantes = registrar_intento_fallido(ip)
             flash("❌ Usuario inactivo", "danger")
             return redirect(url_for("login"))
 
-        # ❌ contraseña incorrecta
+                                 
         if not bcrypt.check_password_hash(user["contrasenia"], clave):
             baneada, restantes = registrar_intento_fallido(ip)
 
@@ -353,7 +353,7 @@ def login():
 
             return redirect(url_for("login"))
 
-        # ✅ LOGIN CORRECTO → limpiar IP
+                                       
         limpiar_ip(ip)
 
         session["usuario_id"] = user["id"]
@@ -510,13 +510,13 @@ def horarios_disponibles():
 
     conn.close()
 
-    # 🕒 horario del sistema
+                           
     horas_sistema = [
         "09:00:00", "10:00:00", "11:00:00",
         "12:00:00", "15:00:00", "16:00:00"
     ]
 
-    # 🔥 filtrar disponibles
+                           
     disponibles = [h for h in horas_sistema if h not in ocupadas]
 
     return jsonify(disponibles)
@@ -657,9 +657,9 @@ def editar_cita(id):
     return render_template("editar_cita.html", cita=cita)
 
 
-# ════════════════════════════════════════════════════
-# ⚙️ PANEL DE ADMINISTRACIÓN
-# ════════════════════════════════════════════════════
+                                                      
+                            
+                                                      
 
 @app.route("/admin/dashboard")
 @admin_required
@@ -671,7 +671,7 @@ def admin_dashboard():
     conn = get_connection()
     cur = conn.cursor()
 
-    # ── KPIs ──
+                
     cur.execute("SELECT COALESCE(COUNT(*),0) AS n FROM citas WHERE fecha = %s AND estado <> 'cancelada'", (hoy,))
     citas_hoy = cur.fetchone()["n"]
 
@@ -688,7 +688,7 @@ def admin_dashboard():
     """, (inicio_mes, hoy))
     ingresos_mes = float(cur.fetchone()["total"])
 
-    # ── Citas de hoy ──
+                        
     cur.execute("""
         SELECT c.id, c.hora, c.estado, u.nombre AS paciente, e.nombre AS servicio
         FROM citas c
@@ -699,7 +699,7 @@ def admin_dashboard():
     """, (hoy,))
     citas_hoy_lista = cur.fetchall()
 
-    # ── Citas por día (esta semana vs pasada) ──
+                                                 
     cur.execute("""
         SELECT fecha, COUNT(*) AS n FROM citas
         WHERE fecha BETWEEN %s AND %s AND estado <> 'cancelada'
@@ -710,7 +710,7 @@ def admin_dashboard():
     citas_actual = [por_fecha.get(lunes + timedelta(days=d), 0) for d in range(7)]
     citas_pasado = [por_fecha.get(lunes - timedelta(days=7) + timedelta(days=d), 0) for d in range(7)]
 
-    # ── Especialidades top del mes (donut) ──
+                                              
     cur.execute("""
         SELECT e.nombre AS nombre, COUNT(*) AS n
         FROM citas c JOIN especialidades e ON c.especialidad_id = e.id
@@ -730,7 +730,7 @@ def admin_dashboard():
             "id": f"d{i + 1}"
         })
 
-    # ── Ingresos por especialidad (mes) ──
+                                           
     cur.execute("""
         SELECT e.nombre AS nombre, COALESCE(SUM(c.adelanto),0) AS total
         FROM citas c JOIN especialidades e ON c.especialidad_id = e.id
@@ -1115,10 +1115,10 @@ def admin_config():
 oauth = OAuth(app)
 
 
-# Carga las variables de entorno
+                                
 load_dotenv()
 
-# Registro de OAuth
+                   
 google = oauth.register(
     name='google',
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
@@ -1140,13 +1140,13 @@ def login_google():
 
 @app.route('/authorize/google')
 def authorize_google():
-    # Recupera el nonce sin forzar el error si expiró en la cookie
+                                                                  
     nonce = session.pop('nonce', None)
 
     try:
         token = google.authorize_access_token()
         
-        # Si el nonce existe se valida, si no, se parsea el ID token directamente
+                                                                                 
         if nonce:
             user = google.parse_id_token(token, nonce=nonce)
         else:
@@ -1157,7 +1157,7 @@ def authorize_google():
         conn = get_connection()
         cursor = conn.cursor()
 
-        # Consulta insensible a mayúsculas usando LEFT JOIN para evitar fallos si id_rol era nulo
+                                                                                                 
         cursor.execute("""
             SELECT u.id, u.nombre, COALESCE(r.nombre, 'paciente') AS rol
             FROM usuarios u
@@ -1172,12 +1172,12 @@ def authorize_google():
             flash("❌ No estás registrado en el sistema.", "danger")
             return redirect(url_for("registro"))
 
-        # Guardar datos en la sesión
+                                    
         session['usuario_id'] = usuario_db['id']
         session['rol']        = usuario_db['rol']
         session['nombre']     = usuario_db['nombre']
 
-        # Redireccionar según el rol recuperado
+                                               
         if usuario_db['rol'] == 'admin':
             return redirect(url_for('admin_dashboard'))
         else:
@@ -1190,18 +1190,18 @@ def authorize_google():
 
 @app.route("/api/consultar_dni/<dni>")
 def consultar_dni(dni):
-    # 1. Validar el formato del DNI
+                                   
     if not dni.isdigit() or len(dni) != 8:
         return jsonify({"success": False, "message": "El DNI debe contener exactamente 8 dígitos"}), 400
 
-    # 2. Obtener y limpiar el token del .env
+                                            
     token = os.getenv("DNI_API_TOKEN", "").strip().strip('"').strip("'")
     
     if not token:
         logger.error("No se encontró el token DNI_API_TOKEN en el archivo .env")
         return jsonify({"success": False, "message": "Error de configuración en el servidor"}), 500
 
-    # 3. Configurar Endpoint y Headers según la documentación oficial de Factiliza
+                                                                                  
     url = f"https://api.factiliza.com/v1/dni/info/{dni}"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -1212,7 +1212,7 @@ def consultar_dni(dni):
         response = requests.get(url, headers=headers, timeout=8)
         res_json = response.json()
 
-        # 4. Validar la respuesta entregada por Factiliza
+                                                         
         if response.status_code == 200 and res_json.get("status") == 200:
             datos_persona = res_json.get("data", {})
             return jsonify({
@@ -1231,13 +1231,13 @@ def consultar_dni(dni):
         logger.error(f"Error al conectar con la API Factiliza: {e}")
         return jsonify({"success": False, "message": f"Error al conectar con la API: {str(e)}"}), 500
 
-# ── Configuración ──────────────────────────────
-MAX_INTENTOS   = 5          # intentos fallidos antes del ban
-TIEMPO_BAN_MIN = 15         # minutos de ban
-TIEMPO_VENTANA = 10         # ventana de tiempo (minutos) para contar intentos
+                                                 
+MAX_INTENTOS   = 5                                           
+TIEMPO_BAN_MIN = 15                         
+TIEMPO_VENTANA = 10                                                           
 
-# ── Almacenamiento en memoria ──────────────────
-# { "ip": {"intentos": int, "primer_intento": datetime, "baneado_hasta": datetime|None} }
+                                                 
+                                                                                         
 registro_ips = defaultdict(lambda: {
     "intentos":       0,
     "primer_intento": None,
@@ -1260,7 +1260,7 @@ def esta_baneada(ip: str) -> tuple[bool, int]:
         restantes = int((datos["baneado_hasta"] - ahora).total_seconds() / 60) + 1
         return True, restantes
 
-    # Ban expirado → limpiar
+                            
     registro_ips[ip] = {"intentos": 0, "primer_intento": None, "baneado_hasta": None}
     return False, 0
 
@@ -1274,18 +1274,18 @@ def registrar_intento_fallido(ip: str) -> tuple[bool, int]:
     ahora  = datetime.now()
     ventana = timedelta(minutes=TIEMPO_VENTANA)
 
-    # Si pasó la ventana de tiempo, reiniciar contador
+                                                      
     if datos["primer_intento"] and (ahora - datos["primer_intento"]) > ventana:
         datos["intentos"]       = 0
         datos["primer_intento"] = None
 
-    # Primer intento en esta ventana
+                                    
     if datos["primer_intento"] is None:
         datos["primer_intento"] = ahora
 
     datos["intentos"] += 1
 
-    # ¿Supera el límite?
+                        
     if datos["intentos"] >= MAX_INTENTOS:
         datos["baneado_hasta"] = ahora + timedelta(minutes=TIEMPO_BAN_MIN)
         logger.info(f"[BAN] IP {ip} baneada hasta {datos['baneado_hasta']}")
@@ -1324,7 +1324,7 @@ def iniciar_scheduler():
 
 if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
     iniciar_scheduler()
-    # 🔥 pasada inmediata al arrancar (dedupe por tabla recordatorios evita duplicados)
+                                                                                      
     try:
         enviar_recordatorios_app()
     except Exception as e:

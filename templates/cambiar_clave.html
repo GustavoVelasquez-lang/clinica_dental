@@ -5,8 +5,6 @@
 {% block content %}
 <div class="col-md-4">
   <h3>Cambiar Contraseña</h3>
-
-  <!-- 🔥 MENSAJES -->
   {% with messages = get_flashed_messages() %}
     {% for msg in messages %}
       <div class="alert alert-danger">{{ msg }}</div>

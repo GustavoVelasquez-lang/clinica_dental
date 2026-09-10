@@ -1,6 +1,4 @@
-/* ════════════════════════════════════════
-   VARIABLES
-════════════════════════════════════════ */
+
 :root {
     --teal:    #0a7c6e;
     --teal-d:  #065a50;
@@ -35,9 +33,7 @@
     overflow-x: hidden;
   }
   
-  /* ════════════════════════════════════════
-     SIDEBAR
-  ════════════════════════════════════════ */
+  
   .sidebar {
     width: var(--sidebar);
     flex-shrink: 0;
@@ -160,9 +156,7 @@
   .sb-profile-text strong { display: block; font-size: 12px; color: #fff; }
   .sb-profile-text small  { font-size: 10px; color: rgba(255,255,255,0.35); }
   
-  /* ════════════════════════════════════════
-     MAIN
-  ════════════════════════════════════════ */
+  
   .main {
     flex: 1;
     display: flex;
@@ -234,9 +228,7 @@
   
   .content { padding: 32px 36px; flex: 1; }
   
-  /* ════════════════════════════════════════
-     CARDS
-  ════════════════════════════════════════ */
+  
   .chart-card {
     background: var(--white);
     border-radius: 18px;
@@ -260,9 +252,7 @@
   
   .chart-header p { font-size: 11px; color: var(--muted); margin-top: 2px; }
   
-  /* ════════════════════════════════════════
-     KPI CARDS
-  ════════════════════════════════════════ */
+  
   .kpi-grid {
     display: grid;
     grid-template-columns: repeat(4,1fr);
@@ -353,9 +343,7 @@
   .c-red  .kpi-bar-fill  { background: var(--red);  }
   .c-blue .kpi-bar-fill  { background: var(--blue); }
   
-  /* ════════════════════════════════════════
-     CHARTS ROW
-  ════════════════════════════════════════ */
+  
   .charts-row {
     display: grid;
     grid-template-columns: 1.6fr 1fr;
@@ -380,9 +368,7 @@
   .ctab.active { background: var(--teal); color: white; }
   .ctab:hover:not(.active) { background: var(--teal-xl); color: var(--teal); }
   
-  /* ════════════════════════════════════════
-     BAR CHART
-  ════════════════════════════════════════ */
+  
   .bar-chart {
     display: flex;
     align-items: flex-end;
@@ -421,9 +407,7 @@
   .bar:hover    { filter: brightness(1.12); }
   .bar-label    { font-size: 10px; color: var(--muted); white-space: nowrap; }
   
-  /* ════════════════════════════════════════
-     DONUT
-  ════════════════════════════════════════ */
+  
   .donut-wrap {
     position: relative;
     width: 140px; height: 140px;
@@ -476,9 +460,7 @@
     transition: width 1.4s cubic-bezier(.22,1,.36,1);
   }
   
-  /* ════════════════════════════════════════
-     BOTTOM ROW
-  ════════════════════════════════════════ */
+  
   .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   
   .citas-card {
@@ -528,9 +510,7 @@
   .st-wait { background: var(--amber-l); color: var(--amber); }
   .st-done { background: #f0f0f0; color: #888; }
   
-  /* ════════════════════════════════════════
-     INGRESOS CARD
-  ════════════════════════════════════════ */
+  
   .ingresos-card {
     background: linear-gradient(140deg, var(--teal-d) 0%, var(--teal) 100%);
     border-radius: 18px;
@@ -607,9 +587,7 @@
     transition: width 1.4s cubic-bezier(.22,1,.36,1);
   }
   
-  /* ════════════════════════════════════════
-     ANIMACIONES
-  ════════════════════════════════════════ */
+  
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(18px); }
     to   { opacity: 1; transform: translateY(0); }
