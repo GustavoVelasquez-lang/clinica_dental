@@ -1,0 +1,30 @@
+{# Barra de navegacion compartida.
+   Uso:
+     {% set pagina = 'inicio' %}   {% include "_navbar.html" %}
+     {% set pagina = 'nosotros' %} {% include "_navbar.html" %}
+   Variables opcionales: pagina, clase_nav, clase_agendar #}
+
+{% set pagina = pagina | default('') %}
+{% set clase_nav = clase_nav | default('navbar-sd') %}
+{% set clase_agendar = clase_agendar | default('btn-agendar-nav') %}
+
+<nav class="{{ clase_nav }}" id="navbar">
+  <a href="{{ url_for('inicio') }}" class="nav-logo">
+    <img class="logo" src="{{ url_for('static', filename='img/trece.png') }}" alt="Clinica Sele Dent" />
+  </a>
+
+  <ul class="nav-links">
+    <li><a href="{{ url_for('inicio') }}" class="{{ 'activacion active' if pagina == 'inicio' }}">Inicio</a></li>
+    <li><a href="{{ url_for('especialidades') }}" class="{{ 'activacion active' if pagina == 'especialidades' }}">Especialidades</a></li>
+    <li><a href="{{ url_for('tratamientos') }}" class="{{ 'activacion active' if pagina == 'tratamientos' }}">Tratamientos</a></li>
+    <li><a href="{{ url_for('nosotros') }}" class="{{ 'activacion active' if pagina == 'nosotros' }}">Nosotros</a></li>
+    <li><a href="{{ url_for('contacto') }}" class="{{ 'activacion active' if pagina == 'contacto' }}">Contacto</a></li>
+  </ul>
+
+  <div class="nav-right">
+    <a href="{{ url_for('mis_citas') }}" class="nav-icon-btn">
+      <i class="fa-solid fa-clipboard"></i> Mis citas
+    </a>
+    <a href="{{ url_for('agendar') }}" class="{{ clase_agendar }}">Agendar cita</a>
+  </div>
+</nav>

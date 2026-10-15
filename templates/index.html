@@ -1,33 +1,16 @@
 {% extends "base.html" %}
 {% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 {% endblock %}
 {% block title %}Clínica Sele Dent{% endblock %}
 {% block content %}
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<nav class="navbar-sd" id="navbar">
-  <a href="#" class="nav-logo">
-    <img class="logo" src="{{ url_for('static', filename='img/trece.png') }}" />
-  </a>
-  <ul class="nav-links">
-    <li><a href="#" class="a  ctivacion">Inicio</a></li>
-    <li><a href="#especialidades">Especialidades</a></li>
-    <li><a href="{{ url_for('nosotros') }}">Nosotros</a></li>
-    <li><a href="#">Contacto</a></li>
-  </ul>
-
-  <div class="nav-right">
-    <a href="{{ url_for('mis_citas') }}" class="nav-icon-btn">
-      <i class="fa-solid fa-clipboard"></i> Mis citas
-    </a>
-    <a href="{{ url_for('mi_cuenta') }}" class="nav-icon-btn">
-      <i class="fa-solid fa-user"></i> Mi cuenta
-    </a>
-    <a href="/agendar" class="btn-agendar-nav">Agendar cita</a>
-  </div>
-</nav>
+{% set pagina = 'inicio' %}
+{% include "_navbar.html" %}
 <div class="hero-wrap">
   <div class="hero-content">
     <div class="hero-badge"><span></span> Odontología de excelencia</div>
@@ -35,7 +18,7 @@
     <p>Tratamientos modernos con tecnología de vanguardia y profesionales especializados para toda la familia.</p>
     <div class="hero-actions">
       <a href="/agendar" class="btn-hero-primary">Agendar mi cita</a>
-      <a href="#especialidades" class="btn-hero-secondary">Ver especialidades</a>
+      <a href="{{ url_for('especialidades') }}" class="btn-hero-secondary">Ver especialidades</a>
     </div>
   </div>
   <div class="hero-stats">
@@ -48,13 +31,13 @@
       <div class="hero-stat-label">Pacientes</div>
     </div>
     <div class="hero-stat">
-      <div class="hero-stat-num">12</div>
+      <div class="hero-stat-num">{{ especialidades|length }}</div>
       <div class="hero-stat-label">Especialidades</div>
     </div>
   </div>
   <div class="hero-search">
     <input type="text" id="busqueda" placeholder="Busca una especialidad: ortodoncia, implantes...">
-    <button onclick="buscar()"><i class="fa-solid fa-magnifying-glass"></i> Buscar</button>
+    <button id="btnBuscar"><i class="fa-solid fa-magnifying-glass"></i> Buscar</button>
   </div>
   <div id="carouselExample" class="carousel slide" data-bs-ride="carousel">
     <div class="carousel-indicators">
@@ -118,49 +101,29 @@
   </div>
 
   <div class="esp-grid">
+    {% for e in especialidades[:3] %}
     <div class="esp-card">
       <div class="esp-card-img">
-        <img src="../static/img/endodoncia.jpg" alt="Endodoncia">
+        <img src="{{ url_for('static', filename='img/' ~ e.imagen) }}" alt="{{ e.nombre }}">
       </div>
       <div class="esp-card-body">
-        <h4>Endodoncia</h4>
-        <p>Tratamiento de conducto para salvar tu pieza dental y eliminar el dolor de raíz.</p>
-        <a href="/especialidades#endodoncia-tratamiento-de-conducto" class="esp-card-link">Ver más</a>
+        <h4>{{ e.nombre }}</h4>
+        <p>{{ e.descripcion }}</p>
+        <a href="{{ url_for('especialidades') }}" class="esp-card-link">Conoce más</a>
       </div>
     </div>
+    {% endfor %}
 
-    <div class="esp-card">
-      <div class="esp-card-img">
-        <img src="../static/img/blanquiamiento.jpg" alt="Blanqueamiento">
+    <a href="{{ url_for('especialidades') }}" class="esp-card esp-card-more">
+      <div class="esp-card-more-inner">
+        <div class="esp-card-more-icon">
+          <i class="fa-solid fa-arrow-right"></i>
+        </div>
+        <h4>Más especialidades</h4>
+        <p>Descubre todo lo que tenemos para tu sonrisa</p>
+        <span class="esp-card-link">Ver todas</span>
       </div>
-      <div class="esp-card-body">
-        <h4>Blanqueamiento Dental</h4>
-        <p>Tratamientos profesionales para una sonrisa más blanca y radiante en pocas sesiones.</p>
-        <a href="/especialidades#blanqueamiento-dental" class="esp-card-link">Ver más</a>
-      </div>
-    </div>
-
-    <div class="esp-card">
-      <div class="esp-card-img no-img">
-        <img src="../static/img/brakets.jpg" alt="Blanqueamiento">
-      </div>
-      <div class="esp-card-body">
-        <h4>Ortodoncia</h4>
-        <p>Brackets tradicionales e invisibles para alinear tu sonrisa de forma efectiva.</p>
-        <a href="/especialidades#ortodoncia-brackets" class="esp-card-link">Ver más</a>
-      </div>
-    </div>
-
-    <div class="esp-card">
-      <div class="esp-card-img no-img">
-        <span class="esp-icon">✨</span>
-      </div>
-      <div class="esp-card-body">
-        <h4>Implantes Dentales</h4>
-        <p>Implantes de titanio con resultados naturales y duraderos para recuperar tu sonrisa.</p>
-        <a href="/especialidades#implantes-dentales" class="esp-card-link">Ver más</a>
-      </div>
-    </div>
+    </a>
   </div>
 </section>
 <div class="section-cta">
@@ -212,69 +175,10 @@
     </iframe>
   </div>
 </section>
-<footer class="footer-sd">
-  <div class="footer-brand">
-    <div class="footer-logo-icon">
-      <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
-        <path d="M13 3C9 3 6 6 6 9.5C6 12 7 14 8 16C9 18 9.5 22 10.5 22C11.5 22 12 19 13 19C14 19 14.5 22 15.5 22C16.5 22 17 18 18 16C19 14 20 12 20 9.5C20 6 17 3 13 3Z" fill="white"/>
-      </svg>
-    </div>
-    <strong style="color:white;font-family:var(--font-d);font-size:17px;">Clínica Sele Dent</strong>
-    <p>Comprometidos con tu salud bucal. Odontología con calidez, profesionalismo y confianza en Huancayo.</p>
-  </div>
-  <div class="footer-col">
-    <h5>Especialidades</h5>
-    <a href="/especialidades#ortodoncia-brackets">Ortodoncia</a>
-    <a href="/especialidades#blanqueamiento-dental">Blanqueamiento</a>
-    <a href="/especialidades#implantes-dentales">Implantes</a>
-    <a href="/especialidades#endodoncia-tratamiento-de-conducto">Endodoncia</a>
-    <a href="/especialidades#extraccion-dental">Extracciones</a>
-  </div>
-  <div class="footer-col">
-    <h5>Clínica</h5>
-    <a href="#">Nosotros</a>
-    <a href="#">Nuestro equipo</a>
-    <a href="#">Contacto</a>
-    <a href="{{ url_for('mis_citas') }}">Mis citas</a>
-  </div>
-  <div class="footer-col">
-    <h5>Contacto</h5>
-    <a href="#">El Tambo, Huancayo</a>
-    <a href="#">+51 956 536 766</a>
-    <a href="#">10am – 5pm, L–S</a>
-  </div>
-</footer>
-<div class="footer-bottom">
-  <span>© 2025 Clínica Sele Dent · Todos los derechos reservados</span>
-  <span>Odontología Integral · Profesionalismo · Confianza</span>
-</div>
+{% include "_footer.html" %}
 
-<script>
-  window.addEventListener('scroll', () => {
-    document.getElementById('navbar')
-      .classList.toggle('scrolled', window.scrollY > 20);
-  });
+{% endblock %}
 
-  function buscar() {
-    const texto = document.getElementById("busqueda").value.toLowerCase();
-    const rutas = {
-      "ortodoncia":    "/especialidades#ortodoncia-brackets",
-      "limpieza":      "/especialidades#limpieza-dental",
-      "blanqueamiento":"/especialidades#blanqueamiento-dental",
-      "endodoncia":    "/especialidades#endodoncia-tratamiento-de-conducto",
-      "extraccion":    "/especialidades#extraccion-dental",
-      "implantes":     "/especialidades#implantes-dentales",
-    };
-    const match = Object.keys(rutas).find(k => texto.includes(k));
-    if (match) {
-      window.location.href = rutas[match];
-    } else {
-      alert("❌ No se encontró esa especialidad. Intenta con: ortodoncia, implantes, blanqueamiento...");
-    }
-  }
-
-  document.getElementById("busqueda")
-    .addEventListener("keydown", e => { if (e.key === "Enter") buscar(); });
-</script>
-
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
 {% endblock %}

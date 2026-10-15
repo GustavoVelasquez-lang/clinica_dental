@@ -26,7 +26,7 @@
     <div>
       <label class="lab">Comprobante de pago</label>
       <a href="{{ url_for('static', filename=cita.comprobante.replace('static/', '')) }}" target="_blank"
-         class="btn-a btn-teal">👁️ Ver comprobante</a>
+         class="btn-a btn-teal"><i class="fa-solid fa-eye me-1"></i>Ver comprobante</a>
     </div>
     {% endif %}
 
@@ -40,9 +40,9 @@
       </select>
     </div>
 
-    <div class="flex" style="justify-content:flex-end;">
+    <div class="flex flex-end">
       <a href="{{ url_for('admin_citas') }}" class="btn-a btn-ghost btn-xl">Volver</a>
-      <button type="submit" class="btn-a btn-solid btn-xl">💾 Guardar</button>
+      <button type="submit" class="btn-a btn-solid btn-xl"><i class="fa-solid fa-floppy-disk me-1"></i>Guardar</button>
     </div>
   </form>
 </div>

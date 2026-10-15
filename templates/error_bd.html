@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Base de datos no disponible{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="min-height:70vh; display:flex; align-items:center; justify-content:center;">
+  <div class="text-center" style="max-width:520px;">
+    <i class="fa-solid fa-database" style="font-size:56px; color:#2f6fd0;"></i>
+
+    <h2 class="mt-3" style="color:#12333a;">Base de datos no disponible</h2>
+
+    <p class="mt-3" style="color:#5a6b70;">
+      No se pudo conectar con la base de datos en este momento.
+      Es un problema temporal del servidor, no de la aplicacion.
+    </p>
+
+    <div class="alert alert-warning mt-4 text-start" style="font-size:13px;">
+      <strong>Si eres administrador:</strong> el proyecto en Supabase se pausa
+      automaticamente por inactividad. Reactivalo desde
+      <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">supabase.com/dashboard</a>
+      y espera a que aparezca en estado <em>Active</em>.
+    </div>
+
+    <a href="{{ url_for('inicio') }}" class="btn" style="background:#2f6fd0; color:#fff;">
+      <i class="fa-solid fa-rotate-right"></i> Reintentar
+    </a>
+  </div>
+</div>
+{% endblock %}

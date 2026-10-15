@@ -5,3 +5,13 @@ __pycache__/
 gmail_token.json
 client_secret.json
 static/comprobantes/
+static/uploads/
+
+# Logs locales
+o.txt
+e.txt
+*.log
+
+# Imagen QR de Yape (dato sensible del negocio; configurar por variable de entorno / hosting)
+static/img/QR.yape.jpeg
+static/img/prueba.yape.jpg

@@ -4,25 +4,25 @@
 {% block topbar_titulo %}Facturación{% endblock %}
 
 {% block admin_content %}
-<div class="kpi-grid mb-0" style="margin-bottom:28px;">
+<div class="kpi-grid mb-28">
   <div class="kpi-card c-teal">
-    <div class="kpi-header"><div class="kpi-icon">💳</div></div>
+    <div class="kpi-header"><div class="kpi-icon"><i class="fa-solid fa-credit-card"></i></div></div>
     <div class="kpi-num">S/ {{ "{:,.0f}".format(total_pagado).replace(",", " ") }}</div>
     <div class="kpi-label">Total pagado (pagos registrados)</div>
   </div>
   <div class="kpi-card c-gold">
-    <div class="kpi-header"><div class="kpi-icon">🧾</div></div>
+    <div class="kpi-header"><div class="kpi-icon"><i class="fa-solid fa-receipt"></i></div></div>
     <div class="kpi-num">S/ {{ "{:,.0f}".format(total_adelantos).replace(",", " ") }}</div>
     <div class="kpi-label">Total en adelantos (citas)</div>
   </div>
   <div class="kpi-card c-blue">
-    <div class="kpi-header"><div class="kpi-icon">📁</div></div>
+    <div class="kpi-header"><div class="kpi-icon"><i class="fa-solid fa-folder-open"></i></div></div>
     <div class="kpi-num">{{ pagos_lista|length }}</div>
     <div class="kpi-label">Pagos registrados</div>
   </div>
 </div>
 
-<div class="chart-card mb-0" style="margin-bottom:28px;">
+<div class="chart-card mb-28">
   <div class="chart-header">
     <div><h3>Pagos registrados</h3><p>Movimientos del libro de facturación</p></div>
   </div>
@@ -44,7 +44,7 @@
       <tr>
         <td class="tb-muted">{{ p.id }}</td>
         <td class="tb-strong">{{ p.paciente }}</td>
-        <td>{{ p.especialidad }}</td>
+        <td>{% if p.tipo_atencion %}{{ p.tipo_atencion }}{% else %}{{ p.especialidad }}{% endif %}</td>
         <td>{{ p.fecha_cita }}</td>
         <td><span class="pill pill-teal">{{ p.tipo }}</span></td>
         <td>{{ p.metodo }}</td>
@@ -79,15 +79,24 @@
       <tr>
         <td class="tb-muted">#{{ a.id }}</td>
         <td class="tb-strong">{{ a.paciente }}</td>
-        <td>{{ a.especialidad }}</td>
+        <td>{% if a.tipo_atencion %}{{ a.tipo_atencion }}{% else %}{{ a.especialidad }}{% endif %}</td>
         <td>
           <span class="pill-time">{{ a.fecha }} · {{ a.hora }}</span>
         </td>
         <td class="tb-strong">S/ {{ a.adelanto }}</td>
-        <td><span class="pill pill-amber">{{ a.estado_pago }}</span></td>
         <td>
-          {% if a.comprobante %}
-            <a href="{{ url_for('static', filename=a.comprobante.replace('static/', '')) }}" target="_blank" class="btn-a btn-teal">👁️ Ver</a>
+          {% if a.estado_pago == 'pagado' %}
+            <span class="pill pill-teal">Pagado</span>
+          {% elif a.estado_pago == 'pendiente_verificacion' %}
+            <span class="pill pill-amber">Pendiente de verificación</span>
+          {% else %}
+            <span class="pill pill-amber">{{ a.estado_pago }}</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if a.comprobante or a.voucher_url %}
+            <a href="{{ url_for('static', filename=(a.voucher_url or a.comprobante).replace('static/', '')) }}" target="_blank" class="btn-a btn-teal"><i class="fa-solid fa-eye me-1"></i>Ver</a>
+            {% if a.nro_operacion %}<div class="tb-muted">N° {{ a.nro_operacion }}</div>{% endif %}
           {% else %}
             <span class="tb-muted">—</span>
           {% endif %}

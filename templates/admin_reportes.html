@@ -4,25 +4,25 @@
 {% block topbar_titulo %}Reportes{% endblock %}
 
 {% block admin_content %}
-<div class="kpi-grid" style="margin-bottom:28px;">
+<div class="kpi-grid mb-28">
   <div class="kpi-card c-teal">
-    <div class="kpi-header"><div class="kpi-icon">📅</div></div>
+    <div class="kpi-header"><div class="kpi-icon"><i class="fa-solid fa-calendar-days"></i></div></div>
     <div class="kpi-num">{{ total_citas }}</div>
     <div class="kpi-label">Total de citas</div>
   </div>
   <div class="kpi-card c-gold">
-    <div class="kpi-header"><div class="kpi-icon">👥</div></div>
+    <div class="kpi-header"><div class="kpi-icon"><i class="fa-solid fa-users"></i></div></div>
     <div class="kpi-num">{{ total_pacientes }}</div>
     <div class="kpi-label">Pacientes registrados</div>
   </div>
   <div class="kpi-card c-blue">
-    <div class="kpi-header"><div class="kpi-icon">💰</div></div>
+    <div class="kpi-header"><div class="kpi-icon"><i class="fa-solid fa-sack-dollar"></i></div></div>
     <div class="kpi-num" data-prefix="S/ ">S/ {{ "{:,.0f}".format(total_ingresos).replace(",", " ") }}</div>
     <div class="kpi-label">Ingresos totales (adelantos)</div>
   </div>
 </div>
 
-<div class="charts-row" style="margin-bottom:28px;">
+<div class="charts-row mb-28">
   <div class="chart-card">
     <div class="chart-header"><div><h3>Citas por mes</h3><p>Últimos 6 meses</p></div></div>
     <table class="tb">
@@ -81,7 +81,7 @@
       <tbody>
         {% for e in citas_por_estado %}
         <tr>
-          <td class="tb-strong" style="text-transform:capitalize;">{{ e.estado }}</td>
+          <td class="tb-strong text-cap">{{ e.estado }}</td>
           <td>{{ e.n }}</td>
         </tr>
         {% else %}

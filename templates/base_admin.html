@@ -2,12 +2,12 @@
 {% block title %}{% block admin_titulo %}Dashboard{% endblock %} — Sele Dent Admin{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=5">
 {% endblock %}
 
 {% block content %}
 <!-- ══ LAYOUT ══ -->
-<div style="display:flex;min-height:100vh">
+<div class="admin-layout">
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -23,25 +23,26 @@
 
   <div class="sb-section">Principal</div>
   <ul class="sb-nav">
-    <li><a href="{{ url_for('admin_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_dashboard' else '' }}"><span class="icon">📊</span> Dashboard</a></li>
-    <li><a href="{{ url_for('admin_citas') }}" class="{{ 'active' if request.endpoint in ['admin_citas','editar_cita','eliminar_cita','admin_enviar_recordatorios'] else '' }}"><span class="icon">📅</span> Citas {% if citas_pendientes is defined and citas_pendientes %}<span class="badge">{{ citas_pendientes }}</span>{% endif %}</a></li>
-    <li><a href="{{ url_for('admin_recordatorios') }}" class="{{ 'active' if request.endpoint == 'admin_recordatorios' else '' }}"><span class="icon">📧</span> Recordatorios</a></li>
-    <li><a href="{{ url_for('admin_pacientes') }}" class="{{ 'active' if request.endpoint in ['admin_pacientes','admin_paciente_estado'] else '' }}"><span class="icon">👥</span> Pacientes</a></li>
-    <li><a href="{{ url_for('admin_tratamientos') }}" class="{{ 'active' if request.endpoint in ['admin_tratamientos','eliminar_tratamiento'] else '' }}"><span class="icon">🦷</span> Tratamientos</a></li>
+    <li><a href="{{ url_for('admin_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_dashboard' else '' }}"><i class="fa-solid fa-chart-pie me-2"></i>Dashboard</a></li>
+    <li><a href="{{ url_for('admin_kpis') }}" class="{{ 'active' if request.endpoint == 'admin_kpis' else '' }}"><i class="fa-solid fa-chart-line me-2"></i>KPIs</a></li>
+    <li><a href="{{ url_for('admin_citas') }}" class="{{ 'active' if request.endpoint in ['admin_citas','editar_cita','eliminar_cita','admin_enviar_recordatorios'] else '' }}"><i class="fa-solid fa-calendar-check me-2"></i>Citas {% if citas_pendientes is defined and citas_pendientes %}<span class="badge">{{ citas_pendientes }}</span>{% endif %}</a></li>
+    <li><a href="{{ url_for('admin_recordatorios') }}" class="{{ 'active' if request.endpoint == 'admin_recordatorios' else '' }}"><i class="fa-solid fa-bell me-2"></i>Recordatorios</a></li>
+    <li><a href="{{ url_for('admin_pacientes') }}" class="{{ 'active' if request.endpoint in ['admin_pacientes','admin_paciente_estado'] else '' }}"><i class="fa-solid fa-users me-2"></i>Pacientes</a></li>
+    <li><a href="{{ url_for('admin_tratamientos') }}" class="{{ 'active' if request.endpoint in ['admin_tratamientos','eliminar_tratamiento'] else '' }}"><i class="fa-solid fa-tooth me-2"></i>Tratamientos</a></li>
   </ul>
 
   <div class="sb-section">Gestión</div>
   <ul class="sb-nav">
-    <li><a href="{{ url_for('admin_facturacion') }}" class="{{ 'active' if request.endpoint == 'admin_facturacion' else '' }}"><span class="icon">💰</span> Facturación</a></li>
-    <li><a href="{{ url_for('admin_personal') }}" class="{{ 'active' if request.endpoint == 'admin_personal' else '' }}"><span class="icon">👨‍⚕️</span> Personal</a></li>
-    <li><a href="{{ url_for('admin_inventario') }}" class="{{ 'active' if request.endpoint in ['admin_inventario','eliminar_inventario'] else '' }}"><span class="icon">📦</span> Inventario</a></li>
-    <li><a href="{{ url_for('admin_reportes') }}" class="{{ 'active' if request.endpoint == 'admin_reportes' else '' }}"><span class="icon">📈</span> Reportes</a></li>
+    <li><a href="{{ url_for('admin_facturacion') }}" class="{{ 'active' if request.endpoint == 'admin_facturacion' else '' }}"><i class="fa-solid fa-file-invoice-dollar me-2"></i>Facturación</a></li>
+    <li><a href="{{ url_for('admin_personal') }}" class="{{ 'active' if request.endpoint == 'admin_personal' else '' }}"><i class="fa-solid fa-user-doctor me-2"></i>Personal</a></li>
+    <li><a href="{{ url_for('admin_inventario') }}" class="{{ 'active' if request.endpoint in ['admin_inventario','eliminar_inventario'] else '' }}"><i class="fa-solid fa-boxes-stacked me-2"></i>Inventario</a></li>
+    <li><a href="{{ url_for('admin_reportes') }}" class="{{ 'active' if request.endpoint == 'admin_reportes' else '' }}"><i class="fa-solid fa-chart-column me-2"></i>Reportes</a></li>
   </ul>
 
   <div class="sb-section">Sistema</div>
   <ul class="sb-nav">
-    <li><a href="{{ url_for('admin_config') }}" class="{{ 'active' if request.endpoint == 'admin_config' else '' }}"><span class="icon">⚙️</span> Configuración</a></li>
-    <li><a href="{{ url_for('inicio') }}"><span class="icon">🏠</span> Volver al inicio</a></li>
+    <li><a href="{{ url_for('admin_config') }}" class="{{ 'active' if request.endpoint == 'admin_config' else '' }}"><i class="fa-solid fa-gear me-2"></i>Configuración</a></li>
+    <li><a href="{{ url_for('inicio') }}"><i class="fa-solid fa-house me-2"></i>Volver al inicio</a></li>
   </ul>
 
   <div class="sb-profile">
@@ -52,16 +53,22 @@
     </div>
   </div>
 </aside>
+<div class="sb-overlay" id="sbOverlay"></div>
 
 <!-- MAIN -->
 <div class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <h1>{% block topbar_titulo %}Panel Admin{% endblock %}</h1>
-      <p id="fechaHoy"></p>
+      <button type="button" class="tb-burger" id="sbToggle" aria-label="Abrir menú">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <div class="topbar-titles">
+        <h1>{% block topbar_titulo %}Panel Admin{% endblock %}</h1>
+        <p id="fechaHoy"></p>
+      </div>
     </div>
     <div class="topbar-right">
-      <span class="tb-date" id="diaHoy">📅</span>
+      <span class="tb-date"><i class="fa-solid fa-calendar-day me-2"></i><span id="diaHoy"></span></span>
       <div class="tb-btn" title="Notificaciones"><i class="fa-solid fa-bell"></i><span class="dot"></span></div>
       <a href="{{ url_for('logout') }}" class="tb-btn" title="Cerrar sesión"><i class="fa-solid fa-door-open"></i></a>
     </div>
@@ -75,14 +82,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-  const now = new Date();
-  const dias_s = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-  const meses  = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  const fh = document.getElementById('fechaHoy');
-  if (fh) fh.textContent = `${dias_s[now.getDay()]}, ${now.getDate()} de ${meses[now.getMonth()]} de ${now.getFullYear()}`;
-  const dh = document.getElementById('diaHoy');
-  if (dh) dh.textContent = `📅 Hoy: ${dias_s[now.getDay()]}`;
-</script>
+<script src="{{ url_for('static', filename='js/base_admin.js') }}"></script>
 {% block admin_js %}{% endblock %}
 {% endblock %}

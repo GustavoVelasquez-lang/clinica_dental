@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Verificar código — Clinica SELEDENT{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+
+{% block flashes %}{% endblock %}
+
+{% block content %}
+<div class="login-page">
+  <div class="login-form-col" style="flex:1;">
+    <div class="login-form-wrap">
+
+      <a href="{{ url_for('recuperar') }}" class="login-back">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Cambiar correo
+      </a>
+
+      <div class="login-brand">
+        <img class="login-brand__logo" src="{{ url_for('static', filename='img/trece.png') }}" alt="Clinica SELEDENT">
+        <span class="login-brand__name">Cl&iacute;nica <strong>SELEDENT</strong></span>
+      </div>
+
+      <h1 class="login-title">Verifica tu c&oacute;digo</h1>
+      <p class="login-sub">
+        Enviamos un c&oacute;digo de 6 d&iacute;gitos a
+        <strong>{{ correo }}</strong>. Revisa tu bandeja y el spam.
+      </p>
+
+
+      <form method="POST" novalidate id="codigoForm">
+
+        <div class="login-field">
+          <label for="codigo">C&oacute;digo de verificaci&oacute;n</label>
+          <div class="login-pass-wrap">
+            <input type="text" name="codigo" id="codigo"
+                   placeholder="000000" required
+                   inputmode="numeric" autocomplete="one-time-code"
+                   maxlength="6" pattern="[0-9]{6}"
+                   style="letter-spacing:.4em;text-align:center;font-size:20px;font-weight:600;">
+          </div>
+          <small class="login-error" id="errorCodigo" hidden>
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            Ingresa el c&oacute;digo de 6 d&iacute;gitos
+          </small>
+        </div>
+
+        <button type="submit" class="btn btn-primary login-submit" id="codigoSubmit">
+          Verificar c&oacute;digo
+        </button>
+      </form>
+
+      <p class="login-foot">
+        &iquest;No recibiste el c&oacute;digo?
+        <a href="{{ url_for('recuperar') }}">Reenviar</a>
+      </p>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/recuperar.js') }}"></script>
+{% endblock %}

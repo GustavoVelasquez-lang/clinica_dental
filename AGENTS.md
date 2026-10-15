@@ -27,8 +27,8 @@ pagos con validación de comprobantes y recordatorios por email vía Gmail API.
 - `static/` — CSS, JS e imágenes.
 
 ## Archivos sensibles (no commitear)
-- `.env`, `client_secret.json`, `gmail_token.json`, `static/comprobantes/`
-  (verificar `.gitignore` antes de cualquier commit).
+- `.env`, `client_secret.json`, `gmail_token.json`, `static/comprobantes/`,
+  `static/uploads/` (verificar `.gitignore` antes de cualquier commit).
 
 ## Convenciones
 - Código y mensajes en español.

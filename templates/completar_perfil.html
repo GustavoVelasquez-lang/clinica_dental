@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Completar perfil — Clínica Sele Dent{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/completar_perfil.css') }}">
+{% endblock %}
+
+{% block content %}
+{% set pagina = 'inicio' %}
+{% include "_navbar.html" %}
+
+<section class="cp-body">
+  <div class="container">
+    <div class="row g-4 justify-content-center">
+
+      <div class="col-lg-7">
+        <div class="cp-card">
+
+          <span class="cp-badge"><span></span> Último paso</span>
+          <h1 class="cp-title">Completa tu perfil</h1>
+          <p class="cp-text">
+            Solo necesitamos tu DNI y tu número de WhatsApp para agendar y confirmar tus citas.
+          </p>
+
+          {% with mensajes = get_flashed_messages(with_categories=true) %}
+            {% for categoria, mensaje in mensajes %}
+              <div class="cp-alert cp-alert--{{ 'error' if categoria == 'danger' else ('ok' if categoria == 'success' else 'warn') }}" role="alert">
+                {{ mensaje }}
+              </div>
+            {% endfor %}
+          {% endwith %}
+          {% if error %}
+            <div class="cp-alert cp-alert--error" role="alert">{{ error }}</div>
+          {% endif %}
+
+          <form method="POST" action="{{ url_for('completar_perfil') }}" novalidate id="cpForm">
+            <input type="hidden" name="next" value="{{ next or '' }}">
+
+            <!-- Correo (bloqueado, proviene de Google) -->
+            <div class="cp-field">
+              <label class="cp-label" for="correo">Correo electrónico (Google)</label>
+              <div class="cp-input-group">
+                <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+                <input type="email" id="correo" name="correo" class="cp-input"
+                       value="{{ datos.correo if datos else session.get('correo', '') }}"
+                       readonly aria-readonly="true">
+                <span class="cp-lock"><i class="fa-solid fa-lock" aria-hidden="true"></i></span>
+              </div>
+              <small class="cp-hint">Este correo lo gestiona tu cuenta de Google y no se puede cambiar.</small>
+            </div>
+
+            <!-- DNI -->
+            <div class="cp-field">
+              <label class="cp-label" for="dni">DNI</label>
+              <div class="cp-input-group">
+                <i class="fa-solid fa-id-card" aria-hidden="true"></i>
+                <input type="text" id="dni" name="dni" class="cp-input"
+                       placeholder="Ej. 70123456" inputmode="numeric" maxlength="8" required
+                       value="{{ form_dni if form_dni is defined and form_dni else (datos.numero_documento if datos and datos.numero_documento else '') }}">
+              </div>
+            </div>
+
+            <!-- WhatsApp -->
+            <div class="cp-field">
+              <label class="cp-label" for="telefono">WhatsApp / Teléfono</label>
+              <div class="cp-input-group">
+                <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                <input type="tel" id="telefono" name="telefono" class="cp-input"
+                       placeholder="Ej. 956 536 766" inputmode="tel" required
+                       value="{{ form_telefono if form_telefono is defined and form_telefono else (datos.telefono if datos and datos.telefono else '') }}">
+              </div>
+            </div>
+
+            <button type="submit" class="cp-submit">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              Guardar y continuar
+            </button>
+          </form>
+
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <aside class="cp-aside">
+          <h2 class="cp-aside__title">
+            <i class="fa-solid fa-shield-heart" aria-hidden="true"></i>
+            ¿Por qué te pedimos estos datos?
+          </h2>
+          <ul class="cp-aside__list">
+            <li>
+              <i class="fa-solid fa-id-card" aria-hidden="true"></i>
+              <span>El DNI identifica tu ficha clínica de forma segura.</span>
+            </li>
+            <li>
+              <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+              <span>El WhatsApp nos permite confirmar y recordar tus citas.</span>
+            </li>
+          </ul>
+        </aside>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% include "_footer.html" %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/completar_perfil.js') }}"></script>
+{% endblock %}

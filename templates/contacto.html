@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}Contacto - Clinica Sele Dent{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/contacto.css') }}">
+{% endblock %}
+
+{% block content %}
+{% set pagina = 'contacto' %}
+{% include "_navbar.html" %}
+
+<section class="ct-section">
+
+  <header class="ct-hero container">
+    <h1>Estamos para atenderte</h1>
+    <p>
+      Escribenos o visitanos. Nuestro equipo esta listo para resolver tus dudas
+      sobre tratamientos, citas y presupuestos en Clinica Sele Dent, Huancayo.
+    </p>
+  </header>
+
+  <div class="container">
+    <div class="row g-4 ct-grid">
+
+      <!-- ============ COLUMNA IZQUIERDA: INFORMACION ============ -->
+      <div class="col-lg-5">
+        <div class="ct-info">
+
+          <ul class="ct-info__list">
+
+            <li class="ct-info__item">
+              <span class="ct-info__icon" aria-hidden="true">
+                <i class="fa-solid fa-location-dot"></i>
+              </span>
+              <div>
+                <h3>Direccion</h3>
+                <p>Av. Giraldez 123, Huancayo - Peru</p>
+              </div>
+            </li>
+
+            <li class="ct-info__item">
+              <span class="ct-info__icon" aria-hidden="true">
+                <i class="fa-brands fa-whatsapp"></i>
+              </span>
+              <div>
+                <h3>Telefono / WhatsApp</h3>
+                <p>
+                  <a href="https://api.whatsapp.com/send?phone=51964123456"
+                     target="_blank" rel="noopener noreferrer">
+                    +51 964 123 456
+                  </a>
+                </p>
+              </div>
+            </li>
+
+            <li class="ct-info__item">
+              <span class="ct-info__icon" aria-hidden="true">
+                <i class="fa-solid fa-envelope"></i>
+              </span>
+              <div>
+                <h3>Correo electronico</h3>
+                <p>
+                  <a href="https://mail.google.com/mail/?view=cm&fs=1&to=clinicaseledentsip@gmail.com&su=Consulta%20-%20Clinica%20Sele%20Dent"
+                     target="_blank" rel="noopener noreferrer">
+                    clinicaseledentsip@gmail.com
+                  </a>
+                </p>
+              </div>
+            </li>
+
+            <li class="ct-info__item">
+              <span class="ct-info__icon" aria-hidden="true">
+                <i class="fa-regular fa-clock"></i>
+              </span>
+              <div>
+                <h3>Horario de atencion</h3>
+                <p>Lunes a Sabado: 8:00 am - 8:00 pm</p>
+              </div>
+            </li>
+
+          </ul>
+
+          <div class="ct-map">
+            <iframe
+              src="https://www.google.com/maps?q=Huancayo,%20Peru&output=embed"
+              title="Ubicacion de Clinica Sele Dent en Huancayo"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              allowfullscreen></iframe>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ============ COLUMNA DERECHA: FORMULARIO ============ -->
+      <div class="col-lg-7">
+        <div class="ct-form-card">
+
+          <h2 class="ct-form-card__title">Enviarnos un mensaje</h2>
+          <p class="ct-form-card__sub">
+            Completa el formulario y te responderemos lo mas pronto posible.
+          </p>
+
+          {% if enviado %}
+            <div class="alert alert-success ct-alert-ok" role="status">
+              <i class="fa-solid fa-circle-check"></i>
+              <div>
+                <strong>Gracias, {{ nombre_contacto }}.</strong>
+                <p class="mb-0">{{ flash_ok }}</p>
+              </div>
+            </div>
+
+            <a href="{{ url_for('contacto') }}" class="ct-btn ct-btn--outline">
+              Enviar otro mensaje
+            </a>
+
+          {% else %}
+
+            {% if errores %}
+            <div class="alert alert-danger ct-alert-err" role="alert">
+              <strong><i class="fa-solid fa-triangle-exclamation"></i>
+                Revisa los siguientes datos:</strong>
+              <ul class="mb-0 mt-2">
+                {% for e in errores %}
+                <li>{{ e }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+
+            <form method="post" action="{{ url_for('contacto') }}"
+                  id="formContacto" novalidate>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label ct-label" for="nombre">
+                    Nombres y Apellidos <span class="ct-req">*</span>
+                  </label>
+                  <input type="text" class="form-control ct-input" id="nombre"
+                         name="nombre" maxlength="120" required
+                         autocomplete="name" placeholder="Juan Perez Rojas">
+                  <div class="invalid-feedback">Ingresa tu nombre completo.</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label ct-label" for="email">
+                    Correo electronico <span class="ct-req">*</span>
+                  </label>
+                  <input type="email" class="form-control ct-input" id="email"
+                         name="email" maxlength="150" required
+                         autocomplete="email" placeholder="tucorreo@ejemplo.com">
+                  <div class="invalid-feedback">Ingresa un correo valido.</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label ct-label" for="telefono">
+                    Telefono / Celular
+                  </label>
+                  <input type="tel" class="form-control ct-input" id="telefono"
+                         name="telefono" maxlength="30"
+                         autocomplete="tel" placeholder="964 123 456">
+                  <div class="invalid-feedback">Telefono no valido.</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label ct-label" for="asunto">
+                    Asunto <span class="ct-req">*</span>
+                  </label>
+                  <select class="form-select ct-input" id="asunto" name="asunto" required>
+                    <option value="">Selecciona un asunto</option>
+                    <option value="Consulta general">Consulta general</option>
+                    <option value="Agendamiento de citas">Agendamiento de citas</option>
+                    <option value="Presupuesto/Tratamientos">Presupuesto/Tratamientos</option>
+                    <option value="Reclamaciones">Reclamaciones</option>
+                  </select>
+                  <div class="invalid-feedback">Selecciona un asunto.</div>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label ct-label" for="mensaje">
+                    Mensaje <span class="ct-req">*</span>
+                  </label>
+                  <textarea class="form-control ct-input" id="mensaje" name="mensaje"
+                            rows="5" maxlength="2000" required
+                            placeholder="Describe tu consulta con detalle..."></textarea>
+                  <div class="invalid-feedback">Escribe tu consulta (minimo 10 caracteres).</div>
+                  <div class="ct-counter"><span id="ctContador">0</span> / 2000</div>
+                </div>
+
+                <div class="col-12">
+                  <div class="form-check ct-check">
+                    <input class="form-check-input" type="checkbox"
+                           id="acepta" name="acepta" required>
+                    <label class="form-check-label ct-label" for="acepta">
+                      Acepto la politica de privacidad y el tratamiento de mis
+                      datos personales. <span class="ct-req">*</span>
+                    </label>
+                    <div class="invalid-feedback">
+                      Debes aceptar la politica de privacidad.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <button type="submit" class="ct-btn" id="ctEnviar">
+                    <span class="ct-btn__texto">Enviar mensaje</span>
+                    <span class="ct-btn__spinner" aria-hidden="true"></span>
+                  </button>
+                </div>
+
+              </div>
+            </form>
+
+          {% endif %}
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</section>
+
+{% include "_footer.html" %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/contacto.js') }}"></script>
+{% endblock %}

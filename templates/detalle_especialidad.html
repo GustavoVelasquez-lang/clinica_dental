@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+{% block title %}{{ esp.nombre }} — Clinica Sele Dent{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/detalle_especialidad.css') }}">
+{% endblock %}
+
+{% block content %}
+{% set pagina = 'especialidades' %}
+{% include "_navbar.html" %}
+
+<!-- ══ HERO ══ -->
+<section class="det-hero" style="--det-img:url('{{ url_for('static', filename='img/' ~ esp.imagen) }}');">
+  <div class="det-hero__inner">
+    <nav class="det-breadcrumb" aria-label="Migas de pan">
+      <a href="{{ url_for('inicio') }}">Inicio</a>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <a href="{{ url_for('especialidades') }}">Especialidades</a>
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      <span>{{ esp.nombre }}</span>
+    </nav>
+
+    <div class="det-hero__head">
+      <span class="det-hero__icon" aria-hidden="true">
+        <i class="{{ esp.icono }}"></i>
+      </span>
+      <div>
+        <h1 class="det-hero__title">{{ esp.nombre }}</h1>
+        <p class="det-hero__lead">{{ esp.descripcion }}</p>
+      </div>
+    </div>
+
+    <ul class="det-mods">
+      <li>
+        <i class="fa-solid fa-handshake-angle" aria-hidden="true"></i>
+        <span>Atencion: <strong>Presencial</strong></span>
+      </li>
+      <li>
+        <i class="fa-regular fa-clock" aria-hidden="true"></i>
+        <span>Duracion estimada: <strong>Segun evaluacion clinica</strong></span>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══ CONTENIDO: 2 COLUMNAS ══ -->
+<section class="det-body">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- ---------- COLUMNA IZQUIERDA (contenido) ---------- -->
+      <div class="col-lg-8">
+        <div class="card border-0 det-card shadow-sm">
+
+          <ul class="nav nav-tabs det-tabs" id="detTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="tab-general" data-bs-toggle="tab"
+                      data-bs-target="#pane-general" type="button" role="tab"
+                      aria-controls="pane-general" aria-selected="true">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                Informacion General
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="tab-tratamientos" data-bs-toggle="tab"
+                      data-bs-target="#pane-tratamientos" type="button" role="tab"
+                      aria-controls="pane-tratamientos" aria-selected="false">
+                <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+                Tratamientos
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="tab-staff" data-bs-toggle="tab"
+                      data-bs-target="#pane-staff" type="button" role="tab"
+                      aria-controls="pane-staff" aria-selected="false">
+                <i class="fa-solid fa-user-doctor" aria-hidden="true"></i>
+                Staff Odontologico
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content det-panes">
+
+            <!-- ---------- TAB 1: INFORMACION GENERAL ---------- -->
+            <div class="tab-pane fade show active" id="pane-general" role="tabpanel" aria-labelledby="tab-general" tabindex="0">
+              <h2 class="det-h2">Sobre {{ esp.nombre }}</h2>
+              <p class="det-lead-p">
+                En Clinica Sele Dent atendemos {{ esp.nombre }} con equipamiento de ultima generacion y
+                protocolos de bioseguridad. Cada caso comienza con una evaluacion clinica para
+                definir el plan de tratamiento mas adecuado para tu sonrisa.
+              </p>
+
+              <h3 class="det-h3">Beneficios de esta especialidad</h3>
+              <ul class="det-beneficios">
+                {% for b in esp.beneficios %}
+                <li>
+                  <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                  <span>{{ b }}</span>
+                </li>
+                {% endfor %}
+              </ul>
+
+              <h3 class="det-h3">Como funciona tu visita</h3>
+              <ol class="det-pasos">
+                <li><strong>Evaluacion:</strong> revision clinica, radiografia y diagnostico.</li>
+                <li><strong>Plan:</strong> te explicamos las alternativas, tiempos y costos.</li>
+                <li><strong>Ejecucion:</strong> procedimiento en consultorio con material esterilizado.</li>
+                <li><strong>Control:</strong> citas de seguimiento para verificar tu recuperacion.</li>
+              </ol>
+            </div>
+
+            <!-- ---------- TAB 2: TRATAMIENTOS ---------- -->
+            <div class="tab-pane fade" id="pane-tratamientos" role="tabpanel" aria-labelledby="tab-tratamientos" tabindex="0">
+              <h2 class="det-h2">Tratamientos disponibles</h2>
+              <p class="det-note">
+                Los precios y tratamientos específicos están sujetos a evaluación clínica previa en consultorio.
+              </p>
+
+              {% if esp.nombre|lower == 'ortodoncia' %}
+
+              <!-- ══ BLOQUE 1: Elige según la tecnología y estética ══ -->
+              <section class="trat-block">
+                <h3 class="trat-block__title">Elige según la tecnología y estética</h3>
+                <div class="row g-4">
+
+                  <div class="col-md-4">
+                    <article class="trat-card h-100">
+                      <span class="trat-card__icon" aria-hidden="true">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                      </span>
+                      <span class="trat-card__badge">100% Estético y Removible</span>
+                      <h4 class="trat-card__title">Ortodoncia Invisible (Alineadores)</h4>
+                      <p class="trat-card__desc">
+                        Férulas transparentes diseñadas a medida con escaneo 3D.
+                      </p>
+                      <a href="{{ url_for('agendar') }}?especialidad={{ esp.id }}" class="trat-card__btn">
+                        Agendar evaluación
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                      </a>
+                    </article>
+                  </div>
+
+                  <div class="col-md-4">
+                    <article class="trat-card h-100">
+                      <span class="trat-card__icon" aria-hidden="true">
+                        <i class="fa-regular fa-gem"></i>
+                      </span>
+                      <span class="trat-card__badge">Discreto e Imperceptible</span>
+                      <h4 class="trat-card__title">Ortodoncia Estética (Zafiro / Cerámica)</h4>
+                      <p class="trat-card__desc">
+                        Brackets de cristal translúcido que mimetizan el color del diente y no se manchan.
+                      </p>
+                      <a href="{{ url_for('agendar') }}?especialidad={{ esp.id }}" class="trat-card__btn">
+                        Agendar evaluación
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                      </a>
+                    </article>
+                  </div>
+
+                  <div class="col-md-4">
+                    <article class="trat-card h-100">
+                      <span class="trat-card__icon" aria-hidden="true">
+                        <i class="fa-solid fa-gears"></i>
+                      </span>
+                      <span class="trat-card__badge">Alta Resistencia y Eficiencia</span>
+                      <h4 class="trat-card__title">Ortodoncia Convencional (Metal)</h4>
+                      <p class="trat-card__desc">
+                        Sistema clásico y preciso ideal para corregir todo tipo de alineación dental.
+                      </p>
+                      <a href="{{ url_for('agendar') }}?especialidad={{ esp.id }}" class="trat-card__btn">
+                        Agendar evaluación
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                      </a>
+                    </article>
+                  </div>
+
+                </div>
+              </section>
+
+              <!-- ══ BLOQUE 2: Tratamientos según la edad ══ -->
+              <section class="trat-block trat-block--soft">
+                <h3 class="trat-block__title">Tratamientos según la edad</h3>
+                <div class="row g-4">
+
+                  <div class="col-md-6">
+                    <article class="trat-card trat-card--age h-100">
+                      <span class="trat-card__icon" aria-hidden="true">
+                        <i class="fa-solid fa-user-tie"></i>
+                      </span>
+                      <h4 class="trat-card__title">Ortodoncia para Adultos y Jóvenes</h4>
+                      <p class="trat-card__desc">
+                        Soluciones estéticas y rápidas adaptadas a tu ritmo de vida y estética profesional.
+                      </p>
+                    </article>
+                  </div>
+
+                  <div class="col-md-6">
+                    <article class="trat-card trat-card--age h-100">
+                      <span class="trat-card__icon" aria-hidden="true">
+                        <i class="fa-solid fa-child-reaching"></i>
+                      </span>
+                      <h4 class="trat-card__title">Ortopedia / Ortodoncia Interceptiva Infantil</h4>
+                      <p class="trat-card__desc">
+                        Guiamos el crecimiento óseo y prevenimos problemas de mordida en niños (6 a 11 años).
+                      </p>
+                    </article>
+                  </div>
+
+                </div>
+              </section>
+
+              {% elif tratamientos %}
+              <div class="det-trat-list">
+                {% for t in tratamientos %}
+                <article class="det-trat">
+                  <div class="det-trat__info">
+                    <h3 class="det-trat__name">{{ t.nombre }}</h3>
+                    {% if t.descripcion %}
+                    <p class="det-trat__desc">{{ t.descripcion }}</p>
+                    {% endif %}
+                  </div>
+                  <div class="det-trat__price">
+                    {% if t.precio_base is not none %}
+                    <span class="det-trat__amount">S/ {{ '{:,.2f}'.format(t.precio_base | float) }}</span>
+                    <span class="det-trat__label">precio base</span>
+                    {% else %}
+                    <span class="det-trat__consult">Consultar</span>
+                    {% endif %}
+                  </div>
+                </article>
+                {% endfor %}
+              </div>
+              {% else %}
+              <div class="det-empty">
+                <i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>
+                <p>Aún no hay tratamientos publicados para {{ esp.nombre }}.</p>
+                <span>Consulta en nuestra sede para recibir el detalle de tu plan.</span>
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- ---------- TAB 3: STAFF ODONTOLOGICO ---------- -->
+            <div class="tab-pane fade" id="pane-staff" role="tabpanel" aria-labelledby="tab-staff" tabindex="0">
+              <h2 class="det-h2">Staff Odontológico</h2>
+              <p class="det-note">
+                Profesionales habilitados para atender {{ esp.nombre }} en nuestra clínica.
+              </p>
+
+              {% set doctors = odontologos %}
+              {% if doctors %}
+              <div class="row row-cols-1 row-cols-md-2 g-3 staff-grid">
+
+                {% for o in doctors %}
+                <div class="col">
+                  <article class="staff-card h-100">
+
+                    <div class="staff-card__head">
+                      {% if o.foto %}
+                      <img class="staff-card__photo"
+                           src="{{ o.foto }}"
+                           alt="Foto de {{ o.nombre }} {{ o.apepaterno }}"
+                           width="80" height="80" loading="lazy">
+                      {% else %}
+                      <span class="staff-card__photo staff-card__photo--avatar" aria-hidden="true">
+                        {{ (o.nombre or '?')[0] }}{{ (o.apepaterno or '')[0] }}
+                      </span>
+                      {% endif %}
+
+                      <div class="staff-card__id">
+                        <h3 class="staff-card__name">
+                          Dr. {{ o.nombre }} {{ o.apepaterno }} {{ o.apematerno or '' }}
+                        </h3>
+                        <div class="staff-card__badges">
+                          <span class="staff-badge staff-badge--muted">COP: {{ o.cop or '28415' }}</span>
+                          <span class="staff-badge staff-badge--muted">RNE: {{ o.rne or '1420' }}</span>
+                          <span class="staff-badge staff-badge--primary">
+                            Especialista en {{ esp.nombre }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <p class="staff-card__bio">
+                      {{ o.biografia or 'Especialista con más de 8 años de experiencia en alineación dental invisible, brackets estéticos y ortopedia infantil.' }}
+                    </p>
+
+                    <p class="staff-card__schedule">
+                      <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
+                      Atiende: {{ o.horario or 'Lunes a Viernes (10:00 am - 6:00 pm)' }}
+                    </p>
+
+                    <a href="{{ url_for('agendar') }}?especialidad={{ esp.id }}&doctor_id={{ o.id }}"
+                       class="staff-card__btn">
+                      <i class="fa-solid fa-calendar-plus" aria-hidden="true"></i>
+                      Reservar cita con el doctor
+                    </a>
+
+                  </article>
+                </div>
+                {% endfor %}
+
+              </div>
+              {% else %}
+              <div class="staff-empty">
+                <i class="fa-solid fa-user-doctor" aria-hidden="true"></i>
+                <p>
+                  Próximamente estaremos asignando más especialistas a este turno.
+                  Puedes consultar con recepción.
+                </p>
+              </div>
+              {% endif %}
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- COLUMNA DERECHA (sticky) ---------- -->
+      <div class="col-lg-4">
+        <div class="det-aside">
+          <div class="card border-0 det-side-card shadow-sm">
+            <h2 class="det-side-title">
+              <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+              Sedes disponibles
+            </h2>
+
+            <div class="det-sede">
+              <span class="det-sede__badge">Principal</span>
+              <h3 class="det-sede__name">Sede Principal — Huancayo</h3>
+              <p class="det-sede__addr">Av. Los Rosales, El Tambo, Huancayo</p>
+              <ul class="det-sede__data">
+                <li><i class="fa-regular fa-clock" aria-hidden="true"></i> Lun a Sab: 10:00 am – 5:00 pm</li>
+                <li><i class="fa-solid fa-phone" aria-hidden="true"></i> +51 956 536 766</li>
+              </ul>
+            </div>
+
+            <a href="{{ url_for('agendar') }}?especialidad={{ esp.id }}"
+               class="btn btn-primary det-cta">
+              <i class="fa-solid fa-calendar-plus" aria-hidden="true"></i>
+              Ir a agendar cita
+            </a>
+
+            <a href="{{ url_for('especialidades') }}" class="det-back">
+              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+              Volver a especialidades
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% include "_footer.html" %}
+{% endblock %}

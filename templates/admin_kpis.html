@@ -1,0 +1,103 @@
+{% extends "base_admin.html" %}
+{% block title %}KPIs — Sele Dent Admin{% endblock %}
+
+{% block topbar_titulo %}KPIs del Sistema{% endblock %}
+
+{% block admin_content %}
+<!-- KPIs — datos desde Flask -->
+<div class="charts-row mb-28">
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <h3>Citas atendidas</h3>
+        <p>Histórico acumulado</p>
+      </div>
+    </div>
+    <div class="kpi-num" style="font-size:34px;margin-top:6px;">{{ atendidas }}</div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <h3>Pacientes</h3>
+        <p>Total registrados</p>
+      </div>
+    </div>
+    <div class="kpi-num" style="font-size:34px;margin-top:6px;">{{ pacientes_totales }}</div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <h3>Ingresos totales</h3>
+        <p>Pagos válidos acumulados</p>
+      </div>
+    </div>
+    <div class="kpi-num" style="font-size:34px;margin-top:6px;" data-prefix="S/ ">S/ {{ "{:,.0f}".format(ingresos_totales).replace(",", " ") }}</div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <h3>Tratamientos</h3>
+        <p>Realizados en citas atendidas</p>
+      </div>
+    </div>
+    <div class="kpi-num" style="font-size:34px;margin-top:6px;">{{ tratamientos_realizados }}</div>
+  </div>
+</div>
+
+<!-- Metas -->
+<div class="chart-card">
+  <div class="chart-header">
+    <div>
+      <h3>KPIs por objetivo — {{ mes_actual }}</h3>
+      <p>Cada objetivo de la clínica tiene UN solo KPI único, calculado con su fórmula y comparado contra su meta</p>
+    </div>
+  </div>
+
+  {% if kpis %}
+  <table class="tb">
+    <thead>
+      <tr>
+        <th>Objetivo</th>
+        <th>KPI (único)</th>
+        <th>Fórmula</th>
+        <th>Actual / Meta</th>
+        <th style="width:26%;">Avance</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for k in kpis %}
+      <tr>
+        <td>
+          <div class="tb-strong">{{ k.objetivo }}</div>
+          {% if k.descripcion %}<div class="tb-muted" style="font-size:12px;">{{ k.descripcion }}</div>{% endif %}
+        </td>
+        <td><span class="pill pill-teal" style="font-weight:600;">{{ k.nombre }}</span></td>
+        <td><code style="font-size:12px;background:rgba(47,111,208,0.06);padding:3px 8px;border-radius:6px;color:#2f6fd0;">{{ k.formula }}</code></td>
+        <td class="tb-nowrap">
+          {% if k.unidad == 'soles' %}S/ {{ "{:,.2f}".format(k.actual) }} / S/ {{ "{:,.0f}".format(k.meta) }}
+          {% else %}{{ "%.2f"|format(k.actual) }}% / {{ "{:,.0f}".format(k.meta) }}{{ k.unidad }}{% endif %}
+        </td>
+        <td>
+          <div class="kpi-bar">
+            <div class="kpi-bar-fill" style="width:{{ k.pct }}%;{{ 'background:#e05252;' if (k.logrado|string == 'False') and (k.pct < 100) else '' }}"></div>
+          </div>
+          <div class="tb-muted" style="font-size:11px;margin-top:3px;">{{ k.pct }}%</div>
+        </td>
+        <td>
+          <span class="pill {{ 'pill-teal' if k.logrado else 'pill-amber' }}">
+            {% if k.logrado %}<i class="fa-solid fa-circle-check me-1"></i>Cumplida{% else %}<i class="fa-solid fa-triangle-exclamation me-1"></i>En proceso{% endif %}
+          </span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No hay KPIs configurados. Ejecuta el script SQL para cargar `metas_kpi`.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,382 @@
+/* ============================================================
+   Clinica Seledent - Modulo Contacto
+   ============================================================ */
+
+:root {
+    --ct-blue: #2f6fd0;
+    --ct-blue-dark: #1f57b3;
+    --ct-ink: #12333a;
+    --ct-muted: #6c757d;
+    --ct-line: #e6e9ec;
+    --ct-bg: #f5f8fb;
+}
+
+.ct-section {
+    padding: calc(72px + 48px) 0 72px;
+    background: var(--ct-bg);
+    min-height: 100vh;
+}
+
+/* ---------- Hero de la pagina ---------- */
+.ct-hero {
+    text-align: center;
+    max-width: 760px;
+    margin-bottom: 40px;
+}
+
+.ct-hero h1 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: clamp(30px, 4.4vw, 46px);
+    letter-spacing: 1px;
+    color: var(--ct-ink);
+    margin: 0 0 12px;
+}
+
+.ct-hero p {
+    color: var(--ct-muted);
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ============================================================
+   COLUMNA IZQUIERDA: INFORMACION
+   ============================================================ */
+.ct-info {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    height: 100%;
+}
+
+.ct-info__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.ct-info__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: #fff;
+    border: 1px solid var(--ct-line);
+    border-radius: 14px;
+    padding: 18px 20px;
+    transition: border-color .25s ease, transform .25s ease;
+}
+
+.ct-info__item:hover {
+    border-color: #cfd8e2;
+    transform: translateX(4px);
+}
+
+.ct-info__icon {
+    flex: 0 0 46px;
+    width: 46px;
+    height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba(47, 111, 208, .10);
+    color: var(--ct-blue);
+    font-size: 18px;
+}
+
+.ct-info__item h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ct-ink);
+    margin: 0 0 3px;
+}
+
+.ct-info__item p {
+    font-size: 14px;
+    color: var(--ct-muted);
+    margin: 0;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.ct-info__item a {
+    color: var(--ct-blue);
+    text-decoration: none;
+}
+
+.ct-info__item a:hover {
+    text-decoration: underline;
+}
+
+/* ---------- Mapa ---------- */
+.ct-map {
+    position: relative;
+    flex: 1;
+    min-height: 280px;
+    border: 1px solid var(--ct-line);
+    border-radius: 14px;
+    overflow: hidden;
+    background: #e9eef3;
+}
+
+.ct-map iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* ============================================================
+   COLUMNA DERECHA: FORMULARIO
+   ============================================================ */
+.ct-form-card {
+    background: #fff;
+    border: 1px solid var(--ct-line);
+    border-radius: 16px;
+    padding: 32px;
+    height: 100%;
+}
+
+.ct-form-card__title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    color: var(--ct-ink);
+    margin: 0 0 6px;
+}
+
+.ct-form-card__sub {
+    font-size: 14px;
+    color: var(--ct-muted);
+    margin: 0 0 24px;
+}
+
+/* ---------- Campos ---------- */
+.ct-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ct-ink);
+    margin-bottom: 6px;
+}
+
+.ct-req {
+    color: #d64545;
+}
+
+.ct-input {
+    border: 1px solid var(--ct-line);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: #333;
+    background: #fbfcfd;
+    transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+
+.ct-input:focus {
+    border-color: var(--ct-blue);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(47, 111, 208, .15);
+    outline: none;
+}
+
+.ct-input.is-invalid,
+.was-validated .ct-input:invalid {
+    border-color: #d64545;
+}
+
+.ct-input::placeholder {
+    color: #a9b3bd;
+}
+
+textarea.ct-input {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.ct-counter {
+    font-size: 12px;
+    color: #a9b3bd;
+    text-align: right;
+    margin-top: 4px;
+}
+
+/* ---------- Checkbox de privacidad ---------- */
+.ct-check {
+    padding-left: 2rem;
+}
+
+.ct-check .form-check-input {
+    width: 1.15rem;
+    height: 1.15rem;
+    margin-left: -2rem;
+    border: 1px solid #c9d1d9;
+    border-radius: 5px;
+}
+
+.ct-check .form-check-input:checked {
+    background-color: var(--ct-blue);
+    border-color: var(--ct-blue);
+}
+
+.ct-check .form-check-input:focus {
+    box-shadow: 0 0 0 3px rgba(47, 111, 208, .15);
+}
+
+.ct-check .ct-label {
+    font-weight: 400;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ct-muted);
+    margin: 0;
+}
+
+/* ---------- Boton ---------- */
+.ct-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-width: 190px;
+    padding: 13px 32px;
+    background: var(--ct-blue);
+    color: #fff;
+    border: 1px solid var(--ct-blue);
+    border-radius: 50px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color .22s ease, border-color .22s ease, transform .15s ease;
+}
+
+.ct-btn:hover {
+    background: var(--ct-blue-dark);
+    border-color: var(--ct-blue-dark);
+    color: #fff;
+}
+
+.ct-btn:active {
+    transform: translateY(1px);
+}
+
+.ct-btn--outline {
+    background: transparent;
+    color: var(--ct-blue);
+    border-color: var(--ct-blue);
+}
+
+.ct-btn--outline:hover {
+    background: var(--ct-blue);
+    color: #fff;
+}
+
+.ct-btn:disabled {
+    opacity: .65;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ---------- Spinner de envio ---------- */
+.ct-btn__spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, .45);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: ctSpin .7s linear infinite;
+}
+
+.ct-btn.is-loading .ct-btn__spinner {
+    display: inline-block;
+}
+
+.ct-btn.is-loading .ct-btn__texto {
+    opacity: .8;
+}
+
+@keyframes ctSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- Alertas ---------- */
+.ct-alert-ok,
+.ct-alert-err {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    padding: 16px 18px;
+}
+
+.ct-alert-ok i,
+.ct-alert-err i {
+    font-size: 17px;
+    margin-top: 2px;
+}
+
+.ct-alert-ok ul,
+.ct-alert-err ul {
+    padding-left: 18px;
+    margin-bottom: 0;
+}
+
+.ct-alert-ok {
+    background: #e9f7ef;
+    border: 1px solid #bfe6cd;
+    color: #1c6b3d;
+}
+
+.ct-alert-err {
+    background: #fdecec;
+    border: 1px solid #f5c6c6;
+    color: #a12d2d;
+}
+
+/* ============================================================
+   RESPONSIVO
+   ============================================================ */
+@media (max-width: 991.98px) {
+    .ct-section {
+        padding: 32px 0 56px;
+    }
+
+    .ct-map {
+        min-height: 240px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .ct-form-card {
+        padding: 22px 18px;
+    }
+
+    .ct-form-card__title {
+        font-size: 23px;
+    }
+
+    .ct-btn {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ct-info__item,
+    .ct-btn,
+    .ct-btn__spinner {
+        transition: none;
+        animation: none;
+    }
+
+    .ct-info__item:hover {
+        transform: none;
+    }
+}

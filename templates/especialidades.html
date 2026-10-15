@@ -1,44 +1,182 @@
 {% extends "base.html" %}
 {% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/especialidades.css') }}">
 {% endblock %}
 {% block title %}Especialidades{% endblock %}
 
 {% block content %}
+{% set pagina = 'especialidades' %}
+{% include "_navbar.html" %}
 
-<h2 class="titulo-tratamientos">Nuestras Especialidades</h2>
+<section class="esp-section">
 
-<div class="tratamientos-container">
+  <!-- ══ BANNER PROMOCIONAL: NUEVA AREA DE ESPECIALIDADES ══ -->
+  <div class="container">
+    <div class="esp-banner">
+      <div class="row g-0 align-items-stretch">
 
-  {% for e in especialidades %}
-  <div class="card-tratamiento-grande" 
-      id="{{ e.nombre|lower|replace(' ', '-')|replace('(', '')|replace(')', '') }}">
-  
-      <!-- IMAGEN -->
-      <img src="{{ url_for('static', filename='img/' ~ e.imagen) }}" class="img-tratamiento">
-  
-      <!-- CONTENIDO -->
-      <div class="contenido-tratamiento">
-        <h3>{{ e.nombre }}</h3>
-        <p>{{ e.descripcion }}</p>
-  
-        <a href="{{ url_for('agendar') }}" class="btn-agendar">
-          Agendar cita
-        </a>
+        <!-- ---------- Columna izquierda: mensaje + CTA ---------- -->
+        <div class="col-lg-6">
+          <div class="esp-banner__copy">
+
+            <div class="esp-banner__badge">
+              <span></span> Novedad Clínica Sele Dent
+            </div>
+
+            <h2 class="esp-banner__title">
+              Renovamos nuestra sede en Huancayo para brindarte la mejor experiencia dental.
+            </h2>
+
+            <p class="esp-banner__text">
+              Más capacidad para atenderte, ambientes modernos con tecnología digital
+              de vanguardia pensados para la salud de tu sonrisa.
+            </p>
+
+            <a href="{{ url_for('agendar') }}" class="esp-banner__cta">
+              Agenda tu cita
+              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </a>
+
+          </div>
+        </div>
+
+        <!-- ---------- Columna derecha: foto + tarjeta azul lateral ---------- -->
+        <div class="col-lg-6">
+          <div class="esp-banner__media">
+
+            <div class="esp-banner__frame">
+              <img src="{{ url_for('static', filename='img/cuatro.jpg') }}"
+                   alt="Odontólogos atendiendo a un paciente en la Clínica Sele Dent">
+            </div>
+
+            <aside class="esp-sede">
+              <h3 class="esp-sede__title">Sede Huancayo</h3>
+              <p class="esp-sede__tagline">Crecimos para cuidar tu sonrisa</p>
+              <div class="esp-sede__divider"></div>
+              <ul class="esp-sede__list">
+                <li>8 consultorios equipados</li>
+                <li>Escáner Intraoral 3D</li>
+                <li>Quirófano de Cirugía Oral</li>
+              </ul>
+            </aside>
+
+          </div>
+        </div>
+
       </div>
-  
+    </div>
   </div>
-  {% endfor %}
 
-</div>
-<script>
-  function buscar() {
-      let texto = document.getElementById("busqueda").value
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[()]/g, '');
-  
-      window.location.href = "/especialidades#" + texto;
-  }
-  </script>
+  <!-- ══ CABECERA DE SECCION CON FILTRO POR PESTANAS ══ -->
+  {% set categorias = especialidades | map(attribute='categoria') | unique | list %}
+  {% set orden_categorias = [
+      'Ortodoncia',
+      'Endodoncia',
+      'Implantología',
+      'Estética Dental',
+      'Cirugía Oral',
+      'Periodoncia',
+      'Odontopediatría',
+      'Rehabilitación Oral'
+  ] %}
+  <header class="esp-header container">
+    <div class="esp-header__row">
+      <div class="esp-header__intro">
+        <h2 class="esp-title">Nuestras Especialidades</h2>
+        <p class="esp-subtitle">
+          Atencion integral para tu sonrisa, con especialistas en cada area de la odontologia.
+        </p>
+      </div>
+
+      <nav class="esp-tabs" role="tablist" aria-label="Filtrar especialidades por categoria">
+        <button type="button"
+                class="esp-tab is-active"
+                role="tab"
+                aria-selected="true"
+                data-filtro="todas">Todas</button>
+
+        {# Categorias prioritarias en orden fijo (siempre visibles) #}
+        {% for cat in orden_categorias %}
+        <button type="button"
+                class="esp-tab"
+                role="tab"
+                aria-selected="false"
+                data-filtro="{{ cat }}">{{ cat }}</button>
+        {% endfor %}
+
+        {# Cualquier otra categoria que exista en la BD y no este en la lista #}
+        {% for cat in categorias %}
+        {% if cat not in orden_categorias %}
+        <button type="button"
+                class="esp-tab"
+                role="tab"
+                aria-selected="false"
+                data-filtro="{{ cat }}">{{ cat }}</button>
+        {% endif %}
+        {% endfor %}
+      </nav>
+    </div>
+  </header>
+
+  <!-- ══ REJILLA DE ESPECIALIDADES (dinamica desde PostgreSQL) ══ -->
+  <div class="container">
+    <div class="row g-4 esp-grid" id="espGrid">
+
+      {% for e in especialidades %}
+      <div class="col-12 col-sm-6 col-lg-3 esp-col"
+           data-categoria="{{ e.categoria }}"
+           data-nombre="{{ e.nombre }}">
+
+        <article class="esp-card">
+          <div class="esp-card__media">
+            <img src="{{ url_for('static', filename='img/' ~ e.imagen) }}"
+                 alt="Imagen de {{ e.nombre }}"
+                 loading="lazy">
+          </div>
+
+          <div class="esp-card__body">
+            <h3 class="esp-card__title">{{ e.nombre }}</h3>
+            <p class="esp-card__desc">{{ e.descripcion }}</p>
+            <a href="{{ url_for('detalle_especialidad', id=e.id) }}" class="esp-card__btn">
+              Conoce más
+            </a>
+          </div>
+        </article>
+
+      </div>
+      {% endfor %}
+
+      <!-- Tarjeta destacada: mas especialidades -->
+      <div class="col-12 col-sm-6 col-lg-3 esp-col esp-col--destacada"
+           data-categoria="todas"
+           data-nombre="Más especialidades">
+        <article class="esp-card esp-card--destacada">
+          <img class="esp-card__media" src="{{ url_for('static', filename='img/cuatro.jpg') }}" alt="">
+          <span class="esp-card__overlay" aria-hidden="true"></span>
+          <div class="esp-card__body">
+            <h3 class="esp-card__title">Más especialidades</h3>
+            <a href="{{ url_for('agendar') }}" class="esp-card__circle"
+               aria-label="Ver mas especialidades">
+              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </a>
+          </div>
+        </article>
+      </div>
+
+    </div>
+
+    {% if not especialidades %}
+    <p class="esp-empty">No hay especialidades activas registradas.</p>
+    {% endif %}
+  </div>
+
+</section>
+
+{% include "_footer.html" %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/especialidades.js') }}"></script>
 {% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Evaluación confirmada — Clínica Sele Dent{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/agendar_evaluacion.css') }}">
+{% endblock %}
+
+{% block content %}
+{% set pagina = 'inicio' %}
+{% include "_navbar.html" %}
+
+<section class="eval-body eval-body--confirm">
+  <div class="container">
+    <div class="eval-confirm">
+
+      <span class="eval-confirm__icon" aria-hidden="true">
+        <i class="fa-solid fa-circle-check"></i>
+      </span>
+      <h1 class="eval-confirm__title">¡Evaluación reservada con éxito!</h1>
+      <p class="eval-confirm__text">
+        Hemos registrado tu solicitud. Nuestro equipo se comunicará contigo para
+        confirmar la fecha y hora exacta de tu evaluación.
+      </p>
+
+      <div class="eval-confirm__card">
+        <h2 class="eval-confirm__card-title">Resumen de tu evaluación</h2>
+
+        <ul class="eval-confirm__list">
+          <li>
+            <span><i class="fa-solid fa-tooth" aria-hidden="true"></i> Especialidad</span>
+            <strong>{{ resumen.especialidad }}</strong>
+          </li>
+          <li>
+            <span><i class="fa-solid fa-list-check" aria-hidden="true"></i> Tratamiento</span>
+            <strong>{{ resumen.tratamiento }}</strong>
+          </li>
+          <li>
+            <span><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Sede</span>
+            <strong>{{ resumen.sede }}</strong>
+          </li>
+          <li>
+            <span><i class="fa-solid fa-user" aria-hidden="true"></i> Paciente</span>
+            <strong>{{ resumen.nombres }}</strong>
+          </li>
+          <li>
+            <span><i class="fa-regular fa-calendar-days" aria-hidden="true"></i> Fecha</span>
+            <strong>{{ resumen.fecha }}</strong>
+          </li>
+          <li>
+            <span><i class="fa-solid fa-clock" aria-hidden="true"></i> Turno</span>
+            <strong>{{ resumen.turno }}</strong>
+          </li>
+        </ul>
+      </div>
+
+      <div class="eval-confirm__actions">
+        <a href="{{ wa_link }}" target="_blank" rel="noopener" class="eval-confirm__wa">
+          <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+          Enviar recordatorio por WhatsApp
+        </a>
+        <a href="{{ url_for('inicio') }}" class="eval-confirm__back">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          Volver al inicio
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% include "_footer.html" %}
+{% endblock %}

@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}Agendar Evaluación — Clínica Sele Dent{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/agendar_evaluacion.css') }}">
+{% endblock %}
+
+{% block content %}
+{% set pagina = 'inicio' %}
+{% include "_navbar.html" %}
+
+{% set nombre_esp = especialidad_sel.nombre if especialidad_sel else 'Ortodoncia' %}
+
+<!-- ══ BANNER SUPERIOR ══ -->
+<section class="eval-hero">
+  <div class="container">
+    <div class="eval-hero__card">
+      <span class="eval-hero__badge"><span></span> Reserva en línea</span>
+      <h1 class="eval-hero__title">
+        Reserva tu Evaluación Especializada en {{ nombre_esp }}
+      </h1>
+      <p class="eval-hero__text">
+        Completa tus datos y elige el turno que prefieras. Te contactaremos para confirmar
+        la fecha y hora de tu evaluación.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CUERPO: FORMULARIO + INFORMACIÓN ══ -->
+<section class="eval-body">
+  <div class="container">
+
+
+
+    <div class="row g-4">
+
+      <!-- ---------- FORMULARIO ---------- -->
+      <div class="col-lg-8">
+        <form method="POST"
+              action="{{ url_for('agendar_evaluacion', especialidad=(especialidad_sel.id if especialidad_sel else ''), tratamiento=tratamiento_sel) }}"
+              class="eval-card"
+              id="evalForm">
+
+          <h2 class="eval-card__title">
+            <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+            Datos de tu evaluación
+          </h2>
+
+          <!-- Tratamiento (preseleccionado / destacado) -->
+          <div class="eval-field">
+            <label class="eval-label" for="tratamiento">Tratamiento</label>
+            <div class="eval-select--highlight">
+              <select name="tratamiento" id="tratamiento" class="eval-input eval-select" required>
+                {% if tratamientos %}
+                  {% for t in tratamientos %}
+                  <option value="{{ t.nombre }}"
+                    {% if tratamiento_sel and t.nombre|lower == tratamiento_sel|lower %}selected{% endif %}>
+                    {{ t.nombre }}
+                  </option>
+                  {% endfor %}
+                {% else %}
+                  <option value="{{ nombre_esp }}" selected>{{ nombre_esp }}</option>
+                {% endif %}
+              </select>
+              <i class="fa-solid fa-tooth" aria-hidden="true"></i>
+            </div>
+          </div>
+
+          <!-- Sede (fija) -->
+          <div class="eval-field">
+            <label class="eval-label" for="sede">Sede</label>
+            <div class="eval-input-group">
+              <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+              <input type="text" id="sede" name="sede" class="eval-input"
+                     value="Sede Principal (El Tambo - Huancayo)" readonly>
+            </div>
+          </div>
+
+          <!-- Datos del paciente -->
+          <h3 class="eval-subtitle">Datos del paciente</h3>
+
+          <div class="row g-3">
+            <div class="col-md-6 eval-field">
+              <label class="eval-label" for="nombres">Nombres completos</label>
+              <input type="text" name="nombres" id="nombres" class="eval-input"
+                     placeholder="Ej. Ana María Pérez Ríos" required
+                     value="{{ session.get('nombre', '') }}">
+            </div>
+
+            <div class="col-md-6 eval-field">
+              <label class="eval-label" for="dni">DNI</label>
+              <input type="text" name="dni" id="dni" class="eval-input"
+                     placeholder="Ej. 70123456" inputmode="numeric" maxlength="8">
+            </div>
+
+            <div class="col-md-6 eval-field">
+              <label class="eval-label" for="whatsapp">WhatsApp</label>
+              <input type="tel" name="whatsapp" id="whatsapp" class="eval-input"
+                     placeholder="Ej. 956 536 766" inputmode="tel" required>
+            </div>
+
+            <div class="col-md-6 eval-field">
+              <label class="eval-label" for="correo">Correo electrónico</label>
+              <input type="email" name="correo" id="correo" class="eval-input"
+                     placeholder="correo@ejemplo.com"
+                     value="{{ session.get('correo', '') }}">
+            </div>
+          </div>
+
+          <!-- Fecha -->
+          <h3 class="eval-subtitle">Fecha y turno</h3>
+
+          <div class="eval-field">
+            <label class="eval-label" for="fecha">Fecha preferida</label>
+            <div class="eval-input-group">
+              <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
+              <input type="date" name="fecha" id="fecha" class="eval-input" required>
+            </div>
+          </div>
+
+          <!-- Turno -->
+          <div class="eval-field">
+            <span class="eval-label">Turno</span>
+            <div class="eval-turns">
+              <label class="eval-turn">
+                <input type="radio" name="turno" value="Mañana" required>
+                <span class="eval-turn__box">
+                  <i class="fa-solid fa-sun" aria-hidden="true"></i>
+                  <strong>Mañana</strong>
+                  <small>10:00 am — 1:00 pm</small>
+                </span>
+              </label>
+              <label class="eval-turn">
+                <input type="radio" name="turno" value="Tarde">
+                <span class="eval-turn__box">
+                  <i class="fa-solid fa-cloud-sun" aria-hidden="true"></i>
+                  <strong>Tarde</strong>
+                  <small>2:00 pm — 5:00 pm</small>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Botón principal -->
+          <button type="submit" class="eval-submit">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            Confirmar mi Evaluación
+          </button>
+
+          <a href="{{ url_for('inicio') }}" class="eval-back">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            Volver al inicio
+          </a>
+        </form>
+      </div>
+
+      <!-- ---------- BLOQUE INFORMATIVO LATERAL ---------- -->
+      <div class="col-lg-4">
+        <aside class="eval-aside">
+
+          <div class="eval-aside__card">
+            <h2 class="eval-aside__title">
+              <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>
+              Tu cita de evaluación incluye:
+            </h2>
+            <ul class="eval-aside__list">
+              <li>
+                <i class="fa-solid fa-stethoscope" aria-hidden="true"></i>
+                <span>Diagnóstico integral</span>
+              </li>
+              <li>
+                <i class="fa-solid fa-camera-retro" aria-hidden="true"></i>
+                <span>Toma de fotografías de evaluación</span>
+              </li>
+              <li>
+                <i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i>
+                <span>Presupuesto personalizado</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="eval-aside__card eval-aside__card--soft">
+            <h2 class="eval-aside__title eval-aside__title--sm">
+              <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+              Sede Principal
+            </h2>
+            <p class="eval-aside__text">
+              Av. Los Rosales, El Tambo, Huancayo
+            </p>
+            <ul class="eval-aside__data">
+              <li><i class="fa-regular fa-clock" aria-hidden="true"></i> Lun a Sáb: 10:00 am — 5:00 pm</li>
+              <li><i class="fa-solid fa-phone" aria-hidden="true"></i> +51 956 536 766</li>
+            </ul>
+          </div>
+
+        </aside>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% include "_footer.html" %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/agendar_evaluacion.js') }}"></script>
+{% endblock %}

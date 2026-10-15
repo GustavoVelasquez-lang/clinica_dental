@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/detalle_especialidad.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tratamientos.css') }}">
+{% endblock %}
+{% block title %}Tratamientos{% endblock %}
+
+{% block content %}
+{% set pagina = 'tratamientos' %}
+{% include "_navbar.html" %}
+
+<section class="trat-page">
+  <div class="container">
+
+    <header class="trat-hero">
+      <span class="trat-hero__badge">Catálogo de tratamientos</span>
+      <h1 class="trat-hero__title">Nuestros Tratamientos</h1>
+      <p class="trat-hero__text">
+        Precios referenciales por tratamiento. El plan final y el adelanto se
+        definen con una evaluación clínica en consultorio.
+      </p>
+    </header>
+
+    {% if grupos %}
+    <nav class="trat-tabs" role="tablist" aria-label="Filtrar tratamientos por especialidad">
+      <button type="button" class="trat-tab is-active" role="tab"
+              aria-selected="true" data-filtro="todas">Todas</button>
+      {% for g in grupos %}
+      <button type="button" class="trat-tab" role="tab"
+              aria-selected="false" data-filtro="{{ g.especialidad_id }}">
+        {{ g.especialidad }}
+      </button>
+      {% endfor %}
+    </nav>
+
+    <div class="trat-groups" id="tratGroups">
+      {% for g in grupos %}
+      <section class="trat-group" data-especialidad="{{ g.especialidad_id }}">
+        <div class="trat-group__head">
+          <h2 class="trat-group__title">
+            <i class="fa-solid fa-tooth" aria-hidden="true"></i>
+            {{ g.especialidad }}
+          </h2>
+          <a href="{{ url_for('detalle_especialidad', id=g.especialidad_id) }}"
+             class="trat-group__link">
+            Ver especialidad <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          </a>
+        </div>
+
+        <div class="det-trat-list">
+          {% for t in g.tratamientos %}
+          <article class="det-trat">
+            <div class="det-trat__info">
+              <h3 class="det-trat__name">{{ t.nombre }}</h3>
+              {% if t.descripcion %}
+              <p class="det-trat__desc">{{ t.descripcion }}</p>
+              {% endif %}
+              {% if t.duracion_minutos %}
+              <p class="trat-meta">
+                <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                Duración aprox. {{ t.duracion_minutos }} min
+              </p>
+              {% endif %}
+            </div>
+            <div class="det-trat__price">
+              {% if t.precio_base is not none %}
+              <span class="det-trat__amount">S/ {{ '{:,.2f}'.format(t.precio_base | float) }}</span>
+              <span class="det-trat__label">precio sugerido</span>
+              {% else %}
+              <span class="det-trat__consult">Consultar</span>
+              {% endif %}
+              <a href="{{ url_for('agendar', tratamiento_id=t.id_tratamiento) }}"
+                 class="trat-agendar">Agendar cita</a>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="det-empty">
+      <i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>
+      <p>Aún no hay tratamientos publicados.</p>
+      <span>Consulta en nuestra sede para recibir el detalle de tu plan.</span>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% include "_footer.html" %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/tratamientos.js') }}"></script>
+{% endblock %}

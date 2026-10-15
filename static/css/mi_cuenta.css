@@ -1,16 +1,16 @@
 :root {
-    --teal:      #0a7c6e;
-    --teal-dark: #065a50;
-    --teal-xl:   #e6f5f3;
+    --teal:      #2f6fd0;
+    --teal-dark: #1f57b3;
+    --teal-xl:   #eaf2fd;
     --gold:      #c9a84c;
     --gold-l:    #e8c97a;
     --cream:     #f8f6f2;
-    --dark:      #0f1f1d;
-    --mid:       #2e4a46;
-    --muted:     #6b8c88;
-    --border:    rgba(10,124,110,0.12);
-    --font-d:    'Playfair Display', serif;
-    --font-b:    'DM Sans', sans-serif;
+    --dark:      #12283f;
+    --mid:       #2c4257;
+    --muted:     #6f7d8d;
+    --border:    rgba(47,111,208,0.12);
+    --font-d:    'Outfit', sans-serif;
+    --font-b:    'Outfit', sans-serif;
   }
 
   html, body {
@@ -41,7 +41,7 @@
     border-radius: 24px;
     overflow: hidden;
     border: 1px solid var(--border);
-    box-shadow: 0 20px 60px rgba(10,124,110,0.1);
+    box-shadow: 0 20px 60px rgba(47,111,208,0.1);
   }
 
   
@@ -123,10 +123,10 @@
     transition: background 0.15s;
   }
   .dato-row:last-child { border-bottom: none; }
-  .dato-row:hover { background: rgba(10,124,110,0.04); }
+  .dato-row:hover { background: rgba(47,111,208,0.04); }
   .dato-icon {
     width: 36px; height: 36px; flex-shrink: 0;
-    background: rgba(10,124,110,0.1);
+    background: rgba(47,111,208,0.1);
     border-radius: 9px;
     display: flex; align-items: center; justify-content: center;
     color: var(--teal); font-size: 15px;
@@ -153,13 +153,13 @@
     font-family: var(--font-b);
     cursor: pointer; text-decoration: none;
     transition: all 0.2s;
-    box-shadow: 0 4px 20px rgba(10,124,110,0.25);
+    box-shadow: 0 4px 20px rgba(47,111,208,0.25);
     margin-bottom: 10px;
   }
   .btn-teal:hover {
     background: var(--teal-dark); color: white;
     transform: translateY(-1px);
-    box-shadow: 0 8px 28px rgba(10,124,110,0.35);
+    box-shadow: 0 8px 28px rgba(47,111,208,0.35);
   }
   .btn-outline-danger {
     display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -214,7 +214,7 @@
     transition: box-shadow 0.2s;
   }
   .cita-item-card:hover {
-    box-shadow: 0 2px 12px rgba(10,124,110,0.08);
+    box-shadow: 0 2px 12px rgba(47,111,208,0.08);
   }
   .cita-item-left {
     display: flex;
@@ -284,3 +284,5 @@
     to   { opacity: 1; transform: translateY(0); }
   }
   .cuenta-card { animation: fadeUp 0.5s ease both; }
+  /* utilidades (antes inline) */
+  .btn-agendar-margen { display: inline-flex; width: auto; padding: 10px 24px; margin-top: 8px; }

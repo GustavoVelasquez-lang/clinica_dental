@@ -62,9 +62,12 @@
           {% for c in citas %}
           <div class="cita-item-card">
             <div class="cita-item-left">
-              <span class="cita-especialidad">{{ c.especialidad }}</span>
+              <span class="cita-especialidad">{% if c.tipo_atencion %}{{ c.tipo_atencion }}{% else %}{{ c.especialidad }}{% endif %}</span>
               <span class="cita-fecha"><i class="fa-regular fa-calendar"></i> {{ c.fecha }}</span>
               <span class="cita-hora"><i class="fa-regular fa-clock"></i> {{ c.hora }}</span>
+              {% if c.tipo_atencion %}
+              <span class="cita-hora"><i class="fa-solid fa-tooth"></i> {{ c.especialidad }}</span>
+              {% endif %}
             </div>
             <div class="cita-item-right">
               {% if c.estado == 'pendiente' %}
@@ -84,7 +87,7 @@
         {% else %}
           <div class="citas-empty">
             <p>No tienes citas registradas</p>
-            <a href="{{ url_for('agendar') }}" class="btn-teal" style="display:inline-flex;width:auto;padding:10px 24px;margin-top:8px">
+            <a href="{{ url_for('agendar') }}" class="btn-teal btn-agendar-margen">
               Agendar una cita
             </a>
           </div>

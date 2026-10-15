@@ -3,79 +3,265 @@
 
 {% block topbar_titulo %}Gestión de Citas{% endblock %}
 
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_citas.css') }}?v=3">
+{% endblock %}
+
 {% block admin_content %}
 
-<div class="page-actions">
-  <a href="{{ url_for('admin_enviar_recordatorios') }}"
-     onclick="return confirm('¿Enviar recordatorios ahora para citas en 3, 2 y 1 día?')"
-     class="btn-a btn-blue btn-xl">📧 Enviar recordatorios ahora</a>
-</div>
+<div class="ctc-page">
 
-<div class="chart-card">
-  <div class="chart-header">
+  <!-- ══ CABECERA ══ -->
+  <div class="ctc-head">
     <div>
-      <h3>Todas las citas</h3>
-      <p>Listado completo de citas registradas</p>
+      <h3>Agenda de citas</h3>
+      <p>Administra, filtra y confirma las citas registradas</p>
+    </div>
+    <a href="{{ url_for('admin_enviar_recordatorios') }}"
+       onclick="return confirm('¿Enviar recordatorios ahora para citas en 3, 2 y 1 día?')"
+       class="btn-a btn-blue btn-xl"><i class="fa-solid fa-paper-plane me-2"></i>Enviar recordatorios ahora</a>
+  </div>
+
+  <!-- ══ KPIs ══ -->
+  <div class="ctc-kpis">
+    <div class="ctc-kpi c-total">
+      <div class="ctc-kpi-icon"><i class="fa-solid fa-calendar-days text-primary"></i></div>
+      <div class="ctc-kpi-text">
+        <span class="ctc-kpi-num" id="kpiTotal">{{ citas|length }}</span>
+        <span class="ctc-kpi-label">Total de citas</span>
+      </div>
+    </div>
+    <div class="ctc-kpi c-pend">
+      <div class="ctc-kpi-icon"><i class="fa-solid fa-clock text-warning"></i></div>
+      <div class="ctc-kpi-text">
+        <span class="ctc-kpi-num" id="kpiPendientes">{{ citas|selectattr('estado','equalto','pendiente')|list|length }}</span>
+        <span class="ctc-kpi-label">Pendientes</span>
+      </div>
+    </div>
+    <div class="ctc-kpi c-conf">
+      <div class="ctc-kpi-icon"><i class="fa-solid fa-circle-check text-success"></i></div>
+      <div class="ctc-kpi-text">
+        <span class="ctc-kpi-num" id="kpiConfirmadas">{{ citas|selectattr('estado','equalto','confirmada')|list|length }}</span>
+        <span class="ctc-kpi-label">Confirmadas</span>
+      </div>
+    </div>
+    <div class="ctc-kpi c-hoy">
+      <div class="ctc-kpi-icon"><i class="fa-solid fa-bell text-info"></i></div>
+      <div class="ctc-kpi-text">
+        <span class="ctc-kpi-num" id="kpiHoy">{{ citas_hoy }}</span>
+        <span class="ctc-kpi-label">Citas de hoy</span>
+      </div>
     </div>
   </div>
 
-  <table class="tb">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Paciente</th>
-        <th>Especialidad</th>
-        <th>Fecha</th>
-        <th>Hora</th>
-        <th>Estado / Pago</th>
-        <th>Comprobante</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for cita in citas %}
-      <tr>
-        <td class="tb-muted">{{ cita.id }}</td>
-        <td class="tb-strong">{{ cita.paciente }}</td>
-        <td>{{ cita.especialidad }}</td>
-        <td>{{ cita.fecha }}</td>
-        <td><span class="pill-time">{{ cita.hora }}</span></td>
-        <td>
-          <div class="flexwrap">
-            {% if cita.estado == 'pendiente' %}
-              <span class="pill pill-amber">Pendiente</span>
-            {% elif cita.estado == 'confirmada' %}
-              <span class="pill pill-teal">Confirmada</span>
-            {% elif cita.estado in ['completada', 'atendida', 'atendido'] %}
-              <span class="pill pill-gray">Completada</span>
-            {% else %}
-              <span class="pill pill-red">{{ cita.estado }}</span>
-            {% endif %}
-            {% if cita.comprobante %}
-              <span class="pill pill-teal">Pago enviado</span>
-            {% endif %}
-          </div>
-        </td>
-        <td>
-          {% if cita.comprobante %}
-            <a href="{{ url_for('static', filename=cita.comprobante.replace('static/', '')) }}" target="_blank" class="btn-a btn-teal">👁️ Ver</a>
-          {% else %}
-            <span class="tb-muted">—</span>
-          {% endif %}
-        </td>
-        <td>
-          <div class="flex">
-            <a href="{{ url_for('editar_cita', id=cita.id) }}" class="btn-a btn-teal">✏️ Editar</a>
-            <a href="{{ url_for('eliminar_cita', id=cita.id) }}"
-               onclick="return confirm('¿Eliminar esta cita?')" class="btn-a btn-red">🗑️ Eliminar</a>
-          </div>
-        </td>
-      </tr>
-      {% else %}
-      <tr><td colspan="8" class="empty">No hay citas registradas aún.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <!-- ══ ACCIÓN · PAGOS POR VERIFICAR ══ -->
+  <div class="ctc-verif-banner{% if por_verificar %} ctc-verif-banner--on{% endif %}" id="ctcVerifBanner">
+    <div class="ctc-verif-info">
+      <span class="ctc-verif-icon"><i class="fa-solid fa-triangle-exclamation text-warning"></i></span>
+      <div>
+        {% if por_verificar %}
+          <strong>{{ por_verificar }} pago{{ 's' if por_verificar != 1 else '' }} pendiente{{ 's' if por_verificar != 1 else '' }} por verificar</strong>
+          <span>Presiona el botón para ver todas las citas que faltan confirmar.</span>
+        {% else %}
+          <strong>No hay pagos pendientes por verificar</strong>
+          <span>Todos los comprobantes están confirmados.</span>
+        {% endif %}
+      </div>
+    </div>
+    <button type="button" class="ctc-verif-btn" id="ctcVerPendientes"
+            data-count="{{ por_verificar }}"{% if not por_verificar %} disabled{% endif %}>
+      <i class="fa-solid fa-triangle-exclamation me-2"></i>Pago pendiente por verificar
+    </button>
+  </div>
+
+  <!-- ══ TOOLBAR ══ -->
+  <div class="ctc-toolbar">
+    <div class="ctc-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="ctcBuscar"
+             placeholder="Buscar por paciente, especialidad o tratamiento…"
+             autocomplete="off">
+    </div>
+    <div class="ctc-filtros" id="ctcFiltros">
+      <button type="button" class="ctc-chip active" data-filtro="todos">Todas</button>
+      <button type="button" class="ctc-chip" data-filtro="pendiente">Pendientes</button>
+      <button type="button" class="ctc-chip" data-filtro="confirmada">Confirmadas</button>
+      <button type="button" class="ctc-chip" data-filtro="atendida">Atendidas</button>
+      <button type="button" class="ctc-chip" data-filtro="cancelada">Canceladas</button>
+    </div>
+  </div>
+
+  <!-- ══ TABLA (agrupada por fecha) ══ -->
+  <div class="chart-card ctc-card">
+    <div class="ctc-scroll">
+      <table class="tb ctc-table">
+        <thead>
+          <tr>
+            <th class="ctc-col-id">#</th>
+            <th>Paciente</th>
+            <th>Especialidad</th>
+            <th>Tratamiento</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Estado / Pago</th>
+            <th class="ctc-col-center">Comprobante</th>
+            <th class="ctc-col-center">Acciones</th>
+          </tr>
+        </thead>
+        {% for grupo in grupos %}
+        <tbody class="ctc-grupo" data-grupo-fecha="{{ grupo.fecha }}">
+          <tr class="ctc-sec-head{% if grupo.es_hoy %} ctc-sec-head--hoy{% endif %}">
+            <td colspan="9">
+              <span class="ctc-sec-label">{{ grupo.etiqueta }}</span>
+              <span class="ctc-sec-date">{{ grupo.fecha.strftime('%d/%m/%Y') }}</span>
+              <span class="ctc-sec-count">{{ grupo.citas|length }} cita{{ 's' if grupo.citas|length != 1 else '' }}</span>
+            </td>
+          </tr>
+          {% for cita in grupo.citas %}
+          <tr class="ctc-row{% if cita.es_hoy %} ctc-row--hoy{% endif %}"
+              data-estado="{{ cita.estado }}"
+              data-pago="{{ cita.estado_pago }}"
+              data-fecha="{{ cita.fecha }}"
+              data-hoy="{{ '1' if cita.es_hoy else '0' }}"
+              data-buscar="{{ (cita.paciente ~ ' ' ~ cita.especialidad ~ ' ' ~ (cita.tratamiento or '') ~ ' ' ~ (cita.tipo_atencion or ''))|lower }}">
+            <td class="ctc-col-id"><span class="ctc-id">#{{ cita.id }}</span></td>
+
+            <td>
+              <div class="ctc-pac">
+                <div class="ctc-avatar">{{ cita.paciente[0]|upper }}</div>
+                <div class="ctc-pac-info">
+                  <span class="ctc-pac-name">{{ cita.paciente }}</span>
+                  {% if cita.por_verificar %}<span class="ctc-verif-tag">POR VERIFICAR</span>{% endif %}
+                </div>
+              </div>
+            </td>
+
+            <td><span class="ctc-esp">{{ cita.especialidad }}</span></td>
+
+            <td>
+              {% if cita.tratamiento %}
+                <span class="ctc-trt">{{ cita.tratamiento }}</span>
+              {% elif cita.tipo_atencion %}
+                <span class="ctc-trt ctc-trt--tipo">{{ cita.tipo_atencion }}</span>
+              {% else %}
+                <span class="tb-muted">—</span>
+              {% endif %}
+            </td>
+
+            <td class="tb-nowrap"><span class="ctc-fecha">{{ cita.fecha }}</span></td>
+            <td><span class="pill-time">{{ cita.hora }}</span></td>
+
+            <td>
+              <div class="ctc-estado">
+                {% if cita.estado == 'pendiente' %}
+                  <span class="pill pill-amber">Pendiente</span>
+                {% elif cita.estado == 'confirmada' %}
+                  <span class="pill pill-teal">Confirmada</span>
+                {% elif cita.estado in ['completada', 'atendida', 'atendido'] %}
+                  <span class="pill pill-gray">Completada</span>
+                {% else %}
+                  <span class="pill pill-red">{{ cita.estado }}</span>
+                {% endif %}
+
+                {% if cita.estado_pago == 'pagado' %}
+                  <span class="pill pill-teal"><i class="fa-solid fa-circle-check me-1"></i>Pago confirmado</span>
+                {% elif cita.estado_pago == 'pendiente_verificacion' %}
+                  <span class="pill pill-verif"><i class="fa-solid fa-triangle-exclamation me-1"></i>Pago por verificar</span>
+                {% elif cita.voucher_url or cita.comprobante %}
+                  <span class="pill pill-amber">Adelanto enviado</span>
+                {% else %}
+                  <span class="pill pill-gray">Sin pago</span>
+                {% endif %}
+              </div>
+            </td>
+
+            <td class="ctc-col-center">
+              {% if cita.voucher_url or cita.comprobante %}
+                <button type="button" class="btn-a btn-teal btn-ver-voucher"
+                        data-bs-toggle="modal" data-bs-target="#modalVoucher"
+                        data-cita="#{{ cita.id }}"
+                        data-paciente="{{ cita.paciente }}"
+                        data-especialidad="{{ cita.especialidad }}"
+                        data-tratamiento="{{ cita.tratamiento or cita.tipo_atencion or '—' }}"
+                        data-fecha="{{ cita.fecha }} {{ cita.hora }}"
+                        data-monto="S/ {{ '%.2f'|format(cita.adelanto or 0) }}"
+                        data-operacion="{{ cita.nro_operacion or '—' }}"
+                        data-voucher="{{ url_for('static', filename=(cita.voucher_url or cita.comprobante).replace('static/', '')) }}">
+                  <i class="fa-solid fa-eye me-2"></i>Ver voucher
+                </button>
+              {% else %}
+                <span class="tb-muted">—</span>
+              {% endif %}
+            </td>
+
+            <td class="ctc-col-center">
+              <div class="ctc-acciones">
+                <a href="{{ url_for('editar_cita', id=cita.id) }}" class="btn-a btn-ghost"><i class="fa-solid fa-pen me-1"></i>Editar</a>
+                {% if (cita.voucher_url or cita.comprobante) and cita.estado_pago != 'pagado' %}
+                  <a href="{{ url_for('confirmar_pago', id=cita.id) }}"
+                     onclick="return confirm('¿Confirmar el adelanto de S/ {{ '%.2f'|format(cita.adelanto or 0) }} y confirmar la cita?')"
+                     class="btn-a btn-gold"><i class="fa-solid fa-circle-check me-1"></i>Confirmar pago</a>
+                {% endif %}
+                <a href="{{ url_for('eliminar_cita', id=cita.id) }}"
+                   onclick="return confirm('¿Eliminar esta cita?')" class="btn-a btn-red"><i class="fa-solid fa-trash"></i></a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        {% endfor %}
+      </table>
+    </div>
+
+    {% if not citas %}
+      <div class="ctc-empty" id="ctcVacioInicial">
+        <div class="ctc-empty-icon"><i class="fa-solid fa-calendar-xmark"></i></div>
+        <p class="ctc-empty-title">No hay citas registradas aún</p>
+        <p class="ctc-empty-sub">Las citas agendadas por los pacientes aparecerán aquí.</p>
+      </div>
+    {% else %}
+      <div class="ctc-empty" id="ctcSinResultados" hidden>
+        <div class="ctc-empty-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+        <p class="ctc-empty-title">Sin resultados</p>
+        <p class="ctc-empty-sub">No se encontraron citas con esos filtros.</p>
+      </div>
+    {% endif %}
+  </div>
+
 </div>
 
+<!-- ══ MODAL · VOUCHER DE PAGO (fuera de .ctc-page para no heredar su transform) ══ -->
+<div class="modal fade" id="modalVoucher" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-receipt me-2"></i>Comprobante de pago (Yape)</h5>
+        <button type="button" class="ctc-modal-x" id="mvCerrarX" data-bs-dismiss="modal" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="mv-datos">
+          <p><strong>Cita:</strong> <span id="mvCita">—</span></p>
+          <p><strong>Paciente:</strong> <span id="mvPaciente">—</span></p>
+          <p><strong>Especialidad:</strong> <span id="mvEspecialidad">—</span></p>
+          <p><strong>Tratamiento:</strong> <span id="mvTratamiento">—</span></p>
+          <p><strong>Fecha:</strong> <span id="mvFecha">—</span></p>
+          <p><strong>Adelanto:</strong> <span id="mvMonto">—</span></p>
+          <p><strong>N° de operación:</strong> <span id="mvOperacion">—</span></p>
+        </div>
+        <div class="mv-img-wrap">
+          <img id="mvVoucher" src="" alt="Comprobante de pago">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a id="mvDescargar" href="#" target="_blank" rel="noopener" class="btn-a btn-teal">Abrir en nueva pestaña</a>
+        <button type="button" class="btn-a btn-ghost" id="mvCerrarBtn" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block admin_js %}
+<script src="{{ url_for('static', filename='js/admin_citas.js') }}?v=4"></script>
 {% endblock %}

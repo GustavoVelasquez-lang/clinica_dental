@@ -1,0 +1,801 @@
+/* ============================================================
+   Clinica Sele Dent - Detalle de especialidad
+   Layout 2 columnas: contenido (col-lg-8) + card sticky (col-lg-4)
+   Depende de las variables definidas en base.css
+   ============================================================ */
+
+.det-hero {
+  position: relative;
+  padding: 132px 0 56px;
+  background-color: var(--dark);
+  background-image:
+    linear-gradient(90deg, rgba(47,111,208,0.94) 0%, rgba(47,111,208,0.72) 55%, rgba(15,44,43,0.55) 100%),
+    var(--det-img);
+  background-size: cover;
+  background-position: center;
+}
+
+.det-hero__inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+/* ---------- Migas de pan ---------- */
+.det-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 26px;
+}
+
+.det-breadcrumb a {
+  color: rgba(255,255,255,0.55);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.det-breadcrumb a:hover { color: var(--gold); }
+.det-breadcrumb i { font-size: 9px; opacity: 0.6; }
+.det-breadcrumb span { color: rgba(255,255,255,0.9); font-weight: 500; }
+
+/* ---------- Encabezado ---------- */
+.det-hero__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 22px;
+}
+
+.det-hero__icon {
+  flex: 0 0 auto;
+  width: 62px;
+  height: 62px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.22);
+}
+
+.det-hero__icon i { font-size: 26px; color: #fff; }
+
+.det-hero__title {
+  font-size: clamp(30px, 4.2vw, 46px);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #fff;
+  margin: 0 0 10px;
+  line-height: 1.1;
+}
+
+.det-hero__lead {
+  font-size: 15.5px;
+  font-weight: 300;
+  line-height: 1.65;
+  color: rgba(255,255,255,0.78);
+  margin: 0;
+  max-width: 620px;
+}
+
+/* ---------- Indicadores de modalidad ---------- */
+.det-mods {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 0;
+  margin: 28px 0 0;
+}
+
+.det-mods li {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 18px;
+  border-radius: 50px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+}
+
+.det-mods li i { font-size: 13px; color: var(--gold); }
+.det-mods strong { color: #fff; font-weight: 600; }
+
+/* ============================================================
+   CUERPO
+   ============================================================ */
+.det-body {
+  background: #f5f7fa;
+  padding: 44px 0 72px;
+}
+
+.det-card {
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+  overflow: hidden;
+}
+
+/* ---------- Pestañas ---------- */
+.det-tabs {
+  border-bottom: 1px solid #e9edf3;
+  padding: 0;
+  margin: 0;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.det-tabs .nav-link {
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  margin-bottom: -1px;
+  background: transparent;
+  color: #5b6b78;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 17px 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.det-tabs .nav-link i { font-size: 13px; opacity: 0.75; }
+
+.det-tabs .nav-link:hover {
+  color: var(--teal);
+  background: transparent;
+  border-bottom-color: rgba(47,111,208,0.25);
+}
+
+.det-tabs .nav-link.active {
+  color: var(--teal);
+  font-weight: 600;
+  background: transparent;
+  border-bottom-color: var(--teal);
+}
+
+.det-tabs .nav-link.active i { opacity: 1; }
+
+/* ---------- Contenido de pestañas ---------- */
+.det-panes { padding: 32px 34px 38px; }
+
+.det-h2 {
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--dark);
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
+}
+
+.det-h3 {
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--teal);
+  margin: 28px 0 14px;
+}
+
+.det-lead-p {
+  font-size: 14.5px;
+  line-height: 1.8;
+  color: #4a5a66;
+  margin: 0;
+}
+
+.det-note {
+  font-size: 13px;
+  color: #7b8794;
+  margin: 0 0 22px;
+}
+
+/* ---------- Lista de beneficios ---------- */
+.det-beneficios {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 11px;
+}
+
+.det-beneficios li {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4a5a66;
+}
+
+.det-beneficios i {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--teal);
+  flex: 0 0 auto;
+}
+
+/* ---------- Pasos de la visita ---------- */
+.det-pasos {
+  padding-left: 20px;
+  margin: 0;
+  display: grid;
+  gap: 9px;
+}
+
+.det-pasos li {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4a5a66;
+}
+
+.det-pasos strong { color: var(--dark); }
+
+/* ---------- Lista de tratamientos ---------- */
+.det-trat-list { display: grid; gap: 12px; }
+
+.det-trat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 17px 20px;
+  border: 1px solid #e6e9ef;
+  border-radius: 12px;
+  background: #fbfcfd;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.det-trat:hover {
+  border-color: rgba(47,111,208,0.35);
+  box-shadow: 0 4px 14px rgba(47,111,208,0.08);
+}
+
+.det-trat__name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dark);
+  margin: 0 0 4px;
+}
+
+.det-trat__desc {
+  font-size: 13px;
+  line-height: 1.55;
+  color: #6c7a86;
+  margin: 0;
+}
+
+.det-trat__price {
+  flex: 0 0 auto;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.det-trat__amount {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--teal);
+  white-space: nowrap;
+}
+
+.det-trat__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #98a3ad;
+}
+
+.det-trat__consult {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #7b8794;
+}
+
+/* ---------- Staff odontologico ---------- */
+.det-staff-list { display: grid; gap: 12px; }
+
+.det-staff {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid #e6e9ef;
+  border-radius: 12px;
+  background: #fbfcfd;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.det-staff:hover {
+  border-color: rgba(47,111,208,0.35);
+  box-shadow: 0 4px 14px rgba(47,111,208,0.08);
+}
+
+.det-staff__avatar {
+  flex: 0 0 auto;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--teal), #2f6fd0);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.det-staff__name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dark);
+  margin: 0 0 5px;
+}
+
+.det-staff__role {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: #6c7a86;
+}
+
+.det-staff__role i { font-size: 11px; color: var(--teal); }
+
+/* ---------- Estados vacios ---------- */
+.det-empty {
+  text-align: center;
+  padding: 42px 24px;
+  border: 1px dashed #d5dbe3;
+  border-radius: 12px;
+  background: #fbfcfd;
+}
+
+.det-empty i { font-size: 28px; color: #c3ccd6; margin-bottom: 14px; }
+
+.det-empty p {
+  font-size: 14.5px;
+  color: #4a5a66;
+  margin: 0 0 6px;
+}
+
+.det-empty span { font-size: 13px; color: #8b96a1; }
+
+/* ============================================================
+   TRATAMIENTOS: comparación y categorización (Ortodoncia)
+   ============================================================ */
+.trat-block {
+  font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+}
+
+.trat-block + .trat-block { margin-top: 30px; }
+
+.trat-block__title {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--dark);
+  letter-spacing: -0.01em;
+  margin: 0 0 18px;
+}
+
+.trat-block__title::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 4px;
+  height: 19px;
+  border-radius: 4px;
+  background: var(--teal);
+}
+
+/* Fondo sutil del bloque "según la edad" */
+.trat-block--soft {
+  background: #f8fafc;
+  border: 1px solid #eef2f7;
+  border-radius: 16px;
+  padding: 26px 22px;
+}
+
+/* ---------- Tarjeta de tratamiento ---------- */
+.trat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 24px 22px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 30, 51, 0.04), 0 8px 20px rgba(15, 30, 51, 0.05);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.trat-card:hover {
+  transform: translateY(-4px);
+  border-color: #cbd5e1;
+  box-shadow: 0 14px 30px rgba(15, 30, 51, 0.10);
+}
+
+.trat-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: rgba(47, 111, 208, 0.10);
+  color: var(--teal);
+  font-size: 19px;
+}
+
+.trat-card__badge {
+  display: inline-block;
+  padding: 4px 13px;
+  border-radius: 50px;
+  background: rgba(47, 111, 208, 0.10);
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.trat-card__title {
+  font-size: 16.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--dark);
+  margin: 0;
+}
+
+.trat-card__desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #5b6b78;
+  margin: 0;
+}
+
+.trat-card__btn {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 50px;
+  background: var(--teal);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 6px 16px rgba(47, 111, 208, 0.25);
+  transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.trat-card__btn:hover {
+  color: #fff;
+  background: #255fc0;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(47, 111, 208, 0.32);
+}
+
+.trat-card__btn i { font-size: 11px; transition: transform 0.2s; }
+.trat-card__btn:hover i { transform: translateX(3px); }
+
+/* Tarjetas del bloque "según la edad": sin botón */
+.trat-card--age { padding: 22px; }
+
+/* ============================================================
+   STAFF ODONTOLOGICO: tarjetas de especialistas
+   ============================================================ */
+.staff-grid { row-gap: 16px; }
+
+.staff-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 30, 51, 0.04), 0 8px 20px rgba(15, 30, 51, 0.05);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.staff-card:hover {
+  transform: translateY(-3px);
+  border-color: #cbd5e1;
+  box-shadow: 0 14px 30px rgba(15, 30, 51, 0.10);
+}
+
+.staff-card__head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.staff-card__photo {
+  flex: 0 0 auto;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.staff-card__photo--avatar {
+  background: linear-gradient(135deg, var(--teal), #2f6fd0);
+  color: #fff;
+  font-size: 26px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.staff-card__id { min-width: 0; }
+
+.staff-card__name {
+  font-size: 16.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--dark);
+  margin: 0 0 8px;
+}
+
+.staff-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.staff-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 50px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.staff-badge--muted {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.staff-badge--primary {
+  background: rgba(47, 111, 208, 0.10);
+  color: var(--teal);
+}
+
+.staff-card__bio {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #5b6b78;
+  margin: 0;
+}
+
+.staff-card__schedule {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #4a5a66;
+  margin: 0;
+}
+
+.staff-card__schedule i { font-size: 13px; color: var(--teal); }
+
+.staff-card__btn {
+  margin-top: auto;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 50px;
+  background: var(--teal);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 6px 16px rgba(47, 111, 208, 0.22);
+  transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.staff-card__btn:hover {
+  color: #fff;
+  background: #255fc0;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(47, 111, 208, 0.30);
+}
+
+/* ---------- Empty state del staff ---------- */
+.staff-empty {
+  text-align: center;
+  padding: 46px 26px;
+  border: 1px dashed #d5dbe3;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.staff-empty i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(47, 111, 208, 0.10);
+  color: var(--teal);
+  font-size: 26px;
+  margin-bottom: 16px;
+}
+
+.staff-empty p {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #4a5a66;
+  max-width: 430px;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   COLUMNA DERECHA (sticky)
+   ============================================================ */
+.det-aside {
+  position: sticky;
+  top: 96px;
+}
+
+.det-side-card {
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+  padding: 26px 26px 24px;
+}
+
+.det-side-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--dark);
+  margin: 0 0 20px;
+}
+
+.det-side-title i { font-size: 15px; color: var(--teal); }
+
+/* ---------- Sede ---------- */
+.det-sede {
+  padding: 18px 20px;
+  border: 1px solid #e6e9ef;
+  border-radius: 12px;
+  background: #fbfcfd;
+}
+
+.det-sede__badge {
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: 50px;
+  background: rgba(47,111,208,0.1);
+  color: var(--teal);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 11px;
+}
+
+.det-sede__name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dark);
+  margin: 0 0 6px;
+}
+
+.det-sede__addr {
+  font-size: 13px;
+  line-height: 1.55;
+  color: #6c7a86;
+  margin: 0 0 14px;
+}
+
+.det-sede__data {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.det-sede__data li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  color: #4a5a66;
+}
+
+.det-sede__data i { font-size: 12px; color: var(--teal); width: 14px; text-align: center; }
+
+/* ---------- Boton de agendar ---------- */
+.det-cta {
+  width: 100%;
+  margin-top: 20px;
+  padding: 13px 18px;
+  border-radius: 50px;
+  font-size: 14.5px;
+  font-weight: 600;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  box-shadow: 0 6px 18px rgba(59,125,216,0.28);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.det-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(59,125,216,0.38);
+}
+
+.det-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 13px;
+  color: #7b8794;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.det-back:hover { color: var(--teal); }
+.det-back i { font-size: 11px; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 991px) {
+  .det-aside { position: static; }
+}
+
+@media (max-width: 768px) {
+  .det-hero { padding: 116px 0 44px; }
+  .det-hero__head { flex-direction: column; gap: 16px; }
+  .det-panes { padding: 26px 22px 32px; }
+  .det-tabs { flex-wrap: nowrap; overflow-x: auto; padding: 0; scrollbar-width: thin; }
+  .det-tabs .nav-link { padding: 14px 16px; font-size: 13px; }
+  .det-trat { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .det-trat__price { text-align: left; align-items: flex-start; }
+}
+
+@media (max-width: 560px) {
+  .det-hero__icon { width: 52px; height: 52px; }
+  .det-hero__icon i { font-size: 22px; }
+  .det-side-card { padding: 22px 20px; }
+
+  .staff-card { padding: 18px; }
+  .staff-card__head { gap: 13px; }
+  .staff-card__photo { width: 64px; height: 64px; }
+  .staff-card__photo--avatar { font-size: 21px; }
+  .staff-card__name { font-size: 15.5px; }
+  .staff-card__btn { width: 100%; justify-content: center; }
+  .staff-empty { padding: 38px 20px; }
+}

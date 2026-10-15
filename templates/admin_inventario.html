@@ -4,40 +4,40 @@
 {% block topbar_titulo %}Inventario{% endblock %}
 
 {% block admin_content %}
-<div class="kpi-grid" style="margin-bottom:28px;">
+<div class="kpi-grid mb-28">
   <div class="kpi-card c-teal">
-    <div class="kpi-header"><div class="kpi-icon">📦</div></div>
+    <div class="kpi-header"><div class="kpi-icon"><i class="fa-solid fa-boxes-stacked"></i></div></div>
     <div class="kpi-num">{{ total_items }}</div>
     <div class="kpi-label">Unidades totales</div>
   </div>
   <div class="kpi-card c-gold">
-    <div class="kpi-header"><div class="kpi-icon">💵</div></div>
+    <div class="kpi-header"><div class="kpi-icon"><i class="fa-solid fa-sack-dollar"></i></div></div>
     <div class="kpi-num" data-prefix="S/ ">S/ {{ "{:,.0f}".format(valor_stock).replace(",", " ") }}</div>
     <div class="kpi-label">Valor del stock</div>
   </div>
   <div class="kpi-card c-red">
-    <div class="kpi-header"><div class="kpi-icon">⚠️</div></div>
+    <div class="kpi-header"><div class="kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div></div>
     <div class="kpi-num">{{ stock_bajo }}</div>
     <div class="kpi-label">Productos con stock bajo</div>
   </div>
   <div class="kpi-card c-blue">
-    <div class="kpi-header"><div class="kpi-icon">🧾</div></div>
+    <div class="kpi-header"><div class="kpi-icon"><i class="fa-solid fa-receipt"></i></div></div>
     <div class="kpi-num">{{ inventario|length }}</div>
     <div class="kpi-label">Productos registrados</div>
   </div>
 </div>
 
-<div class="chart-card" style="margin-bottom:28px;">
+<div class="chart-card mb-28">
   <div class="chart-header">
     <div><h3>Agregar producto</h3><p>Registra un nuevo insumo al inventario</p></div>
   </div>
   <form method="POST" class="frm-grid">
     <input type="hidden" name="accion" value="agregar">
-    <div class="frm-col" style="min-width:160px;">
+    <div class="frm-col frm-col-w160">
       <label class="lab">Nombre *</label>
       <input type="text" name="nombre" required class="inp">
     </div>
-    <div class="frm-col" style="min-width:130px;">
+    <div class="frm-col frm-col-w130">
       <label class="lab">Categoría</label>
       <input type="text" name="categoria" class="inp">
     </div>
@@ -53,12 +53,12 @@
       <label class="lab">Precio compra (S/)</label>
       <input type="number" name="precio_compra" step="0.01" min="0" class="inp">
     </div>
-    <div class="frm-col" style="min-width:150px;">
+    <div class="frm-col frm-col-w150">
       <label class="lab">Proveedor</label>
       <input type="text" name="proveedor" class="inp">
     </div>
     <div>
-      <button type="submit" class="btn-a btn-solid btn-xl">＋ Agregar</button>
+      <button type="submit" class="btn-a btn-solid btn-xl"><i class="fa-solid fa-plus me-1"></i>Agregar</button>
     </div>
   </form>
 </div>
@@ -92,7 +92,7 @@
         <td>
           {% set bajo = i.cantidad is not none and i.stock_minimo is not none and i.cantidad <= i.stock_minimo %}
           {% if bajo %}
-            <span class="pill-stock-bajo">{{ i.cantidad }} ⚠️</span>
+            <span class="pill-stock-bajo">{{ i.cantidad }} <i class="fa-solid fa-triangle-exclamation"></i></span>
           {% else %}
             <span class="pill-stock-alto">{{ i.cantidad }}</span>
           {% endif %}
@@ -105,7 +105,7 @@
             <button type="submit" class="btn-a btn-teal">Actualizar</button>
           </form>
           <a href="{{ url_for('eliminar_inventario', id=i.id) }}"
-             onclick="return confirm('¿Eliminar este producto?')" class="btn-a btn-red">🗑️</a>
+             onclick="return confirm('¿Eliminar este producto?')" class="btn-a btn-red"><i class="fa-solid fa-trash"></i></a>
         </td>
       </tr>
       {% else %}

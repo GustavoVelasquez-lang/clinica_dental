@@ -1,0 +1,128 @@
+/* ============================================================
+   Clinica Sele Dent - Barra de navegacion (compartida)
+   Usada por index, nosotros y especialidades.
+   Depende de las variables definidas en base.css
+   ============================================================ */
+
+.navbar-sd {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px;
+  background: rgba(248,246,242,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  transition: box-shadow 0.3s;
+}
+
+.navbar-sd.scrolled {
+  box-shadow: 0 4px 24px rgba(47,111,208,0.08);
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  height: 90px;
+  object-fit: contain;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mid);
+  position: relative;
+  transition: color 0.2s;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0; right: 0;
+  height: 1.5px;
+  background: var(--gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s;
+}
+
+.nav-links a:hover { color: var(--teal); }
+
+.nav-links a:hover::after,
+.nav-links a.activacion::after {
+  transform: scaleX(1);
+}
+
+.nav-links a.activacion,
+.nav-links a.active { color: var(--teal); }
+
+/* El enlace activo mantiene la linea inferior siempre visible */
+.nav-links a.active::after {
+  transform: scaleX(1);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-icon-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mid);
+  background: rgba(47,111,208,0.06);
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+}
+
+.nav-icon-btn:hover {
+  background: rgba(47,111,208,0.12);
+  color: var(--teal);
+}
+
+.nav-icon-btn i { font-size: 13px; }
+
+.btn-agendar-nav {
+  padding: 9px 22px;
+  border-radius: 50px;
+  background: var(--teal);
+  color: white;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(47,111,208,0.25);
+}
+
+.btn-agendar-nav:hover {
+  background: var(--teal-dark);
+  color: white;
+  box-shadow: 0 6px 24px rgba(47,111,208,0.35);
+  transform: translateY(-1px);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 860px) {
+  .navbar-sd { padding: 0 24px; }
+  .nav-links  { display: none; }
+}

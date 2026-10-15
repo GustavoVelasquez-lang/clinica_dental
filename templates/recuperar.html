@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Recuperar contraseña — Clinica SELEDENT{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+
+{% block flashes %}{% endblock %}
+
+{% block content %}
+<div class="login-page">
+  <div class="login-form-col" style="flex:1;">
+    <div class="login-form-wrap">
+
+      <a href="{{ url_for('login') }}" class="login-back">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Volver a iniciar sesión
+      </a>
+
+      <div class="login-brand">
+        <img class="login-brand__logo" src="{{ url_for('static', filename='img/trece.png') }}" alt="Clinica SELEDENT">
+        <span class="login-brand__name">Cl&iacute;nica <strong>SELEDENT</strong></span>
+      </div>
+
+      <h1 class="login-title">Recuperar contrase&ntilde;a</h1>
+      <p class="login-sub">Escribe tu correo electr&oacute;nico y te enviaremos un c&oacute;digo de verificaci&oacute;n.</p>
+
+
+      <form method="POST" novalidate id="recuperarForm">
+
+        <div class="login-field">
+          <label for="correo">Correo electrónico</label>
+          <div class="login-doc-group">
+            <input type="email" name="correo" id="correo"
+                   placeholder="correo@ejemplo.com" required
+                   autocomplete="email" inputmode="email" autofocus>
+          </div>
+          <small class="login-error" id="errorCorreo" hidden>
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            Correo inv&aacute;lido
+          </small>
+        </div>
+
+        <button type="submit" class="btn btn-primary login-submit" id="recuperarSubmit">
+          Enviar c&oacute;digo
+        </button>
+      </form>
+
+      <p class="login-foot">
+        &iquest;Recordaste tu contrase&ntilde;a?
+        <a href="{{ url_for('login') }}">Inicia sesi&oacute;n</a>
+      </p>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/recuperar.js') }}"></script>
+{% endblock %}

@@ -1,14 +1,4 @@
-"""
-Script de autenticacion para Gmail API.
-
-Pasos:
-1. Crea credenciales OAuth2 en https://console.cloud.google.com/apis/credentials
-   - Tipo: "Aplicacion de escritorio"
-   - Descarga el JSON y renombralo como "client_secret.json"
-2. Ejecuta: python gmail_auth.py
-3. Se abrira el navegador para autorizar
-4. Se generara el archivo "gmail_token.json"
-"""
+#Script de autenticacion para Gmail API.
 
 import os
 import json

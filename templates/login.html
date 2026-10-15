@@ -1,63 +1,138 @@
 {% extends "base.html" %}
+{% block title %}Iniciar Sesión — Clinica SELEDENT{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 {% endblock %}
-{% block title %}Login{% endblock %}
+
+{% block flashes %}{% endblock %}
 
 {% block content %}
+<div class="login-page">
 
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-5">
+  {# ================= COLUMNA IZQUIERDA: BANNER ================= #}
+  <div class="col-lg-6 login-banner-col">
+    <div class="login-banner">
+      <div class="login-banner__overlay"></div>
 
-      <div style="margin-bottom:12px">
-        <a href="{{ url_for('inicio') }}" style="color:var(--teal);text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:6px;">
-          <i class="fa-solid fa-arrow-left"></i> Volver al inicio
+      {# Marca sobre la imagen #}
+      <div class="login-banner__brand">
+        <img class="login-banner__logo" src="{{ url_for('static', filename='img/trece.png') }}" alt="Clinica SELEDENT">
+        <span class="login-banner__brandname">Cl&iacute;nica <strong>SELEDENT</strong></span>
+      </div>
+
+      {# Tarjeta flotante sobrepuesta #}
+      <div class="login-banner__card">
+        <h2 class="login-banner__title">
+          M&aacute;s que una sonrisa, es recuperar tu calidad de vida
+        </h2>
+        <p class="login-banner__text">
+          Consulta por nuestros tratamientos de Odontolog&iacute;a Integral
+        </p>
+        <a href="{{ url_for('especialidades') }}" class="login-banner__btn">
+          Conoce nuestros tratamientos
+          <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
         </a>
       </div>
 
-      <div class="card shadow p-4">
+      <ul class="login-banner__stats">
+        <li><strong>10+</strong><span>A&ntilde;os de experiencia</span></li>
+        <li><strong>7</strong><span>Especialidades</span></li>
+        <li><strong>100%</strong><span>Atenci&oacute;n personalizada</span></li>
+      </ul>
+    </div>
+  </div>
 
-        <div class="text-center mb-3">
-          <img class="login-logo-simple" src="{{ url_for('static', filename='img/trece.png') }}" alt="Logo Clinica Sele Dent">
+  {# ================= COLUMNA DERECHA: FORMULARIO ================= #}
+  <div class="col-lg-6 login-form-col">
+    <div class="login-form-wrap">
+
+      <a href="{{ url_for('inicio') }}" class="login-back">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Volver al inicio
+      </a>
+
+      {# Logo arriba a la derecha #}
+      <div class="login-brand">
+        <img class="login-brand__logo" src="{{ url_for('static', filename='img/trece.png') }}" alt="Clinica SELEDENT">
+        <span class="login-brand__name">Cl&iacute;nica <strong>SELEDENT</strong></span>
+      </div>
+
+      <h1 class="login-title">Iniciar sesi&oacute;n</h1>
+      <p class="login-sub">Ingresa tus credenciales para acceder a tu cuenta</p>
+
+      <form method="POST" novalidate id="loginForm">
+        <input type="hidden" name="next" value="{{ next or '' }}">
+
+        {# ---------- Correo electrónico ---------- #}
+        <div class="login-field">
+          <label for="usuario">Correo electrónico</label>
+          <div class="login-doc-group">
+            <input type="email" name="usuario" id="usuario"
+                   placeholder="correo@ejemplo.com" required
+                   autocomplete="email" inputmode="email">
+          </div>
+          <small class="login-error" id="errorUsuario" hidden>
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            Correo inv&aacute;lido
+          </small>
         </div>
 
-        <h2 class="login-title text-center mb-1">Iniciar sesión</h2>
-        <p class="login-sub text-center mb-4">Ingresa tus credenciales para continuar</p>
-
-        <form method="POST">
-
-          <div class="field-group">
-            <label for="usuario">Usuario</label>
-            <input type="text" name="usuario" id="usuario"
-                  placeholder="Tu nombre de usuario" required autocomplete="username">
-          </div>
-
-          <div class="field-group">
-            <label for="clave">Contraseña</label>
-            <input type="password" name="clave" id="clave"
-                  placeholder="••••••••" required autocomplete="current-password">
-          </div>
-
-          <button type="submit" class="btn-login">Iniciar sesión</button>
-
-          <div class="google-btn-wrap">
-            <div class="divider">
-              <hr><span>o continúa con</span><hr>
-            </div>
-            <a href="{{ url_for('login_google') }}" class="btn-google-custom">
-              <i class="fa-brands fa-google"></i>
-              Ingresar con Google
+        {# ---------- Contrasena ---------- #}
+        <div class="login-field">
+          <div class="login-label-row">
+            <label for="clave">Contrase&ntilde;a</label>
+            <a href="{{ url_for('recuperar') }}" class="login-forgot">
+              &iquest;Olvidaste tu contrase&ntilde;a?
             </a>
           </div>
+          <div class="login-pass-wrap">
+            <input type="password" name="clave" id="clave"
+                   placeholder="Ingresa tu contraseña" required
+                   autocomplete="current-password">
+            <button type="button" class="login-eye" id="toggleClave"
+                    aria-label="Mostrar contraseña" aria-pressed="false">
+              <i class="fa-regular fa-eye" aria-hidden="true"></i>
+            </button>
+          </div>
+          <small class="login-error" id="errorClave" hidden>
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            Contrase&ntilde;a inv&aacute;lida
+          </small>
+        </div>
 
-          <a href="{{ url_for('registro') }}" class="btn-register">Crear cuenta nueva</a>
+        {# ---------- Recordar correo ---------- #}
+        <div class="login-remember">
+          <input type="checkbox" id="recordar" name="recordar" value="1">
+          <label for="recordar">Recordar correo electr&oacute;nico</label>
+        </div>
 
-        </form>
-      </div>
+        {# ---------- Submit ---------- #}
+        <button type="submit" class="btn btn-primary login-submit" id="loginSubmit">
+          Ingresar
+        </button>
+
+        {# ---------- Google ---------- #}
+        <div class="login-divider">
+          <span>o contin&uacute;a con</span>
+        </div>
+        <a href="{{ url_for('login_google', next=next or '') }}" class="login-google">
+          <i class="fa-brands fa-google" aria-hidden="true"></i>
+          Ingresar con Google
+        </a>
+      </form>
+
+      {# ---------- Pie del formulario ---------- #}
+      <p class="login-foot">
+        &iquest;No tienes cuenta?
+        <a href="{{ url_for('registro', next=next or '') }}">Crear cuenta</a>
+      </p>
 
     </div>
   </div>
-</div>
 
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
 {% endblock %}

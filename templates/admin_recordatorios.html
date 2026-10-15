@@ -8,7 +8,7 @@
 <div class="page-actions">
   <a href="{{ url_for('admin_enviar_recordatorios') }}"
      onclick="return confirm('¿Enviar recordatorios ahora para citas en 3, 2 y 1 día?')"
-     class="btn-a btn-blue btn-xl">📧 Enviar recordatorios ahora</a>
+     class="btn-a btn-blue btn-xl"><i class="fa-solid fa-paper-plane me-2"></i>Enviar recordatorios ahora</a>
 </div>
 
 <div class="chart-card">
@@ -36,7 +36,7 @@
         <td class="tb-muted">{{ r.id }}</td>
         <td class="tb-strong">{{ r.nombre }} {{ r.apepaterno or '' }} {{ r.apematerno or '' }}</td>
         <td>{{ r.correo }}</td>
-        <td>{{ r.especialidad }}</td>
+        <td>{% if r.tipo_atencion %}{{ r.tipo_atencion }}{% else %}{{ r.especialidad }}{% endif %}</td>
         <td class="tb-nowrap">
           <span class="pill-time">{{ r.fecha }} · {{ r.hora }}</span>
           <div class="mt-4 tb-muted"><strong>{{ r.dias_antes }}</strong> día(s) antes</div>

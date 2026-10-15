@@ -1,101 +1,588 @@
+/* ============================================================
+   Clinica Seledent - Seccion Especialidades
+   Tarjetas de catalogo: imagen de fondo + overlay + texto
+   ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Manrope:wght@300;400;600&display=swap');
-
-body {
-    font-family: 'Manrope', sans-serif;
+.esp-section {
     background: #f5f7fa;
-    margin: 0;
-    color: #1a1a1a;
+    padding: 132px 0 70px;
 }
 
-.titulo-tratamientos {
-    text-align: center;
-    font-family: 'Playfair Display', serif;
-    font-size: 42px;
-    margin: 50px 0;
-    letter-spacing: 1px;
-}
+/* ============================================================
+   BANNER PROMOCIONAL - NUEVA AREA DE ESPECIALIDADES
+   Layout col-lg-6 + col-lg-6 con tarjeta azul superpuesta
+   ============================================================ */
 
-.tratamientos-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 30px;
-    padding: 40px;
-}
-
-.card-tratamiento-grande {
-    background: white;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    transition: all 0.4s ease;
+.esp-banner {
     position: relative;
-}
-.img-tratamiento {
-    width: 100%;
-    max-height: 250px;  
-    object-fit: cover;
-}
-
-.card-tratamiento-grande:hover {
-    transform: translateY(-10px) scale(1.02);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+    background: #f0f4f9;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 18px 48px rgba(15, 30, 51, 0.08);
+    margin-bottom: 46px;
 }
 
-.img-tratamiento {
-    width: 100%;
-    height: 220px;
-    object-fit: cover;
+/* ---------- Columna izquierda: mensaje + CTA ---------- */
+.esp-banner__copy {
+    padding: 54px 24px 54px 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
-.contenido-tratamiento {
-    padding: 25px;
-}
-
-.contenido-tratamiento h3 {
-    font-family: 'Playfair Display', serif;
-    font-size: 24px;
-    margin-bottom: 10px;
-}
-
-.contenido-tratamiento p {
-    font-size: 14px;
-    color: #555;
+.esp-banner__badge {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 50px;
+    background: rgba(37, 99, 235, 0.09);
+    color: #2563eb;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
     margin-bottom: 20px;
 }
 
-.btn-agendar {
-    display: inline-block;
-    padding: 12px 20px;
-    background: linear-gradient(135deg, #00b4db, #0083b0);
-    color: white;
-    border-radius: 30px;
-    text-decoration: none;
+.esp-banner__badge span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #2563eb;
+}
+
+.esp-banner__title {
+    font-size: clamp(27px, 3.2vw, 40px);
+    font-weight: 700;
+    line-height: 1.17;
+    letter-spacing: -0.015em;
+    color: #0f1e33;
+    margin: 0 0 18px;
+}
+
+.esp-banner__text {
+    font-size: 15.5px;
+    font-weight: 300;
+    line-height: 1.75;
+    color: #5b6b7f;
+    margin: 0 0 30px;
+    max-width: 480px;
+}
+
+.esp-banner__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    align-self: flex-start;
+    padding: 13px 30px;
+    border-radius: 50px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 14.5px;
     font-weight: 600;
-    transition: all 0.3s ease;
+    text-decoration: none;
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
-.btn-agendar:hover {
-    background: linear-gradient(135deg, #0083b0, #00b4db);
-    transform: scale(1.05);
+.esp-banner__cta:hover {
+    background: #1d4ed8;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(37, 99, 235, 0.36);
 }
 
-.card-tratamiento-grande {
+.esp-banner__cta i {
+    font-size: 12px;
+    transition: transform 0.2s;
+}
+
+.esp-banner__cta:hover i { transform: translateX(3px); }
+
+/* ---------- Columna derecha: foto + tarjeta azul ---------- */
+.esp-banner__media {
+    position: relative;
+    height: 100%;
+    min-height: 460px;
+    padding: 22px 128px 22px 0;   /* hueco a la derecha para la tarjeta */
+}
+
+.esp-banner__frame {
+    height: 100%;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #dde5ef;
+}
+
+.esp-banner__frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+/* ---------- Tarjeta azul lateral ---------- */
+.esp-sede {
+    position: absolute;
+    top: 22px;
+    right: 22px;
+    bottom: 22px;
+    width: 128px;
+    padding: 26px 18px;
+    border-radius: 0 20px 20px 0;
+    background: linear-gradient(165deg, #0052cc 0%, #003fa8 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 14px 34px rgba(0, 82, 204, 0.34);
+    overflow: hidden;
+}
+
+.esp-sede::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -34px;
+    height: 74px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.esp-sede__title {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #fff;
+    margin: 0 0 8px;
+}
+
+.esp-sede__tagline {
+    font-size: 11.5px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.82);
+    margin: 0 0 16px;
+}
+
+.esp-sede__divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.24);
+    margin-bottom: 16px;
+}
+
+.esp-sede__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 14px;
+    position: relative;
+    z-index: 1;
+}
+
+.esp-sede__list li {
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: #fff;
+    padding-left: 16px;
+    position: relative;
+}
+
+.esp-sede__list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 5px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #9cc4ff;
+}
+
+/* ---------- Responsive del banner ---------- */
+@media (max-width: 1199.98px) {
+    .esp-banner__copy { padding: 46px 20px 46px 40px; }
+    .esp-banner__media { padding-right: 118px; }
+    .esp-sede { width: 118px; padding: 24px 15px; }
+}
+
+@media (max-width: 991.98px) {
+    /* texto arriba, imagen debajo */
+    .esp-banner__copy {
+        padding: 40px 28px 34px;
+        order: 1;
+    }
+    .esp-banner__media {
+        order: 2;
+        min-height: 0;
+        padding: 0 96px 0 0;
+    }
+    .esp-banner__frame { min-height: 320px; }
+    .esp-sede {
+        top: 14px;
+        right: 14px;
+        bottom: 14px;
+        width: 96px;
+        padding: 20px 12px;
+    }
+    .esp-sede__title { font-size: 13px; }
+    .esp-sede__tagline { font-size: 10.5px; }
+    .esp-sede__list { gap: 11px; }
+    .esp-sede__list li { font-size: 10px; }
+}
+
+@media (max-width: 767.98px) {
+    .esp-banner { border-radius: 20px; }
+    .esp-banner__copy { padding: 32px 22px 28px; }
+    .esp-banner__title { font-size: 24px; }
+    .esp-banner__text { font-size: 14px; }
+
+    /* la tarjeta azul deja de ser lateral y pasa a franja inferior */
+    .esp-banner__media {
+        padding: 0 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .esp-banner__frame { min-height: 240px; border-radius: 16px; }
+    .esp-sede {
+        position: static;
+        width: auto;
+        border-radius: 16px;
+        padding: 22px 20px;
+    }
+    .esp-sede__list { gap: 10px; }
+    .esp-sede__list li { font-size: 11.5px; }
+}
+
+/* ============================================================
+   ENCABEZADO + FILTRO POR PESTANAS
+   ============================================================ */
+.esp-header {
+    margin-bottom: 38px;
+}
+
+.esp-header__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px 32px;
+}
+
+.esp-header__intro {
+    max-width: 560px;
+}
+
+.esp-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 4vw, 42px);
+    letter-spacing: 1px;
+    color: #12333a;
+    margin: 0 0 8px;
+}
+
+.esp-subtitle {
+    color: #5a6b70;
+    font-size: 15px;
+    margin: 0;
+}
+
+/* ---------- Pestanas de filtro ---------- */
+.esp-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 26px;
+    border-bottom: 1px solid #e6e9ec;
+}
+
+.esp-tab {
+    position: relative;
+    background: none;
+    border: 0;
+    padding: 0 2px 12px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: #6c757d;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color .2s ease;
+}
+
+.esp-tab::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+    background: #12333a;
+    transform: scaleX(0);
+    transition: transform .25s ease;
+}
+
+.esp-tab:hover { color: #12333a; }
+
+.esp-tab.is-active {
+    color: #12333a;
+}
+
+.esp-tab.is-active::after {
+    transform: scaleX(1);
+}
+
+.esp-tab:focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+/* ============================================================
+   REJILLA DE TARJETAS
+   ============================================================ */
+.esp-grid {
+    row-gap: 28px;
+}
+
+.esp-col {
+    display: flex;
+    transition: opacity .28s ease, transform .28s ease;
+}
+
+/* Tarjeta en proceso de desvanecerse por el filtro de pestanas */
+.esp-col.is-fade-out {
     opacity: 0;
-    transform: translateY(30px);
-    animation: fadeUp 0.6s ease forwards;
+    transform: translateY(10px) scale(.97);
+    pointer-events: none;
 }
 
-.card-tratamiento-grande:nth-child(1) { animation-delay: 0.1s; }
-.card-tratamiento-grande:nth-child(2) { animation-delay: 0.2s; }
-.card-tratamiento-grande:nth-child(3) { animation-delay: 0.3s; }
+/* Tarjeta ya oculta (fuera del flujo de la cuadricula) */
+.esp-col.is-oculto,
+.esp-col[hidden] {
+    display: none;
+}
 
-@keyframes fadeUp {
-    to {
-        opacity: 1;
-        transform: translateY(0);
+.esp-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #e6e9ec;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
+}
+
+.esp-card:hover {
+    transform: translateY(-6px);
+    border-color: #d4dae0;
+    box-shadow: 0 18px 40px rgba(18, 51, 58, .10);
+}
+
+.esp-card:focus-within {
+    box-shadow: 0 0 0 3px rgba(47, 111, 208, .28);
+}
+
+/* ---------- Imagen superior ---------- */
+.esp-card__media {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 12px 12px 0 0;
+    background: #eef1f3;
+}
+
+.esp-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .5s ease;
+}
+
+.esp-card:hover .esp-card__media img {
+    transform: scale(1.06);
+}
+
+/* ---------- Cuerpo ---------- */
+.esp-card__body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 18px 18px 20px;
+    flex: 1;
+}
+
+.esp-card__title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 19px;
+    font-weight: 700;
+    color: #12333a;
+    margin: 0;
+}
+
+.esp-card__desc {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #6c757d;
+    margin: 0;
+}
+
+/* ---------- Boton "Conoce mas" ---------- */
+.esp-card__btn {
+    margin-top: auto;
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 18px;
+    background: transparent;
+    border: 1px solid #000;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #000;
+    text-decoration: none;
+    transition: background-color .22s ease, color .22s ease;
+}
+
+.esp-card__btn:hover {
+    background: #000;
+    color: #fff;
+}
+
+/* ============================================================
+   TARJETA DESTACADA: MAS ESPECIALIDADES
+   ============================================================ */
+.esp-col--destacada {
+    min-height: 100%;
+}
+
+.esp-card--destacada {
+    position: relative;
+    justify-content: flex-end;
+    min-height: 320px;
+    border-color: #12333a;
+}
+
+.esp-card--destacada .esp-card__media {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
+    height: 100%;
+    border-radius: 0;
+}
+
+.esp-card--destacada .esp-card__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10, 32, 38, .35) 0%, rgba(10, 32, 38, .78) 100%);
+    transition: opacity .3s ease;
+}
+
+.esp-card--destacada:hover .esp-card__overlay {
+    opacity: .86;
+}
+
+.esp-card--destacada .esp-card__body {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    padding: 22px;
+    min-height: 320px;
+    justify-content: flex-end;
+}
+
+.esp-card--destacada .esp-card__title {
+    color: #fff;
+    font-size: 21px;
+    max-width: calc(100% - 58px);
+    text-shadow: 0 2px 12px rgba(0, 0, 0, .35);
+}
+
+/* Flecha circular anclada en la esquina inferior derecha */
+.esp-card--destacada .esp-card__circle {
+    position: absolute;
+    right: 22px;
+    bottom: 22px;
+    margin-top: 0;
+}
+
+.esp-card__circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    border-radius: 50%;
+    background: #fff;
+    color: #12333a;
+    font-size: 14px;
+    text-decoration: none;
+    transition: transform .25s ease, background-color .25s ease, color .25s ease;
+}
+
+.esp-card__circle:hover {
+    transform: translateX(4px);
+    background: #12333a;
+    color: #fff;
+}
+
+/* ---------- Sin resultados / vacio ---------- */
+.esp-empty {
+    text-align: center;
+    color: #6c757d;
+    padding: 40px 0;
+}
+
+.esp-col[hidden] ~ .esp-empty { display: none; }
+
+/* ============================================================
+   RESPONSIVO
+   ============================================================ */
+@media (max-width: 991.98px) {
+    .esp-header__row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .esp-tabs {
+        width: 100%;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 2px;
+        scrollbar-width: thin;
     }
 }
-html {
-    scroll-behavior: smooth;
+
+@media (max-width: 575.98px) {
+    .esp-card--destacada,
+    .esp-card--destacada .esp-card__body {
+        min-height: 240px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .esp-col,
+    .esp-card,
+    .esp-card__media img,
+    .esp-tab::after,
+    .esp-card__circle {
+        transition: none;
+    }
+
+    .esp-card:hover {
+        transform: none;
+    }
 }

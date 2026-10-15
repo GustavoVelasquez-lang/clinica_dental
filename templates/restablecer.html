@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Nueva contraseña — Clinica SELEDENT{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+
+{% block flashes %}{% endblock %}
+
+{% block content %}
+<div class="login-page">
+  <div class="login-form-col" style="flex:1;">
+    <div class="login-form-wrap">
+
+      <a href="{{ url_for('login') }}" class="login-back">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Volver a iniciar sesión
+      </a>
+
+      <div class="login-brand">
+        <img class="login-brand__logo" src="{{ url_for('static', filename='img/trece.png') }}" alt="Clinica SELEDENT">
+        <span class="login-brand__name">Cl&iacute;nica <strong>SELEDENT</strong></span>
+      </div>
+
+      <h1 class="login-title">Nueva contrase&ntilde;a</h1>
+      <p class="login-sub">
+        Crea una nueva contrase&ntilde;a para <strong>{{ correo }}</strong>.
+      </p>
+
+
+      <form method="POST" novalidate id="resetForm">
+
+        <div class="login-field">
+          <label for="clave">Nueva contrase&ntilde;a</label>
+          <div class="login-pass-wrap">
+            <input type="password" name="clave" id="clave"
+                   placeholder="Mínimo 8 caracteres" required
+                   minlength="8" autocomplete="new-password">
+            <button type="button" class="login-eye" data-eye="clave"
+                    aria-label="Mostrar contraseña" aria-pressed="false">
+              <i class="fa-regular fa-eye" aria-hidden="true"></i>
+            </button>
+          </div>
+          <small class="login-error" id="errorClave" hidden>
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            M&iacute;nimo 8 caracteres
+          </small>
+        </div>
+
+        <div class="login-field">
+          <label for="confirmar">Confirmar contrase&ntilde;a</label>
+          <div class="login-pass-wrap">
+            <input type="password" name="confirmar" id="confirmar"
+                   placeholder="Repite la contraseña" required
+                   minlength="8" autocomplete="new-password">
+            <button type="button" class="login-eye" data-eye="confirmar"
+                    aria-label="Mostrar contraseña" aria-pressed="false">
+              <i class="fa-regular fa-eye" aria-hidden="true"></i>
+            </button>
+          </div>
+          <small class="login-error" id="errorConfirmar" hidden>
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            Las contrase&ntilde;as no coinciden
+          </small>
+        </div>
+
+        <button type="submit" class="btn btn-primary login-submit" id="resetSubmit">
+          Cambiar contrase&ntilde;a
+        </button>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/recuperar.js') }}"></script>
+{% endblock %}

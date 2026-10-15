@@ -49,7 +49,7 @@ def enviar_recordatorios():
         logger.info(f"Buscando citas para {fecha_cita} (T-{dias_antes})")
 
         cursor.execute("""
-            SELECT c.id, c.fecha, c.hora,
+            SELECT c.id, c.fecha, c.hora, c.tipo_atencion,
                    u.nombre, u.apePaterno, u.apeMaterno, u.correo,
                    e.nombre AS especialidad
             FROM citas c
@@ -75,7 +75,7 @@ def enviar_recordatorios():
             exito = enviar_recordatorio_cita(
                 destinatario=cita['correo'],
                 nombre_paciente=nombre_completo,
-                especialidad=cita['especialidad'],
+                especialidad=cita['tipo_atencion'] or cita['especialidad'],
                 fecha=fecha_str,
                 hora=hora_str,
                 dias_antes=dias_antes,

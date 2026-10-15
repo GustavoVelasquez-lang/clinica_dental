@@ -1,0 +1,222 @@
+/* ============================================================
+   Clinica Sele Dent - Completar perfil
+   ============================================================ */
+
+.cp-body {
+  background: #f5f7fa;
+  padding: 132px 0 76px;
+  font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+}
+
+/* ---------- Tarjeta principal ---------- */
+.cp-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 34px 34px 30px;
+  box-shadow: 0 1px 2px rgba(15, 30, 51, 0.04), 0 14px 34px rgba(15, 30, 51, 0.06);
+}
+
+.cp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 50px;
+  background: rgba(47, 111, 208, 0.10);
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.cp-badge span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--teal);
+}
+
+.cp-title {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--dark);
+  margin: 0 0 10px;
+}
+
+.cp-text {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #5b6b78;
+  margin: 0 0 22px;
+}
+
+/* ---------- Alertas ---------- */
+.cp-alerts { display: grid; gap: 10px; margin-bottom: 20px; }
+
+.cp-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 18px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.cp-alert--error { background: #fef2f2; color: #b91c1c; }
+.cp-alert--ok { background: #ecfdf5; color: #047857; }
+.cp-alert--warn { background: #fffbeb; color: #b45309; }
+
+/* ---------- Campos ---------- */
+.cp-field { margin-bottom: 18px; }
+
+.cp-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 8px;
+}
+
+.cp-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cp-input-group > i {
+  position: absolute;
+  left: 15px;
+  font-size: 14px;
+  color: var(--teal);
+  pointer-events: none;
+}
+
+.cp-input {
+  width: 100%;
+  padding: 12px 15px 12px 42px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--dark);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.cp-input::placeholder { color: #a6b0bd; }
+
+.cp-input:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 4px rgba(47, 111, 208, 0.12);
+}
+
+.cp-input[readonly] {
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: not-allowed;
+  padding-right: 42px;
+}
+
+.cp-lock {
+  position: absolute;
+  right: 14px;
+  font-size: 12px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.cp-hint {
+  display: block;
+  margin-top: 7px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* ---------- Botón ---------- */
+.cp-submit {
+  margin-top: 8px;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px 24px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--teal);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(47, 111, 208, 0.28);
+  transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.cp-submit:hover {
+  background: #255fc0;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(47, 111, 208, 0.34);
+}
+
+/* ---------- Lateral ---------- */
+.cp-aside {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 2px rgba(15, 30, 51, 0.04), 0 12px 30px rgba(15, 30, 51, 0.06);
+}
+
+.cp-aside__title {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--dark);
+  margin: 0 0 18px;
+}
+
+.cp-aside__title i { font-size: 15px; color: var(--teal); margin-top: 2px; }
+
+.cp-aside__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.cp-aside__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #4a5a66;
+}
+
+.cp-aside__list i {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(47, 111, 208, 0.10);
+  color: var(--teal);
+  font-size: 14px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .cp-body { padding: 116px 0 56px; }
+  .cp-card { padding: 26px 22px 24px; }
+}

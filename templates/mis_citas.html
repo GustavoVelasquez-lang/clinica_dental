@@ -1,71 +1,280 @@
 {% extends "base.html" %}
 
-{% block title %}Mis Citas{% endblock %}
+{% block title %}Mis Citas — Clínica SELEDENT{% endblock %}
 
-{% block content %}
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mis_citas.css') }}">
+{% endblock %}
 
-<div class="container mt-5">
+{# ══════════════════════════════════════════════════════════
+   MACRO · Tarjeta de cita
+   ══════════════════════════════════════════════════════════ #}
+{% macro cita_card(c) %}
+{% set activa = c.estado in ['pendiente', 'confirmada'] %}
+{% set titulo = c.tipo_atencion or c.especialidad %}
+<article class="mc-card mc-card--{{ c.estado }}" data-estado="{{ c.estado }}">
 
-  <div style="max-width:800px;margin:0 auto 16px">
-    <a href="{{ url_for('inicio') }}" style="color:rgba(255,255,255,0.7);text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:6px;">
-      <i class="fa-solid fa-arrow-left"></i> Volver al inicio
-    </a>
+  <div class="mc-card__top">
+    <div class="mc-card__title-wrap">
+      {% if c.prioridad == 'Atención Prioritaria' and c.estado in ['pendiente', 'confirmada'] %}
+        <span class="mc-badge mc-badge--prioritaria"><i class="fa-solid fa-truck-medical"></i> Pendiente de Atención Prioritaria</span>
+      {% elif c.estado == 'confirmada' %}
+        <span class="mc-badge mc-badge--confirmada"><i class="fa-solid fa-circle-check"></i> Confirmada</span>
+      {% elif c.estado == 'pendiente' %}
+        <span class="mc-badge mc-badge--pendiente"><i class="fa-solid fa-hourglass-half"></i> Pendiente</span>
+      {% elif c.estado in ['atendida', 'atendido', 'completada'] %}
+        <span class="mc-badge mc-badge--atendida"><i class="fa-solid fa-tooth"></i> Atendida</span>
+      {% elif c.estado in ['cancelada', 'cancelado'] %}
+        <span class="mc-badge mc-badge--cancelada"><i class="fa-solid fa-circle-xmark"></i> Cancelada</span>
+      {% else %}
+        <span class="mc-badge mc-badge--neutra">{{ c.estado }}</span>
+      {% endif %}
+      {% if c.estado_pago == 'pendiente_verificacion' %}
+        <span class="mc-badge mc-badge--pendiente"><i class="fa-regular fa-clock"></i> Pendiente de Verificación</span>
+      {% endif %}
+    </div>
+
+    <h3 class="mc-card__title">{{ titulo }}</h3>
+    {% if c.tipo_atencion %}
+    <span class="mc-card__esp"><i class="fa-solid fa-tooth"></i> {{ c.especialidad }}</span>
+    {% endif %}
   </div>
 
-  <h2 class="text-center mb-4 text-white">Mis Citas</h2>
-
-  {% if citas %}
-
-    <div class="row justify-content-center">
-      <div class="col-md-8">
-
-        {% for c in citas %}
-        <div class="card mb-4 shadow-lg border-0">
-
-          <div class="card-body">
-
-            <h5 class="card-title text-primary">
-              {{ c.especialidad }}
-            </h5>
-
-            <hr>
-
-            <p><i class="fa-solid fa-calendar"></i> 
-              <strong>Fecha:</strong> {{ c.fecha }}
-            </p>
-
-            <p><i class="fa-solid fa-clock"></i> 
-              <strong>Hora:</strong> {{ c.hora }}
-            </p>
-
-            <!-- 🔥 ESTADO CON COLOR -->
-            {% if c.estado == "pendiente" %}
-              <span class="badge bg-warning text-dark">Pendiente</span>
-            {% elif c.estado == "atendido" %}
-              <span class="badge bg-success">Atendido</span>
-            {% elif c.estado == "cancelado" %}
-              <span class="badge bg-danger">Cancelado</span>
-            {% endif %}
-
-          </div>
-
-        </div>
-        {% endfor %}
-
-      </div>
+  <div class="mc-card__grid">
+    <div class="mc-dato">
+      <span class="mc-dato__icon"><i class="fa-solid fa-user-doctor"></i></span>
+      <span class="mc-dato__label">Especialista</span>
+      <span class="mc-dato__valor">{{ c.odontologo }}</span>
     </div>
-
-  {% else %}
-
-    <div class="text-center mt-5">
-      <h4 class="text-white">No tienes citas registradas</h4>
-      <a href="{{ url_for('agendar') }}" class="btn btn-primary mt-3">
-        Agendar una cita
-      </a>
+    <div class="mc-dato">
+      <span class="mc-dato__icon"><i class="fa-solid fa-location-dot"></i></span>
+      <span class="mc-dato__label">Sede</span>
+      <span class="mc-dato__valor">{{ c.sede }}</span>
     </div>
+    <div class="mc-dato">
+      <span class="mc-dato__icon"><i class="fa-solid fa-calendar-day"></i></span>
+      <span class="mc-dato__label">Fecha</span>
+      <span class="mc-dato__valor">{{ c.fecha_larga }}</span>
+    </div>
+    <div class="mc-dato">
+      <span class="mc-dato__icon"><i class="fa-regular fa-clock"></i></span>
+      <span class="mc-dato__label">Hora</span>
+      <span class="mc-dato__valor">{{ c.hora_corta }}</span>
+    </div>
+  </div>
 
+  {% if c.estado in ['cancelada', 'cancelado'] and c.motivo_cancelacion %}
+  <div class="mc-card__nota">
+    <i class="fa-solid fa-circle-info"></i> Motivo: {{ c.motivo_cancelacion }}
+  </div>
   {% endif %}
 
+  {% if activa %}
+  <div class="mc-card__actions">
+    <button type="button" class="mc-act mc-act--sec"
+            data-bs-toggle="modal" data-bs-target="#modalReprogramar"
+            data-accion="{{ url_for('reprogramar_cita', cita_id=c.id) }}"
+            data-especialidad="{{ c.tipo_atencion or c.especialidad }}"
+            data-fecha="{{ c.fecha_corta }} {{ c.hora_corta }}">
+      <i class="fa-solid fa-calendar-days"></i> Reprogramar
+    </button>
+
+    <button type="button" class="mc-act mc-act--danger"
+            data-bs-toggle="modal" data-bs-target="#modalCancelar"
+            data-accion="{{ url_for('cancelar_cita', cita_id=c.id) }}"
+            data-especialidad="{{ c.tipo_atencion or c.especialidad }}"
+            data-fecha="{{ c.fecha_corta }} {{ c.hora_corta }}">
+      <i class="fa-solid fa-xmark"></i> Cancelar cita
+    </button>
+
+    <a href="{{ c.wa_link }}" target="_blank" rel="noopener" class="mc-act mc-act--wa">
+      <i class="fa-brands fa-whatsapp"></i> Ayuda de recepción
+    </a>
+
+    {% if c.estado == 'pendiente' and c.estado_pago != 'pagado' and not c.comprobante %}
+    <a href="{{ url_for('pago', cita_id=c.id) }}" class="mc-act mc-act--pay">
+      <i class="fa-solid fa-money-bill-wave"></i> Realizar adelanto
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</article>
+{% endmacro %}
+
+{% block content %}
+{% set pagina = 'inicio' %}
+{% include "_navbar.html" %}
+
+<div class="mc-page">
+  <div class="container">
+
+    <!-- ══ ENCABEZADO DEL DASHBOARD ══ -->
+    <header class="mc-header">
+      <div class="mc-header__text">
+        <h1 class="mc-title">
+          Hola, {{ session.get('nombre')|default('Paciente', true) }}
+          <span class="mc-title__wave" aria-hidden="true">👋</span>
+        </h1>
+        <p class="mc-subtitle">Gestiona tu historial médico y próximas consultas en Clínica SELEDENT.</p>
+      </div>
+
+      <div class="mc-header__actions">
+        <a href="{{ url_for('logout') }}" class="mc-btn-logout">
+          <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+        </a>
+        <a href="{{ url_for('agendar') }}" class="mc-btn-new">
+          <i class="fa-solid fa-plus"></i> Agendar nueva cita
+        </a>
+      </div>
+    </header>
+
+    <!-- ══ PESTAÑAS ══ -->
+    <ul class="nav mc-tabs" id="mcTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-proximas" data-bs-toggle="tab"
+                data-bs-target="#panel-proximas" type="button" role="tab"
+                aria-controls="panel-proximas" aria-selected="true">
+          <i class="fa-solid fa-calendar-check"></i> Próximas citas
+          <span class="mc-tab-count">{{ proximas|length }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-historial" data-bs-toggle="tab"
+                data-bs-target="#panel-historial" type="button" role="tab"
+                aria-controls="panel-historial" aria-selected="false">
+          <i class="fa-solid fa-clock-rotate-left"></i> Historial de atenciones
+          <span class="mc-tab-count">{{ historial|length }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-canceladas" data-bs-toggle="tab"
+                data-bs-target="#panel-canceladas" type="button" role="tab"
+                aria-controls="panel-canceladas" aria-selected="false">
+          <i class="fa-solid fa-ban"></i> Canceladas
+          <span class="mc-tab-count">{{ canceladas|length }}</span>
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content mc-tab-content" id="mcTabsContent">
+
+      <!-- ── Próximas ── -->
+      <div class="tab-pane fade show active" id="panel-proximas" role="tabpanel" aria-labelledby="tab-proximas">
+        {% if proximas %}
+        <div class="mc-lista">{% for c in proximas %}{{ cita_card(c) }}{% endfor %}</div>
+        {% else %}
+        <div class="mc-empty">
+          <div class="mc-empty__icon"><i class="fa-solid fa-calendar-plus"></i></div>
+          <h3 class="mc-empty__title">No tienes citas programadas por el momento</h3>
+          <p class="mc-empty__sub">Agenda tu próxima consulta y aparecerá aquí.</p>
+          <a href="{{ url_for('agendar') }}" class="mc-btn-new mc-btn-new--lg">
+            <i class="fa-solid fa-calendar-plus"></i> Agendar cita
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- ── Historial ── -->
+      <div class="tab-pane fade" id="panel-historial" role="tabpanel" aria-labelledby="tab-historial">
+        {% if historial %}
+        <div class="mc-lista">{% for c in historial %}{{ cita_card(c) }}{% endfor %}</div>
+        {% else %}
+        <div class="mc-empty">
+          <div class="mc-empty__icon"><i class="fa-solid fa-notes-medical"></i></div>
+          <h3 class="mc-empty__title">Aún no tienes atenciones registradas</h3>
+          <p class="mc-empty__sub">Tu historial médico aparecerá aquí tras tu primera consulta.</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- ── Canceladas ── -->
+      <div class="tab-pane fade" id="panel-canceladas" role="tabpanel" aria-labelledby="tab-canceladas">
+        {% if canceladas %}
+        <div class="mc-lista">{% for c in canceladas %}{{ cita_card(c) }}{% endfor %}</div>
+        {% else %}
+        <div class="mc-empty">
+          <div class="mc-empty__icon"><i class="fa-solid fa-circle-check"></i></div>
+          <h3 class="mc-empty__title">No tienes citas canceladas</h3>
+          <p class="mc-empty__sub">¡Excelente! Ninguna de tus citas ha sido cancelada.</p>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
 </div>
 
+<!-- ══ MODAL · REPROGRAMAR ══ -->
+<div class="modal fade" id="modalReprogramar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content mc-modal">
+      <form method="POST" id="formReprogramar" novalidate>
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fa-solid fa-calendar-days"></i> Reprogramar cita</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mc-modal__info">
+            Cita actual: <strong id="rpEspecialidad">—</strong>
+            <span id="rpFechaActual">—</span>
+          </p>
+          <div class="mc-field">
+            <label for="rpFecha">Nueva fecha</label>
+            <input type="date" id="rpFecha" name="fecha" min="{{ fecha_min }}" required>
+          </div>
+          <div class="mc-field">
+            <label for="rpHora">Nueva hora</label>
+            <select id="rpHora" name="hora" required>
+              {% for h in horas %}<option value="{{ h }}">{{ h[:5] }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="mc-act mc-act--sec" data-bs-dismiss="modal">Cerrar</button>
+          <button type="submit" class="mc-act mc-act--primary">Guardar cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL · CANCELAR ══ -->
+<div class="modal fade" id="modalCancelar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content mc-modal">
+      <form method="POST" id="formCancelar" novalidate>
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fa-solid fa-triangle-exclamation"></i> Cancelar cita</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mc-modal__info">
+            ¿Seguro que deseas cancelar tu cita de
+            <strong id="cnEspecialidad">—</strong>
+            <span id="cnFecha">—</span>?
+          </p>
+          <div class="mc-field">
+            <label for="cnMotivo">Motivo (opcional)</label>
+            <textarea id="cnMotivo" name="motivo" rows="3"
+                      placeholder="Cuéntanos brevemente por qué cancelas…"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="mc-act mc-act--sec" data-bs-dismiss="modal">Volver</button>
+          <button type="submit" class="mc-act mc-act--danger-solid">Sí, cancelar cita</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% include "_footer.html" %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/mis_citas.js') }}"></script>
 {% endblock %}

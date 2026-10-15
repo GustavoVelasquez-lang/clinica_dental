@@ -1,0 +1,44 @@
+{# Pie de pagina compartido (footer + copyright).
+   Uso: {% include "_footer.html" %}
+   Variable opcional: anio (por defecto el anio actual) #}
+
+<footer class="footer-sd">
+  <div class="footer-brand">
+    <div class="footer-logo-icon">
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+        <path d="M13 3C9 3 6 6 6 9.5C6 12 7 14 8 16C9 18 9.5 22 10.5 22C11.5 22 12 19 13 19C14 19 14.5 22 15.5 22C16.5 22 17 18 18 16C19 14 20 12 20 9.5C20 6 17 3 13 3Z" fill="white"/>
+      </svg>
+    </div>
+    <strong class="logo-texto">Clínica Sele Dent</strong>
+    <p>Comprometidos con tu salud bucal. Odontología con calidez, profesionalismo y confianza en Huancayo.</p>
+  </div>
+
+  <div class="footer-col">
+    <h5>Especialidades</h5>
+    <a href="{{ url_for('especialidades') }}">Ortodoncia</a>
+    <a href="{{ url_for('especialidades') }}">Blanqueamiento</a>
+    <a href="{{ url_for('especialidades') }}">Implantes</a>
+    <a href="{{ url_for('especialidades') }}">Endodoncia</a>
+    <a href="{{ url_for('especialidades') }}">Extracciones</a>
+  </div>
+
+<div class="footer-col">
+    <h5>Clinica</h5>
+    <a href="{{ url_for('nosotros') }}">Nosotros</a>
+    <a href="#">Nuestro equipo</a>
+    <a href="{{ url_for('contacto') }}">Contacto</a>
+    <a href="{{ url_for('mis_citas') }}">Mis citas</a>
+  </div>
+
+  <div class="footer-col">
+    <h5>Contacto</h5>
+    <a href="#">El Tambo, Huancayo</a>
+    <a href="#">+51 956 536 766</a>
+    <a href="#">10am – 5pm, L–S</a>
+  </div>
+</footer>
+
+<div class="footer-bottom">
+  <span>&copy; {{ anio | default(2025) }} Clínica Sele Dent · Todos los derechos reservados</span>
+  <span>Odontología Integral · Profesionalismo · Confianza</span>
+</div>
