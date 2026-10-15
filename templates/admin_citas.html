@@ -187,7 +187,7 @@
                         data-fecha="{{ cita.fecha }} {{ cita.hora }}"
                         data-monto="S/ {{ '%.2f'|format(cita.adelanto or 0) }}"
                         data-operacion="{{ cita.nro_operacion or '—' }}"
-                        data-voucher="{{ url_for('static', filename=(cita.voucher_url or cita.comprobante).replace('static/', '')) }}">
+                        data-voucher="{{ url_for('ver_comprobante', cita_id=cita.id) }}">
                   <i class="fa-solid fa-eye me-2"></i>Ver voucher
                 </button>
               {% else %}

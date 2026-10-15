@@ -95,7 +95,7 @@
         </td>
         <td>
           {% if a.comprobante or a.voucher_url %}
-            <a href="{{ url_for('static', filename=(a.voucher_url or a.comprobante).replace('static/', '')) }}" target="_blank" class="btn-a btn-teal"><i class="fa-solid fa-eye me-1"></i>Ver</a>
+            <a href="{{ url_for('ver_comprobante', cita_id=a.id) }}" target="_blank" class="btn-a btn-teal"><i class="fa-solid fa-eye me-1"></i>Ver</a>
             {% if a.nro_operacion %}<div class="tb-muted">N° {{ a.nro_operacion }}</div>{% endif %}
           {% else %}
             <span class="tb-muted">—</span>

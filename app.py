@@ -25,8 +25,9 @@ from email_utils import (enviar_alerta_comprobante_admin,
                          enviar_notificacion_agendamiento_admin,
                          enviar_notificacion_contacto,
                          enviar_notificacion_pago_admin)
-from flask import (Flask, flash, jsonify, redirect, render_template, request,
-                   session, url_for)
+from flask import (Flask, abort, flash, jsonify, redirect, render_template,
+                   request, send_file, session, url_for)
+from io import BytesIO
 from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
 
@@ -722,21 +723,34 @@ EXTENSIONES_VOUCHER = {".jpg", ".jpeg", ".png"}
 
 
 def _guardar_voucher(cita_id, archivo):
-    """Guarda el voucher de Yape en static/uploads/vouchers/.
+    """Lee y guarda el voucher de Yape.
 
-    Devuelve (ruta_relativa, error). La ruta ya incluye el prefijo 'static/'
-    para usarse con url_for('static', filename=...).
+    Devuelve (ruta_relativa, datos, mime, error). `datos` son los bytes del
+    archivo (para persistirlos también en la base de datos) y `mime` su tipo.
+    La ruta incluye el prefijo 'static/' y se guarda además en disco como
+    respaldo (y para adjuntarlo al correo de aviso al administrador).
     """
     ext = os.path.splitext(archivo.filename or "")[1].lower()
     if ext not in EXTENSIONES_VOUCHER:
-        return None, "Formato no permitido. Sube una imagen JPG o PNG."
+        return None, None, None, "Formato no permitido. Sube una imagen JPG o PNG."
+
+    datos = archivo.read()
+    if not datos:
+        return None, None, None, "El archivo del comprobante está vacío."
+
+    mime = "image/png" if ext == ".png" else "image/jpeg"
     nombre = secure_filename(
         f"voucher_cita_{cita_id}_{datetime.now():%Y%m%d%H%M%S}{ext}"
     )
     upload_dir = os.path.join(app.root_path, "static", "uploads", "vouchers")
-    os.makedirs(upload_dir, exist_ok=True)
-    archivo.save(os.path.join(upload_dir, nombre))
-    return f"static/uploads/vouchers/{nombre}", None
+    try:
+        os.makedirs(upload_dir, exist_ok=True)
+        with open(os.path.join(upload_dir, nombre), "wb") as fh:
+            fh.write(datos)
+    except OSError as e:
+        # El disco puede ser efímero (Render); lo importante es la BD.
+        logger.warning(f"No se pudo guardar el voucher en disco: {e}")
+    return f"static/uploads/vouchers/{nombre}", datos, mime, None
 
 
 @app.route("/pago/<int:cita_id>/manual", methods=["POST"])
@@ -782,7 +796,7 @@ def pago_manual(cita_id):
         flash("❌ Debes adjuntar el comprobante de Yape (JPG o PNG).", "danger")
         return redirect(url_for("pago", cita_id=cita_id))
 
-    ruta_rel, error = _guardar_voucher(cita_id, archivo)
+    ruta_rel, datos, mime, error = _guardar_voucher(cita_id, archivo)
     if error:
         conn.close()
         flash(f"❌ {error}", "danger")
@@ -794,10 +808,13 @@ def pago_manual(cita_id):
             nro_operacion = %s,
             voucher_url = %s,
             comprobante = %s,
+            voucher_data = %s,
+            voucher_mime = %s,
             estado_pago = 'pendiente_verificacion',
             estado = 'pendiente'
         WHERE id = %s
-    """, (nro_operacion, ruta_rel, ruta_rel, cita_id))
+    """, (nro_operacion, ruta_rel, ruta_rel,
+          psycopg2.Binary(datos), mime, cita_id))
 
     # Registrar la ejecución y el comprobante en el tratamiento de la cita.
     cursor.execute("""
@@ -842,6 +859,53 @@ def pago_manual(cita_id):
         "success",
     )
     return redirect(url_for("pago", cita_id=cita_id, enviado=1))
+
+
+@app.route("/comprobante/<int:cita_id>")
+@login_required
+def ver_comprobante(cita_id):
+    """Sirve el comprobante de pago de una cita.
+
+    Prioriza la imagen guardada en la base de datos (voucher_data); si no
+    existe, cae al archivo en disco (registros antiguos). Accesible para el
+    administrador y para el paciente dueño de la cita.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT paciente_id, voucher_data, voucher_mime,
+               voucher_url, comprobante
+        FROM citas
+        WHERE id = %s
+    """, (cita_id,))
+    cita = cursor.fetchone()
+    conn.close()
+
+    if not cita:
+        abort(404)
+
+    es_admin = session.get("rol") == "admin"
+    es_dueno = cita["paciente_id"] == session.get("usuario_id")
+    if not (es_admin or es_dueno):
+        abort(403)
+
+    datos = cita["voucher_data"]
+    if datos:
+        return send_file(
+            BytesIO(bytes(datos)),
+            mimetype=cita["voucher_mime"] or "image/jpeg",
+        )
+
+    ruta = cita["voucher_url"] or cita["comprobante"]
+    if ruta:
+        ruta_limpia = ruta.replace("\\", "/")
+        if ruta_limpia.startswith("static/"):
+            ruta_limpia = ruta_limpia[len("static/"):]
+        abs_path = os.path.join(app.root_path, "static", *ruta_limpia.split("/"))
+        if os.path.exists(abs_path):
+            return send_file(abs_path)
+
+    abort(404)
 
 
 def _culqi_headers():

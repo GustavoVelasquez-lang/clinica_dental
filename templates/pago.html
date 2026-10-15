@@ -120,9 +120,9 @@
             <p class="pago-dato-dark">Yape</p>
           </div>
         </div>
-        {% if cita.voucher_url %}
+        {% if cita.voucher_url or cita.comprobante %}
         <p style="margin:12px 0 0;">
-          <a href="{{ url_for('static', filename=cita.voucher_url.replace('static/', '')) }}"
+          <a href="{{ url_for('ver_comprobante', cita_id=cita.id) }}"
              target="_blank" rel="noopener">👁️ Ver comprobante enviado</a>
         </p>
         {% endif %}
