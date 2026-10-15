@@ -45,11 +45,14 @@
           {% endif %}
         </td>
         <td>
-          <a href="{{ url_for('admin_paciente_estado', id=p.id) }}"
-             onclick="return confirm('¿Cambiar el estado de este paciente?')"
-             class="btn-a {% if p.estado == 'ACTIVO' %}btn-red{% else %}btn-teal{% endif %}">
-            {% if p.estado == 'ACTIVO' %}<i class="fa-solid fa-ban me-1"></i>Desactivar{% else %}<i class="fa-solid fa-circle-check me-1"></i>Activar{% endif %}
-          </a>
+          <div class="flex" style="flex-wrap:wrap;gap:4px;">
+            <a href="{{ url_for('admin_paciente_estado', id=p.id) }}"
+               onclick="return confirm('¿Cambiar el estado de este paciente?')"
+               class="btn-a {% if p.estado == 'ACTIVO' %}btn-red{% else %}btn-teal{% endif %}">
+              {% if p.estado == 'ACTIVO' %}<i class="fa-solid fa-ban me-1"></i>Desactivar{% else %}<i class="fa-solid fa-circle-check me-1"></i>Activar{% endif %}
+            </a>
+            <a href="{{ url_for('admin_historial', paciente_id=p.id) }}" class="btn-a btn-blue"><i class="fa-solid fa-clock-rotate-left me-1"></i>Historial</a>
+          </div>
         </td>
       </tr>
       {% else %}

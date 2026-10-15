@@ -1,0 +1,52 @@
+{% extends "base_admin.html" %}
+{% block title %}Auditoria — Sele Dent Admin{% endblock %}
+
+{% block topbar_titulo %}Log de Auditoria{% endblock %}
+
+{% block admin_content %}
+<div class="chart-card">
+  <div class="chart-header">
+    <div>
+      <h3>Registro de actividades</h3>
+      <p>Acciones realizadas en el sistema</p>
+    </div>
+  </div>
+
+  <table class="tb">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Usuario</th>
+        <th>Accion</th>
+        <th>Detalle</th>
+        <th>IP</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in registros %}
+      <tr>
+        <td class="tb-muted">{{ r.created_at }}</td>
+        <td class="tb-strong">{{ r.usuario }}</td>
+        <td><span class="pill pill-teal">{{ r.accion }}</span></td>
+        <td>{{ r.detalle or '-' }}</td>
+        <td class="tb-muted">{{ r.ip or '-' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="empty">No hay registros de auditoria.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if total_pages is defined and total_pages > 1 %}
+  <div style="display:flex;justify-content:center;gap:8px;margin-top:20px;">
+    {% if page > 1 %}
+      <a href="?page={{ page-1 }}" class="btn-a btn-teal">Anterior</a>
+    {% endif %}
+    <span style="padding:8px 16px;color:var(--muted);font-size:13px;">Pagina {{ page }} de {{ total_pages }}</span>
+    {% if page < total_pages %}
+      <a href="?page={{ page+1 }}" class="btn-a btn-teal">Siguiente</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

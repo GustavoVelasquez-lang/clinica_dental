@@ -4,6 +4,10 @@
 {% block topbar_titulo %}Personal Odontológico{% endblock %}
 
 {% block admin_content %}
+<div class="page-actions">
+  <a href="{{ url_for('admin_crear_odontologo') }}" class="btn-a btn-teal btn-xl">+ Nuevo odontologo</a>
+</div>
+
 <div class="chart-card">
   <div class="chart-header">
     <div>

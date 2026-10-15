@@ -14,7 +14,7 @@ import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from authlib.common.security import generate_token
 from authlib.integrations.flask_client import OAuth
-from db import get_connection
+from db import db_connection, get_connection
 from dotenv import dotenv_values, load_dotenv, set_key
 from email_utils import (enviar_alerta_comprobante_admin,
                          enviar_codigo_recuperacion,
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 app = Flask(__name__)
-app.secret_key = "clave_secreta_segura"
+app.secret_key = os.getenv("SECRET_KEY", "clave_secreta_segura")
 bcrypt = Bcrypt(app)
 
 # --- Pasarela de pago Culqi (tarjeta + Yape) ------------------------------
@@ -271,6 +271,31 @@ def _descartar_flashes(response):
     return response
 
 
+@app.after_request
+def set_security_headers(response):
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    if os.environ.get("FLASK_DEBUG", "0") == "0":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
+
+def _log_auditoria(accion, usuario_id=None, detalle=None):
+    """Registra una accion en la tabla auditoria (no rompe si falla)."""
+    try:
+        with db_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO auditoria (usuario_id, accion, detalle, ip, created_at)
+                VALUES (%s, %s, %s, %s, NOW())
+            """, (usuario_id or session.get("usuario_id"), accion, detalle, request.remote_addr))
+            conn.commit()
+    except Exception as e:
+        logger.error(f"Error en auditoria: {e}")
+
+
 @app.context_processor
 def inject_admin_context():
     """Variables globales disponibles en todas las vistas (sidebar admin)."""
@@ -441,6 +466,7 @@ def agendar():
 
         conn.commit()
         conn.close()
+        _log_auditoria("agendar_cita", detalle=f"cita #{cita_id}")
 
                                                             
         # Notificar al administrador del agendamiento (en segundo plano).
@@ -788,6 +814,7 @@ def pago_manual(cita_id):
         WHERE id_cita = %s
     """, (ruta_rel, cita_id))
     conn.commit()
+    _log_auditoria("subir_comprobante", detalle=f"cita #{cita_id}")
 
     # Notificar al administrador del nuevo pago (en segundo plano, con voucher).
     try:
@@ -1262,7 +1289,8 @@ def completar_perfil():
 
 @app.route("/logout")
 def logout():
-    session.clear()                          
+    _log_auditoria("logout")
+    session.clear()
     return redirect(url_for("login"))
 
 
@@ -1343,6 +1371,7 @@ def login():
         session["usuario_id"] = user["id"]
         session["nombre"] = user["nombre"]
         session["rol"] = user["rol"]
+        _log_auditoria("login", user["id"])
 
         # Volver a la página que el usuario intentaba abrir (p.ej. agendar).
         if user["rol"] == "admin":
@@ -1853,6 +1882,7 @@ def cancelar_cita(cita_id):
     """, (motivo or None, cita_id, session["usuario_id"]))
     conn.commit()
     conn.close()
+    _log_auditoria("cancelar_cita_paciente", detalle=f"cita #{cita_id}")
 
     flash("✅ Tu cita fue cancelada correctamente.", "success")
     return redirect(url_for("mis_citas"))
@@ -1915,6 +1945,7 @@ def reprogramar_cita(cita_id):
     )
     conn.commit()
     conn.close()
+    _log_auditoria("reprogramar_cita_paciente", detalle=f"cita #{cita_id}")
 
     flash("✅ Tu cita fue reprogramada correctamente.", "success")
     return redirect(url_for("mis_citas"))
@@ -2167,6 +2198,7 @@ def eliminar_cita(id):
     cursor.execute("DELETE FROM citas WHERE id = %s", (id,))
     conn.commit()
     conn.close()
+    _log_auditoria("eliminar_cita", detalle=f"cita #{id}")
 
     return redirect(url_for("admin_citas"))
 
@@ -2190,6 +2222,7 @@ def editar_cita(id):
 
         conn.commit()
         conn.close()
+        _log_auditoria("editar_cita", detalle=f"cita #{id}")
 
         return redirect(url_for("admin_citas"))
 
@@ -2239,6 +2272,7 @@ def confirmar_pago(id):
     """, (id, adelanto, cita["nro_operacion"]))
     conn.commit()
     conn.close()
+    _log_auditoria("aprobar_pago", detalle=f"cita #{id}")
 
     try:
         nombre_pac = f"{cita['nombre']} {cita['apepaterno']} {cita['apematerno']}".strip()
@@ -3277,6 +3311,356 @@ def _asegurar_esquema_perfil():
 
 
 _asegurar_esquema_perfil()
+
+
+# ═══════════════════════════════════════════════════════════════
+#  Funciones portadas de feature/mejoras-sistema
+#  (auditoria, horarios, historial clinico, Google Calendar)
+# ═══════════════════════════════════════════════════════════════
+
+
+@app.route("/admin/validar_pago/<int:cita_id>", methods=["POST"])
+@admin_required
+def validar_pago(cita_id):
+    accion = request.form.get("accion")
+
+    with db_connection() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT id, estado_pago FROM citas WHERE id = %s", (cita_id,))
+        cita = cur.fetchone()
+        if not cita:
+            flash("Cita no encontrada", "danger")
+            return redirect(url_for("admin_facturacion"))
+
+        if accion == "aprobar":
+            cur.execute("UPDATE citas SET estado_pago = 'pagado', estado = 'confirmada' WHERE id = %s", (cita_id,))
+            conn.commit()
+            _log_auditoria("aprobar_pago", detalle=f"cita #{cita_id}")
+            flash("Pago aprobado y cita confirmada", "success")
+        elif accion == "rechazar":
+            cur.execute("UPDATE citas SET estado_pago = 'pendiente', comprobante = NULL WHERE id = %s", (cita_id,))
+            conn.commit()
+            _log_auditoria("rechazar_pago", detalle=f"cita #{cita_id}")
+            flash("Pago rechazado. El paciente debera subir un nuevo comprobante.", "warning")
+
+    return redirect(url_for("admin_facturacion"))
+
+
+@app.route("/admin/personal/crear", methods=["GET", "POST"])
+@admin_required
+def admin_crear_odontologo():
+    with db_connection() as conn:
+        cur = conn.cursor()
+
+        if request.method == "POST":
+            dni = request.form.get("dni", "").strip()
+            nombre = request.form.get("nombre", "").strip()
+            apepaterno = request.form.get("apepaterno", "").strip()
+            apematerno = request.form.get("apematerno", "").strip()
+            correo = request.form.get("correo", "").strip()
+            especialidades_ids = request.form.getlist("especialidades")
+
+            if not all([dni, nombre, apepaterno, correo]):
+                flash("Completa todos los campos obligatorios", "danger")
+                return redirect(url_for("admin_crear_odontologo"))
+
+            try:
+                cur.execute("""
+                    INSERT INTO usuarios (tipo_documento, numero_documento, nombre,
+                        apepaterno, apematerno, correo, contrasenia, id_rol, estado)
+                    VALUES ('DNI', %s, %s, %s, %s, %s, %s, 3, 'ACTIVO')
+                    RETURNING id
+                """, (dni, nombre, apepaterno, apematerno or None, correo,
+                      bcrypt.generate_password_hash(dni).decode("utf-8")))
+                nuevo_id = cur.fetchone()["id"]
+
+                for esp_id in especialidades_ids:
+                    cur.execute("""
+                        INSERT INTO odontologo_especialidad (odontologo_id, especialidad_id)
+                        VALUES (%s, %s) ON CONFLICT DO NOTHING
+                    """, (nuevo_id, esp_id))
+
+                conn.commit()
+                _log_auditoria("crear_odontologo", detalle=f"odontologo #{nuevo_id}")
+                flash("Odontologo registrado correctamente", "success")
+                return redirect(url_for("admin_personal"))
+            except Exception:
+                conn.rollback()
+                flash("Error al registrar odontologo. Verifica que el DNI no este duplicado.", "danger")
+                return redirect(url_for("admin_crear_odontologo"))
+
+        cur.execute("SELECT id, nombre FROM especialidades ORDER BY nombre")
+        especialidades = cur.fetchall()
+
+    return render_template("admin_crear_odontologo.html", especialidades=especialidades)
+
+
+@app.route("/admin/horarios", methods=["GET", "POST"])
+@admin_required
+def admin_horarios():
+    with db_connection() as conn:
+        cur = conn.cursor()
+
+        if request.method == "POST":
+            odontologo_id = request.form.get("odontologo_id")
+            dia_semana = request.form.get("dia_semana")
+            hora_inicio = request.form.get("hora_inicio")
+            hora_fin = request.form.get("hora_fin")
+
+            if not all([odontologo_id, dia_semana, hora_inicio, hora_fin]):
+                flash("Completa todos los campos", "danger")
+                return redirect(url_for("admin_horarios"))
+
+            try:
+                cur.execute("""
+                    INSERT INTO horarios (odontologo_id, dia_semana, hora_inicio, hora_fin)
+                    VALUES (%s, %s, %s, %s)
+                """, (odontologo_id, dia_semana, hora_inicio, hora_fin))
+                conn.commit()
+                _log_auditoria("crear_horario", detalle=f"odontologo #{odontologo_id} - {dia_semana}")
+                flash("Horario registrado", "success")
+            except Exception:
+                conn.rollback()
+                flash("Error al registrar horario", "danger")
+            return redirect(url_for("admin_horarios"))
+
+        cur.execute("""
+            SELECT h.*, u.nombre || ' ' || COALESCE(u.apepaterno,'') AS odontologo_nombre
+            FROM horarios h
+            JOIN usuarios u ON h.odontologo_id = u.id
+            ORDER BY h.dia_semana, h.hora_inicio
+        """)
+        horarios = cur.fetchall()
+
+        cur.execute("""
+            SELECT u.id, u.nombre || ' ' || COALESCE(u.apepaterno,'') AS nombre
+            FROM usuarios u
+            WHERE u.id IN (SELECT DISTINCT odontologo_id FROM horarios)
+               OR u.id IN (SELECT DISTINCT odontologo_id FROM odontologo_especialidad)
+            ORDER BY u.nombre
+        """)
+        odontologos = cur.fetchall()
+
+    return render_template("admin_horarios.html", horarios=horarios, odontologos=odontologos)
+
+
+@app.route("/admin/horarios/eliminar/<int:id>", methods=["POST"])
+@admin_required
+def eliminar_horario(id):
+    with db_connection() as conn:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM horarios WHERE id = %s", (id,))
+        conn.commit()
+    _log_auditoria("eliminar_horario", detalle=f"horario #{id}")
+    flash("Horario eliminado", "success")
+    return redirect(url_for("admin_horarios"))
+
+
+@app.route("/admin/historial/<int:paciente_id>")
+@admin_required
+def admin_historial(paciente_id):
+    with db_connection() as conn:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT u.id, u.nombre, u.apepaterno, u.apematerno, u.numero_documento, u.correo
+            FROM usuarios u WHERE u.id = %s AND u.id_rol = 2
+        """, (paciente_id,))
+        paciente = cur.fetchone()
+
+        if not paciente:
+            flash("Paciente no encontrado", "danger")
+            return redirect(url_for("admin_pacientes"))
+
+        cur.execute("""
+            SELECT c.id, e.nombre AS especialidad, c.fecha, c.hora, c.estado,
+                   c.diagnostico, c.observaciones,
+                   COALESCE(u2.nombre || ' ' || COALESCE(u2.apepaterno,''), 'Sin asignar') AS odontologo
+            FROM citas c
+            JOIN especialidades e ON c.especialidad_id = e.id
+            LEFT JOIN usuarios u2 ON c.odontologo_id = u2.id
+            WHERE c.paciente_id = %s
+            ORDER BY c.fecha DESC
+        """, (paciente_id,))
+        historial_citas = cur.fetchall()
+
+        cur.execute("""
+            SELECT hc.id, hc.fecha, hc.diagnostico, hc.observaciones, hc.tratamiento,
+                   e.nombre AS especialidad,
+                   COALESCE(u.nombre || ' ' || COALESCE(u.apepaterno,''), '') AS odontologo
+            FROM historial_clinico hc
+            LEFT JOIN citas c ON hc.cita_id = c.id
+            LEFT JOIN especialidades e ON c.especialidad_id = e.id
+            LEFT JOIN usuarios u ON c.odontologo_id = u.id
+            WHERE hc.paciente_id = %s
+            ORDER BY hc.fecha DESC
+        """, (paciente_id,))
+        historial_clinico = cur.fetchall()
+
+    return render_template("admin_historial.html", paciente=paciente,
+                           historial_citas=historial_citas, historial_clinico=historial_clinico)
+
+
+@app.route("/admin/historial/<int:paciente_id>/registrar", methods=["POST"])
+@admin_required
+def registrar_historial(paciente_id):
+    diagnostico = request.form.get("diagnostico", "").strip()
+    observaciones = request.form.get("observaciones", "").strip()
+    tratamiento = request.form.get("tratamiento", "").strip()
+    cita_id = request.form.get("cita_id") or None
+
+    if not diagnostico:
+        flash("El diagnostico es obligatorio", "danger")
+        return redirect(url_for("admin_historial", paciente_id=paciente_id))
+
+    with db_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+                INSERT INTO historial_clinico (paciente_id, cita_id, fecha, diagnostico, observaciones, tratamiento)
+                VALUES (%s, %s, NOW(), %s, %s, %s)
+            """, (paciente_id, cita_id, diagnostico, observaciones or None, tratamiento or None))
+            conn.commit()
+            _log_auditoria("registrar_historial", detalle=f"paciente #{paciente_id}")
+            flash("Historial clinico registrado", "success")
+        except Exception:
+            conn.rollback()
+            flash("Error al registrar historial", "danger")
+
+    return redirect(url_for("admin_historial", paciente_id=paciente_id))
+
+
+@app.route("/admin/auditoria")
+@admin_required
+def admin_auditoria():
+    page = request.args.get("page", 1, type=int)
+    per_page = 30
+    offset = (page - 1) * per_page
+
+    with db_connection() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) AS n FROM auditoria")
+        total = cur.fetchone()["n"]
+        total_pages = max(1, (total + per_page - 1) // per_page)
+
+        cur.execute("""
+            SELECT a.id, a.accion, a.detalle, a.ip, a.created_at,
+                   COALESCE(u.nombre || ' ' || COALESCE(u.apepaterno,''), 'Sistema') AS usuario
+            FROM auditoria a
+            LEFT JOIN usuarios u ON a.usuario_id = u.id
+            ORDER BY a.created_at DESC
+            LIMIT %s OFFSET %s
+        """, (per_page, offset))
+        registros = cur.fetchall()
+
+    return render_template("admin_auditoria.html", registros=registros, page=page, total_pages=total_pages)
+
+
+# ── Google Calendar (integracion opcional; degrada si no hay credenciales) ──
+
+def _get_calendar_service():
+    try:
+        from google.oauth2 import service_account
+        from googleapiclient.discovery import build
+
+        creds_path = os.getenv("GOOGLE_CALENDAR_CREDENTIALS")
+        if creds_path and os.path.exists(creds_path):
+            creds = service_account.Credentials.from_service_account_file(
+                creds_path,
+                scopes=['https://www.googleapis.com/auth/calendar']
+            )
+            return build('calendar', 'v3', credentials=creds)
+
+        from google.oauth2.credentials import Credentials as UserCreds
+        token_file = os.path.join(app.root_path, "gmail_token.json")
+        if os.path.exists(token_file):
+            import json
+            with open(token_file) as f:
+                data = json.load(f)
+            creds = UserCreds(
+                token=data.get("token"),
+                refresh_token=data.get("refresh_token"),
+                token_uri=data.get("token_uri"),
+                client_id=data.get("client_id"),
+                client_secret=data.get("client_secret"),
+                scopes=['https://www.googleapis.com/auth/calendar']
+            )
+            from google.auth.transport.requests import Request
+            if creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            return build('calendar', 'v3', credentials=creds)
+
+    except Exception as e:
+        logger.error(f"Error al crear servicio Google Calendar: {e}")
+    return None
+
+
+def sincronizar_cita_calendar(cita_id, especialidad, fecha, hora, paciente_nombre):
+    service = _get_calendar_service()
+    if not service:
+        return False
+
+    try:
+        cal_id = os.getenv("GOOGLE_CALENDAR_ID", "primary")
+        hora_str = str(hora)[:5]
+        fecha_obj = datetime.strptime(str(fecha), "%Y-%m-%d") if isinstance(fecha, str) else fecha
+        hora_parts = hora_str.split(":")
+        start_dt = fecha_obj.replace(hour=int(hora_parts[0]), minute=int(hora_parts[1]))
+        end_dt = start_dt + timedelta(hours=1)
+
+        event = {
+            'summary': f'{especialidad} - {paciente_nombre}',
+            'description': f'Cita dental - {especialidad}\nPaciente: {paciente_nombre}\nID: #{cita_id}',
+            'start': {
+                'dateTime': start_dt.isoformat(),
+                'timeZone': 'America/Lima',
+            },
+            'end': {
+                'dateTime': end_dt.isoformat(),
+                'timeZone': 'America/Lima',
+            },
+        }
+
+        created_event = service.events().insert(calendarId=cal_id, body=event).execute()
+        logger.info(f"Cita #{cita_id} sincronizada con Google Calendar: {created_event.get('htmlLink')}")
+        return True
+    except Exception as e:
+        logger.error(f"Error al sincronizar cita #{cita_id} con Google Calendar: {e}")
+        return False
+
+
+def eliminar_evento_calendar(event_id):
+    service = _get_calendar_service()
+    if not service:
+        return False
+    try:
+        cal_id = os.getenv("GOOGLE_CALENDAR_ID", "primary")
+        service.events().delete(calendarId=cal_id, eventId=event_id).execute()
+        return True
+    except Exception as e:
+        logger.error(f"Error al eliminar evento de Google Calendar: {e}")
+        return False
+
+
+def crear_tabla_auditoria():
+    try:
+        with db_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS auditoria (
+                    id SERIAL PRIMARY KEY,
+                    usuario_id INT REFERENCES usuarios(id) ON DELETE SET NULL,
+                    accion VARCHAR(100) NOT NULL,
+                    detalle TEXT,
+                    ip VARCHAR(45),
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            """)
+            conn.commit()
+    except Exception as e:
+        logger.error(f"Error al crear tabla auditoria: {e}")
+
+
+crear_tabla_auditoria()
 
 
 if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":

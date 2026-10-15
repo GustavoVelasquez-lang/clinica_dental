@@ -15,3 +15,10 @@ e.txt
 # Imagen QR de Yape (dato sensible del negocio; configurar por variable de entorno / hosting)
 static/img/QR.yape.jpeg
 static/img/prueba.yape.jpg
+
+# Varios (versión de feature/mejoras-sistema)
+*.db
+.DS_Store
+.idea/
+.vscode/
+migrations/

@@ -1,8 +1,12 @@
 import os
 import time
+from contextlib import contextmanager
+
 import psycopg2
-from dotenv import load_dotenv
 from psycopg2.extras import RealDictCursor
+from psycopg2 import pool
+
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -51,3 +55,21 @@ def get_connection():
             espera = min(_ESPERA_BASE * (intento ** 2), 15)
             time.sleep(espera)
     raise psycopg2.OperationalError("No se pudo conectar a la base de datos")
+
+
+def release_connection(conn):
+    """Devuelve la conexión (compatibilidad con el código que usa pool)."""
+    try:
+        conn.close()
+    except Exception:
+        pass
+
+
+@contextmanager
+def db_connection():
+    """Context manager de conexión: abre, cierre automático al salir."""
+    conn = get_connection()
+    try:
+        yield conn
+    finally:
+        conn.close()

@@ -9,3 +9,5 @@ Flask-APScheduler
 APScheduler
 python-dotenv
 psycopg2-binary
+gunicorn
+waitress
