@@ -174,7 +174,7 @@
           <span class="pago-yape-valor">{{ yape_nombre }}</span>
         </div>
         <div class="pago-qr-caja">
-          <img src="{{ yape_qr }}" alt="QR Yape" class="pago-qr-img">
+          <img src="{{ url_for('static', filename='img/qr_yape.jpg') }}" alt="QR Yape" class="pago-qr-img">
         </div>
         <p class="pago-aviso">
           ⚠️ Abona <strong>S/ {{ '%.2f'|format(monto_adelanto) }}</strong> por Yape y registra el
