@@ -92,7 +92,7 @@
     </div>
   </div>
 
-  <!-- ══ TABLA (agrupada por fecha) ══ -->
+  <!-- ══ TABLA (agrupada por fecha de agendamiento) ══ -->
   <div class="chart-card ctc-card">
     <div class="ctc-scroll">
       <table class="tb ctc-table">
@@ -113,7 +113,7 @@
         <tbody class="ctc-grupo" data-grupo-fecha="{{ grupo.fecha }}">
           <tr class="ctc-sec-head{% if grupo.es_hoy %} ctc-sec-head--hoy{% endif %}">
             <td colspan="9">
-              <span class="ctc-sec-label">{{ grupo.etiqueta }}</span>
+              <span class="ctc-sec-label">Agendadas · {{ grupo.etiqueta }}</span>
               <span class="ctc-sec-date">{{ grupo.fecha.strftime('%d/%m/%Y') }}</span>
               <span class="ctc-sec-count">{{ grupo.citas|length }} cita{{ 's' if grupo.citas|length != 1 else '' }}</span>
             </td>

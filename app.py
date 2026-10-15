@@ -2171,6 +2171,7 @@ def admin_citas():
             e.nombre AS especialidad,
             c.fecha, c.hora, c.estado, c.estado_pago, c.comprobante,
             c.tipo_atencion, c.adelanto, c.nro_operacion, c.voucher_url, c.metodo_pago,
+            c.created_at,
             (
                 SELECT t.nombre
                 FROM cita_tratamiento ct
@@ -2182,8 +2183,9 @@ def admin_citas():
         FROM citas c
         JOIN usuarios u ON c.paciente_id = u.id
         JOIN especialidades e ON c.especialidad_id = e.id
-        -- Hoy y próximas primero (ascendente); las pasadas al final.
-        ORDER BY (c.fecha >= CURRENT_DATE) DESC, c.fecha ASC, c.hora ASC
+        -- Orden por la fecha en que el paciente AGENDÓ la cita (no la de
+        -- atención): lo más reciente primero, así lo agendado hoy queda arriba.
+        ORDER BY c.created_at DESC NULLS LAST, c.id DESC
     """)
 
     citas = [dict(c) for c in cursor.fetchall()]
@@ -2192,24 +2194,23 @@ def admin_citas():
     hoy = date.today()
 
     for c in citas:
+        # Fecha en que el paciente AGENDÓ la cita (registro), no la de atención.
+        creada = c.get("created_at")
+        c["agendada"] = creada.date() if creada else c["fecha"]
+        # La cita se atiende hoy (para el KPI y el resaltado de la fila).
         c["es_hoy"] = (c["fecha"] == hoy)
         c["por_verificar"] = (c["estado_pago"] == "pendiente_verificacion")
 
-    # Orden: Hoy primero, luego próximas (ascendente), luego pasadas (recientes primero).
-    citas.sort(key=lambda c: (
-        0 if c["fecha"] >= hoy else 1,
-        c["fecha"].toordinal() if c["fecha"] >= hoy else -c["fecha"].toordinal(),
-        c["hora"],
-    ))
-
-    # Agrupar en secciones por fecha, conservando el orden.
+    # Agrupar por la fecha en que se agendó la cita. Ya vienen ordenadas de la
+    # más reciente a la más antigua (ORDER BY created_at DESC).
     grupos = []
     for c in citas:
-        if not grupos or grupos[-1]["fecha"] != c["fecha"]:
+        clave = c["agendada"]
+        if not grupos or grupos[-1]["fecha"] != clave:
             grupos.append({
-                "fecha": c["fecha"],
-                "etiqueta": _etiqueta_fecha(c["fecha"], hoy),
-                "es_hoy": c["fecha"] == hoy,
+                "fecha": clave,
+                "etiqueta": _etiqueta_fecha(clave, hoy),
+                "es_hoy": clave == hoy,
                 "citas": [],
             })
         grupos[-1]["citas"].append(c)
