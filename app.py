@@ -1181,6 +1181,7 @@ def registro():
                 perfil_completo
             )   
             VALUES (%s,%s,%s,%s,%s,2,FALSE)
+            RETURNING id, nombre
         """, (
             nombre,
             apePaterno,
@@ -1188,12 +1189,20 @@ def registro():
             correo,
             clave_hash
         ))  
-
+        nuevo = cursor.fetchone()
         conn.commit()
         conn.close()
-        flash("✅ Registro exitoso. Ya puedes iniciar sesión.", "success")
-        # Conserva el destino para que, tras iniciar sesión, vuelva a él.
-        return redirect(url_for("login", next=siguiente))
+
+        # Iniciar sesión y forzar a completar el perfil (DNI y WhatsApp) una
+        # sola vez, justo después de registrarse.
+        session["usuario_id"] = nuevo["id"]
+        session["rol"] = "paciente"
+        session["nombre"] = nuevo["nombre"]
+        flash(
+            "✅ Registro exitoso. Completa tu perfil para poder agendar tu cita.",
+            "success",
+        )
+        return redirect(url_for("completar_perfil", next=siguiente))
 
     return render_template("registro.html", next=request.args.get("next"))
 
@@ -3158,11 +3167,6 @@ def authorize_google():
         session['usuario_id'] = usuario_db['id']
         session['rol']        = usuario_db['rol']
         session['nombre']     = usuario_db['nombre']
-
-        # Si le falta DNI o teléfono, debe completar el perfil una sola vez.
-        if not usuario_db['perfil_completo']:
-            flash("Completa tu perfil para poder agendar citas.", "warning")
-            return redirect(url_for('completar_perfil', next=siguiente))
 
         if usuario_db['rol'] == 'admin':
             if siguiente and siguiente.startswith('/admin'):
