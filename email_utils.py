@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+import os
 import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -38,42 +39,125 @@ def enviar_en_segundo_plano(func, *args, **kwargs):
 
 
 
+def _scopes_entorno():
+    """Scopes de Gmail, configurables por variable de entorno (opcional)."""
+    raw = (os.getenv("GMAIL_SCOPES") or os.getenv("GOOGLE_SCOPES") or "").strip()
+    if raw:
+        return [s.strip() for s in raw.split(",") if s.strip()]
+    return SCOPES
+
+
+def _credenciales_desde_entorno() -> Credentials | None:
+    """Construye credenciales de Gmail desde variables de entorno.
+
+    Soporta dos formas (para producción, donde no hay archivo en disco):
+      1) GMAIL_TOKEN_JSON: el contenido completo del gmail_token.json.
+      2) GMAIL_REFRESH_TOKEN junto con GMAIL_CLIENT_ID / GMAIL_CLIENT_SECRET.
+    Devuelve None si no hay variables configuradas o son inválidas.
+    """
+    token_json = (os.getenv("GMAIL_TOKEN_JSON") or "").strip()
+    if token_json:
+        try:
+            data = json.loads(token_json)
+            return Credentials(
+                token=data.get("token"),
+                refresh_token=data.get("refresh_token"),
+                token_uri=data.get("token_uri", "https://oauth2.googleapis.com/token"),
+                client_id=data.get("client_id"),
+                client_secret=data.get("client_secret"),
+                scopes=data.get("scopes", SCOPES),
+            )
+        except Exception as e:
+            logger.warning(f"GMAIL_TOKEN_JSON no es un JSON válido: {e}")
+
+    refresh_token = (os.getenv("GMAIL_REFRESH_TOKEN") or "").strip()
+    if refresh_token:
+        client_id = (os.getenv("GMAIL_CLIENT_ID") or os.getenv("GOOGLE_CLIENT_ID") or "").strip()
+        client_secret = (
+            os.getenv("GMAIL_CLIENT_SECRET") or os.getenv("GOOGLE_CLIENT_SECRET") or ""
+        ).strip()
+        if not (client_id and client_secret):
+            logger.warning(
+                "GMAIL_REFRESH_TOKEN definido pero faltan GMAIL_CLIENT_ID / "
+                "GMAIL_CLIENT_SECRET."
+            )
+            return None
+        return Credentials(
+            token=None,
+            refresh_token=refresh_token,
+            token_uri=os.getenv("GMAIL_TOKEN_URI", "https://oauth2.googleapis.com/token"),
+            client_id=client_id,
+            client_secret=client_secret,
+            scopes=_scopes_entorno(),
+        )
+
+    return None
+
+
 def _get_credentials() -> Credentials | None:
-    if not _TOKEN_FILE.exists():
-        logger.error(
-            f"No se encuentra {_TOKEN_FILE}. "
-            "Ejecuta primero: python gmail_auth.py"
+    """Obtiene credenciales de Gmail.
+
+    Prioridad:
+      1) Archivo local ``gmail_token.json`` (desarrollo).
+      2) Variables de entorno (producción: Render/Railway, sin archivo en disco).
+
+    Nunca lanza excepciones: si no hay credenciales o falla el refresco,
+    registra una advertencia y devuelve ``None`` para no romper el flujo
+    principal (citas, recordatorios, etc.).
+    """
+    creds = None
+
+    if _TOKEN_FILE.exists():
+        try:
+            with open(_TOKEN_FILE) as f:
+                token_data = json.load(f)
+            creds = Credentials(
+                token=token_data.get("token"),
+                refresh_token=token_data.get("refresh_token"),
+                token_uri=token_data.get("token_uri"),
+                client_id=token_data.get("client_id"),
+                client_secret=token_data.get("client_secret"),
+                scopes=token_data.get("scopes", SCOPES),
+            )
+        except Exception as e:
+            logger.warning(f"No se pudo leer {_TOKEN_FILE}: {e}")
+            creds = None
+
+    if creds is None:
+        creds = _credenciales_desde_entorno()
+
+    if creds is None:
+        logger.warning(
+            "Credenciales de Gmail no configuradas. Define GMAIL_TOKEN_JSON o "
+            "GMAIL_REFRESH_TOKEN + GMAIL_CLIENT_ID/GMAIL_CLIENT_SECRET, o coloca "
+            f"{_TOKEN_FILE.name} en el proyecto. Se omite el envío de correos."
         )
         return None
 
-    with open(_TOKEN_FILE) as f:
-        token_data = json.load(f)
-
-    creds = Credentials(
-        token=token_data.get("token"),
-        refresh_token=token_data.get("refresh_token"),
-        token_uri=token_data.get("token_uri"),
-        client_id=token_data.get("client_id"),
-        client_secret=token_data.get("client_secret"),
-        scopes=token_data.get("scopes", SCOPES),
-    )
-
-    if creds.expired and creds.refresh_token:
-        creds.refresh(Request())
-        with open(_TOKEN_FILE, "w") as f:
-            json.dump(
-                {
-                    "token": creds.token,
-                    "refresh_token": creds.refresh_token,
-                    "token_uri": creds.token_uri,
-                    "client_id": creds.client_id,
-                    "client_secret": creds.client_secret,
-                    "scopes": creds.scopes,
-                },
-                f,
-                indent=2,
-            )
-        logger.info("Token de Gmail actualizado automaticamente")
+    try:
+        if creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+            if _TOKEN_FILE.exists():
+                try:
+                    with open(_TOKEN_FILE, "w") as f:
+                        json.dump(
+                            {
+                                "token": creds.token,
+                                "refresh_token": creds.refresh_token,
+                                "token_uri": creds.token_uri,
+                                "client_id": creds.client_id,
+                                "client_secret": creds.client_secret,
+                                "scopes": creds.scopes,
+                            },
+                            f,
+                            indent=2,
+                        )
+                    logger.info("Token de Gmail actualizado automáticamente")
+                except Exception as e:
+                    logger.warning(f"No se pudo guardar el token actualizado: {e}")
+    except Exception as e:
+        logger.warning(f"No se pudo refrescar el token de Gmail: {e}")
+        return None
 
     return creds
 

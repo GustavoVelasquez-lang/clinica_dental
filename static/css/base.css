@@ -23,3 +23,24 @@ body {
     margin: 0;
     padding: 0;
 }
+
+/* Mensajes flash (alertas de Flask) visibles en todas las paginas */
+.flash-stack {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2100;
+    width: min(92vw, 560px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.flash-stack .alert {
+    margin: 0;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(15, 30, 51, 0.18);
+    font-size: 14px;
+}

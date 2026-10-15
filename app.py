@@ -265,13 +265,6 @@ def _datos_notificacion_admin(cursor, cita_id):
 
 
 @app.after_request
-def _descartar_flashes(response):
-    """Los mensajes flash no se muestran en la interfaz; se descartan."""
-    session.pop("_flashes", None)
-    return response
-
-
-@app.after_request
 def set_security_headers(response):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-Content-Type-Options"] = "nosniff"
