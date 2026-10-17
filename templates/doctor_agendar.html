@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Agendar cita como doctor — Clínica SELEDENT{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+<style>
+  .da-page { background: #f4f7f8; min-height: 100vh; padding: 32px 0 64px; }
+  .da-card {
+    max-width: 820px; margin: 0 auto; background: #fff; border-radius: 18px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.08); padding: 32px;
+  }
+  .da-head { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+  .da-head .da-icon {
+    width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center;
+    background: linear-gradient(135deg, #0d9488, #14b8a6); color: #fff; font-size: 20px;
+  }
+  .da-head h1 { font-size: 22px; margin: 0; color: #0f172a; }
+  .da-head p { margin: 2px 0 0; color: #64748b; font-size: 14px; }
+  .da-badge {
+    display: inline-flex; align-items: center; gap: 6px; margin: 14px 0 22px;
+    background: #ecfeff; color: #0e7490; border: 1px solid #a5f3fc;
+    padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+  }
+  .da-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .da-field { display: flex; flex-direction: column; gap: 6px; }
+  .da-field.da-full { grid-column: 1 / -1; }
+  .da-field label { font-size: 13px; font-weight: 600; color: #334155; }
+  .da-field select, .da-field input, .da-field textarea {
+    border: 1px solid #cbd5e1; border-radius: 10px; padding: 11px 12px;
+    font-size: 14px; background: #fff; color: #0f172a; outline: none;
+  }
+  .da-field select:focus, .da-field input:focus, .da-field textarea:focus {
+    border-color: #14b8a6; box-shadow: 0 0 0 3px rgba(20,184,166,.15);
+  }
+  .da-actions { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+  .da-btn {
+    display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer;
+    padding: 13px 22px; border-radius: 12px; font-weight: 700; font-size: 14px;
+    text-decoration: none;
+  }
+  .da-btn--primary { background: linear-gradient(135deg, #0d9488, #14b8a6); color: #fff; }
+  .da-btn--ghost { background: #f1f5f9; color: #334155; }
+  @media (max-width: 640px) { .da-grid { grid-template-columns: 1fr; } .da-card { padding: 22px; } }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set pagina = 'inicio' %}
+{% include "_navbar.html" %}
+
+<div class="da-page">
+  <div class="container">
+    <div class="da-card">
+      <div class="da-head">
+        <div class="da-icon"><i class="fa-solid fa-user-doctor"></i></div>
+        <div>
+          <h1>Agendar cita como doctor</h1>
+          <p>Registra una atención asignándote como especialista responsable.</p>
+        </div>
+      </div>
+
+      <span class="da-badge">
+        <i class="fa-solid fa-circle-check"></i> La cita se asignará automáticamente a tu agenda
+      </span>
+
+      <form method="POST" action="{{ url_for('agendar_doctor') }}">
+        <div class="da-grid">
+          <div class="da-field da-full">
+            <label for="paciente_id">Paciente</label>
+            <select name="paciente_id" id="paciente_id" required>
+              <option value="">— Selecciona un paciente —</option>
+              {% for p in pacientes %}
+              <option value="{{ p.id }}">
+                {{ (p.apepaterno ~ ' ' ~ p.apematerno ~ ', ' ~ p.nombre)|replace('  ', ' ')|trim }}
+                {%- if p.numero_documento %} · {{ p.numero_documento }}{% endif %}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="da-field">
+            <label for="especialidad">Especialidad</label>
+            <select name="especialidad" id="especialidad" required>
+              <option value="">— Selecciona la especialidad —</option>
+              {% for esp in especialidades %}
+              <option value="{{ esp.id }}">{{ esp.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="da-field">
+            <label for="tratamiento">Tratamiento (opcional)</label>
+            <select name="tratamiento" id="tratamiento">
+              <option value="">— Selecciona un tratamiento —</option>
+            </select>
+          </div>
+
+          <div class="da-field">
+            <label for="fecha">Fecha</label>
+            <input type="date" name="fecha" id="fecha" min="{{ hoy }}" value="{{ hoy }}" required>
+          </div>
+
+          <div class="da-field">
+            <label for="hora">Hora</label>
+            <select name="hora" id="hora" required>
+              <option value="">— Selecciona la hora —</option>
+              {% for h in horas %}
+              <option value="{{ h }}">{{ h[:5] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="da-field da-full">
+            <label for="mensaje">Observaciones (opcional)</label>
+            <textarea name="mensaje" id="mensaje" rows="3"
+                      placeholder="Notas internas sobre la atención…"></textarea>
+          </div>
+        </div>
+
+        <div class="da-actions">
+          <button type="submit" class="da-btn da-btn--primary">
+            <i class="fa-solid fa-calendar-plus"></i> Registrar cita
+          </button>
+          <a href="{{ url_for('mis_citas') }}" class="da-btn da-btn--ghost">
+            <i class="fa-solid fa-arrow-left"></i> Volver a Mis Citas
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    var esp = document.getElementById("especialidad");
+    var trat = document.getElementById("tratamiento");
+    if (!esp || !trat) return;
+
+    esp.addEventListener("change", function () {
+      var id = esp.value;
+      trat.innerHTML = '<option value="">— Selecciona un tratamiento —</option>';
+      if (!id) return;
+      fetch("{{ url_for('tratamientos_por_especialidad') }}?especialidad_id=" + encodeURIComponent(id))
+        .then(function (r) { return r.json(); })
+        .then(function (lista) {
+          lista.forEach(function (t) {
+            var opt = document.createElement("option");
+            opt.value = t.id;
+            opt.textContent = t.nombre;
+            trat.appendChild(opt);
+          });
+        })
+        .catch(function () {});
+    });
+  })();
+</script>
+{% endblock %}

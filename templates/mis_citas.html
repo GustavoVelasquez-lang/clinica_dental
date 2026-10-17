@@ -126,8 +126,8 @@
         <a href="{{ url_for('logout') }}" class="mc-btn-logout">
           <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
         </a>
-        <a href="{{ url_for('agendar') }}" class="mc-btn-new">
-          <i class="fa-solid fa-plus"></i> Agendar nueva cita
+        <a href="{{ url_for('agendar_doctor') if es_doctor else url_for('agendar') }}" class="mc-btn-new{% if es_doctor %} mc-btn-new--doctor{% endif %}">
+          <i class="fa-solid {{ 'fa-user-doctor' if es_doctor else 'fa-plus' }}"></i> {% if es_doctor %}Agendar cita como doctor{% else %}Agendar nueva cita{% endif %}
         </a>
       </div>
     </header>
@@ -171,8 +171,8 @@
           <div class="mc-empty__icon"><i class="fa-solid fa-calendar-plus"></i></div>
           <h3 class="mc-empty__title">No tienes citas programadas por el momento</h3>
           <p class="mc-empty__sub">Agenda tu próxima consulta y aparecerá aquí.</p>
-          <a href="{{ url_for('agendar') }}" class="mc-btn-new mc-btn-new--lg">
-            <i class="fa-solid fa-calendar-plus"></i> Agendar cita
+          <a href="{{ url_for('agendar_doctor') if es_doctor else url_for('agendar') }}" class="mc-btn-new mc-btn-new--lg{% if es_doctor %} mc-btn-new--doctor{% endif %}">
+            <i class="fa-solid {{ 'fa-user-doctor' if es_doctor else 'fa-calendar-plus' }}"></i> {% if es_doctor %}Agendar cita como doctor{% else %}Agendar cita{% endif %}
           </a>
         </div>
         {% endif %}

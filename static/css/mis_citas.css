@@ -93,6 +93,17 @@ html, body {
 
 .mc-btn-new--lg { margin-top: 18px; padding: 14px 26px; }
 
+/* Variante visual para el agendamiento interno del doctor */
+.mc-btn-new--doctor {
+  background: linear-gradient(135deg, #0d9488, #7c3aed);
+  box-shadow: 0 10px 24px rgba(124, 58, 237, 0.28);
+}
+
+.mc-btn-new--doctor:hover {
+  background: linear-gradient(135deg, #0f766e, #6d28d9);
+  box-shadow: 0 14px 30px rgba(124, 58, 237, 0.36);
+}
+
 .mc-header__actions {
   display: flex;
   align-items: center;

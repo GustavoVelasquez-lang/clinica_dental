@@ -315,6 +315,33 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# Roles considerados "doctor" para el flujo de agendamiento médico.
+# En la BD los odontólogos tienen rol 'odontologo' o 'dentista'; se incluye
+# 'doctor' por si se crea ese rol a futuro.
+ROLES_DOCTOR = {"doctor", "odontologo", "dentista"}
+
+
+def _rol_actual():
+    """Rol del usuario autenticado (soporta la clave 'rol' y 'usuario_rol')."""
+    return session.get("rol") or session.get("usuario_rol")
+
+
+def _es_doctor():
+    """True si el usuario autenticado tiene un rol de doctor/odontólogo."""
+    return _rol_actual() in ROLES_DOCTOR
+
+
+def doctor_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "usuario_id" not in session:
+            return redirect(url_for("login", next=_url_actual()))
+        if _rol_actual() not in ROLES_DOCTOR:
+            flash("❌ Acceso exclusivo para doctores", "danger")
+            return redirect(url_for("mis_citas"))
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 @app.route("/agendar", methods=["GET", "POST"])
 @login_required
@@ -1916,6 +1943,8 @@ def mis_citas():
         horas=HORAS_SISTEMA,
         fecha_min=manana,
         wa_numero=wa_numero,
+        es_doctor=_es_doctor(),
+        rol=session.get("rol"),
     )
 
 
@@ -2017,6 +2046,146 @@ def reprogramar_cita(cita_id):
 
     flash("✅ Tu cita fue reprogramada correctamente.", "success")
     return redirect(url_for("mis_citas"))
+
+
+@app.route("/doctor/agendar", methods=["GET", "POST"])
+@doctor_required
+def agendar_doctor():
+    """Gestión interna de citas para doctores/odontólogos.
+
+    Permite al doctor programar una cita asignándose a sí mismo (odontologo_id
+    = su propio id) y eligiendo al paciente, especialidad, tratamiento y horario.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    doctor_id = session["usuario_id"]
+
+    if request.method == "POST":
+        paciente_id = (request.form.get("paciente_id") or "").strip()
+        especialidad_id = (request.form.get("especialidad") or "").strip()
+        tratamiento_id = (request.form.get("tratamiento") or "").strip() or None
+        fecha_str = (request.form.get("fecha") or "").strip()
+        hora = (request.form.get("hora") or "").strip()
+        mensaje = (request.form.get("mensaje") or "").strip()
+
+        if not paciente_id.isdigit():
+            conn.close()
+            flash("❌ Debes seleccionar un paciente", "danger")
+            return redirect(url_for("agendar_doctor"))
+
+        if not especialidad_id.isdigit():
+            conn.close()
+            flash("❌ Debes seleccionar una especialidad", "danger")
+            return redirect(url_for("agendar_doctor"))
+
+        try:
+            fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+        except ValueError:
+            conn.close()
+            flash("❌ Debes elegir una fecha válida", "danger")
+            return redirect(url_for("agendar_doctor"))
+
+        if fecha < date.today():
+            conn.close()
+            flash("❌ La fecha no puede ser anterior a hoy", "danger")
+            return redirect(url_for("agendar_doctor"))
+
+        if hora not in HORAS_SISTEMA:
+            conn.close()
+            flash("❌ Debes elegir una hora válida", "danger")
+            return redirect(url_for("agendar_doctor"))
+
+        if tratamiento_id and not str(tratamiento_id).isdigit():
+            tratamiento_id = None
+
+        # Hora ocupada para el mismo doctor.
+        cursor.execute(
+            """
+            SELECT id FROM citas
+            WHERE odontologo_id = %s AND fecha = %s AND hora = %s
+              AND estado NOT IN ('cancelada', 'cancelado')
+            """,
+            (doctor_id, fecha, hora),
+        )
+        if cursor.fetchone():
+            conn.close()
+            flash("❌ Ya tienes una cita agendada a esa hora.", "warning")
+            return redirect(url_for("agendar_doctor"))
+
+        adelanto = _resolver_adelanto(cursor, int(especialidad_id), tratamiento_id)
+
+        try:
+            cursor.execute(
+                """
+                INSERT INTO citas
+                (paciente_id, odontologo_id, especialidad_id, fecha, hora, estado,
+                 estado_pago, tipo_atencion, sede, prioridad, observaciones, adelanto)
+                VALUES (%s, %s, %s, %s, %s, 'confirmada', 'pendiente',
+                        %s, %s, %s, %s, %s)
+                RETURNING id
+                """,
+                (
+                    int(paciente_id),
+                    doctor_id,
+                    int(especialidad_id),
+                    fecha,
+                    hora,
+                    "Cita médica (doctor)",
+                    SEDE_PREDETERMINADA,
+                    PRIORIDAD_NORMAL,
+                    mensaje or None,
+                    adelanto,
+                ),
+            )
+            cita_id = cursor.fetchone()["id"]
+        except psycopg2.errors.UniqueViolation:
+            conn.rollback()
+            conn.close()
+            flash("❌ Ya existe una cita en ese horario.", "danger")
+            return redirect(url_for("agendar_doctor"))
+
+        if tratamiento_id and str(tratamiento_id).isdigit():
+            cursor.execute(
+                """
+                INSERT INTO cita_tratamiento (id_cita, id_tratamiento, precio_aplicado)
+                VALUES (
+                    %s, %s,
+                    (SELECT precio_base FROM tratamientos WHERE id_tratamiento = %s)
+                )
+                """,
+                (cita_id, int(tratamiento_id), int(tratamiento_id)),
+            )
+
+        conn.commit()
+        conn.close()
+        _log_auditoria("agendar_cita_doctor", detalle=f"cita #{cita_id}")
+
+        flash("✅ Cita registrada correctamente como doctor.", "success")
+        return redirect(url_for("mis_citas"))
+
+    # ---------- GET ----------
+    cursor.execute("SELECT id, nombre FROM especialidades ORDER BY nombre")
+    especialidades = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT u.id, u.nombre, u.apepaterno, u.apematerno, u.numero_documento
+        FROM usuarios u
+        WHERE u.id_rol = 2 AND u.estado = 'ACTIVO'
+        ORDER BY u.apepaterno, u.nombre
+    """)
+    pacientes = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "doctor_agendar.html",
+        especialidades=especialidades,
+        pacientes=pacientes,
+        horas=HORAS_SISTEMA,
+        hoy=date.today().strftime("%Y-%m-%d"),
+    )
+
 
 @app.route("/mi_cuenta")
 @login_required
