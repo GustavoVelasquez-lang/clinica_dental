@@ -166,6 +166,43 @@ GRUPOS = [
             },
         ],
     },
+    {
+        "especialidad": "Periodoncia",
+        "candidatos": ["periodoncia"],
+        "descripcion": "Tratamiento de las encías y los tejidos de soporte dental.",
+        "tratamientos": [
+            {
+                "nombre": "Profilaxis Dental Profunda",
+                "precio": 90.00, "adelanto": 30.00, "duracion": 30,
+                "descripcion": "Limpieza profesional especializada para eliminar la placa bacteriana y el sarro superficial por encima de la línea de la encía.",
+            },
+            {
+                "nombre": "Raspado y Alisado Radicular (Curetaje)",
+                "precio": 200.00, "adelanto": 50.00, "duracion": 60,
+                "descripcion": "Limpieza profunda de sarro y bacterias debajo de la encía dentro de las bolsas periodontales, alisando la raíz para favorecer su re-adherencia.",
+            },
+            {
+                "nombre": "Cirugía de Colgajo Periodontal",
+                "precio": 550.00, "adelanto": 150.00, "duracion": 60,
+                "descripcion": "Levantamiento temporal de la encía para acceder a raíces profundas, limpiar infección avanzada y suturar el tejido en su posición correcta.",
+            },
+            {
+                "nombre": "Injerto de Tejido Blando (Cirugía Plástica Periodontal)",
+                "precio": 700.00, "adelanto": 200.00, "duracion": 60,
+                "descripcion": "Colocación de tejido del paladar para cubrir raíces expuestas por recesión gingival, reduciendo sensibilidad y mejorando la estética.",
+            },
+            {
+                "nombre": "Injertos Óseos y Regeneración Tisular Guiada (RTG)",
+                "precio": 950.00, "adelanto": 300.00, "duracion": 90,
+                "descripcion": "Uso de materiales biológicos y membranas para rellenar defectos óseos y estimular la regeneración de tejidos de soporte perdidos.",
+            },
+            {
+                "nombre": "Mantenimiento Periodontal",
+                "precio": 100.00, "adelanto": 30.00, "duracion": 30,
+                "descripcion": "Sesión de control y limpieza periódica programada (cada 3 a 6 meses) para supervisar la salud de las encías y evitar recaídas.",
+            },
+        ],
+    },
 ]
 
 
