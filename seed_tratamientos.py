@@ -124,6 +124,48 @@ GRUPOS = [
             },
         ],
     },
+    {
+        "especialidad": "Cirugía Oral",
+        "candidatos": ["cirugia oral"],
+        "descripcion": "Procedimientos quirúrgicos de la cavidad bucal y los maxilares.",
+        "tratamientos": [
+            {
+                "nombre": "Extracción de Muela del Juicio (Tercer Molar)",
+                "precio": 250.00, "adelanto": 50.00, "duracion": 45,
+                "descripcion": "Procedimiento para extraer molares retenidos, impactados en el hueso o que causan dolor e infecciones.",
+            },
+            {
+                "nombre": "Extracción Dental Compleja / Exodoncia",
+                "precio": 150.00, "adelanto": 40.00, "duracion": 40,
+                "descripcion": "Retirada de dientes destruidos por caries profundas, fracturados, supernumerarios o por indicación ortodóntica.",
+            },
+            {
+                "nombre": "Injerto Óseos y Elevación de Seno Maxilar",
+                "precio": 900.00, "adelanto": 250.00, "duracion": 60,
+                "descripcion": "Regeneración del volumen de hueso perdido en los maxilares para permitir la colocación segura de implantes.",
+            },
+            {
+                "nombre": "Apicectomía (Cirugía Endodóntica)",
+                "precio": 600.00, "adelanto": 150.00, "duracion": 60,
+                "descripcion": "Eliminación quirúrgica de la punta de la raíz dental y del tejido infectado tras el fallo de una endodoncia previa.",
+            },
+            {
+                "nombre": "Frenectomía (Labial o Lingual)",
+                "precio": 200.00, "adelanto": 50.00, "duracion": 30,
+                "descripcion": "Reubicación o corte de frenillos que afectan el habla, la movilidad de la lengua o generan separación dental.",
+            },
+            {
+                "nombre": "Biopsia Bukal y Análisis Patológico",
+                "precio": 300.00, "adelanto": 80.00, "duracion": 30,
+                "descripcion": "Toma de muestra de tejido bucal en encía, lengua o mejilla para estudio histopatológico en laboratorio.",
+            },
+            {
+                "nombre": "Drenaje de Absceso y Enucleación de Quiste Maxilar",
+                "precio": 350.00, "adelanto": 100.00, "duracion": 45,
+                "descripcion": "Apertura y descontaminación de infecciones agudas, o remoción quirúrgica de sacos quísticos en los maxilares.",
+            },
+        ],
+    },
 ]
 
 
