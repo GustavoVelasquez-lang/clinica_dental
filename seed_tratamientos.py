@@ -245,6 +245,53 @@ GRUPOS = [
             },
         ],
     },
+    {
+        "especialidad": "Rehabilitación Oral",
+        "candidatos": ["rehabilitacion oral"],
+        "descripcion": "Restauración de la función y estética dental con coronas, puentes y prótesis.",
+        "tratamientos": [
+            {
+                "nombre": "Corona Dental (Circonio / Porcelana / Metal-Porcelana)",
+                "precio": 450.00, "adelanto": 100.00, "duracion": 60,
+                "descripcion": "Funda a medida que recubre un diente muy destruido o debilitado para devolverle su forma, fuerza y apariencia estética.",
+            },
+            {
+                "nombre": "Puente Dental Fijo (por unidad o pieza)",
+                "precio": 400.00, "adelanto": 100.00, "duracion": 60,
+                "descripcion": "Estructura fija que se apoya en los dientes vecinos sanos para cubrir el espacio de uno o más dientes ausentes.",
+            },
+            {
+                "nombre": "Carillas de Porcelana / Resina (Veneers)",
+                "precio": 500.00, "adelanto": 120.00, "duracion": 60,
+                "descripcion": "Láminas estéticas adheridas a la parte frontal de los dientes para corregir la forma, color, tamaño y alineación.",
+            },
+            {
+                "nombre": "Incrustación Dental (Inlay / Onlay / Overlay)",
+                "precio": 300.00, "adelanto": 80.00, "duracion": 45,
+                "descripcion": "Restauración rígida a medida para cavidades o destrucciones extensas donde una resina convencional no es suficiente.",
+            },
+            {
+                "nombre": "Prótesis Parcial Removible (Metálica / Flexible / Acrílica)",
+                "precio": 450.00, "adelanto": 100.00, "duracion": 45,
+                "descripcion": "Aparato removible para reemplazar varios dientes perdidos, sujetándose a las piezas dentales mediante retenedores estéticos o metálicos.",
+            },
+            {
+                "nombre": "Prótesis Total / Dentadura Completa (por arcada)",
+                "precio": 600.00, "adelanto": 150.00, "duracion": 60,
+                "descripcion": "Rehabilitación acrílica completa diseñada para pacientes que han perdido la totalidad de sus dientes en una o ambas arcadas.",
+            },
+            {
+                "nombre": "Diseño de Sonrisa Digital (Smile Design) y Rehabilitación Integral",
+                "precio": 250.00, "adelanto": 50.00, "duracion": 45,
+                "descripcion": "Planificación digital y clínica personalizada para transformar la estética y funcionalidad de la dentadura mediante carillas, coronas y alineación.",
+            },
+            {
+                "nombre": "Férula Miorelajante / Placa Neuromiorrelajante (Anti-Bruxismo)",
+                "precio": 280.00, "adelanto": 70.00, "duracion": 45,
+                "descripcion": "Aparato de acrílico rígido a medida para proteger los dientes del desgaste nocturno, relajar los músculos masticatorios y aliviar la ATM.",
+            },
+        ],
+    },
 ]
 
 
