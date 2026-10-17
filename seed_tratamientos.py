@@ -203,6 +203,48 @@ GRUPOS = [
             },
         ],
     },
+    {
+        "especialidad": "Odontopediatría",
+        "candidatos": ["odontopediatria"],
+        "descripcion": "Odontología para niños: prevención y tratamiento de la salud bucal infantil.",
+        "tratamientos": [
+            {
+                "nombre": "Profilaxis Infantil y Aplicación de Flúor",
+                "precio": 70.00, "adelanto": 20.00, "duracion": 30,
+                "descripcion": "Limpieza dental para niños, enseñanza de cepillado y aplicación de barniz/gel de flúor para fortalecer el esmalte contra las caries.",
+            },
+            {
+                "nombre": "Sellantes de Fosas y Fisuras (por pieza)",
+                "precio": 50.00, "adelanto": 15.00, "duracion": 20,
+                "descripcion": "Recubrimiento protector de resina en los surcos profundos de molares para evitar la acumulación de placa y la formación de caries.",
+            },
+            {
+                "nombre": "Obturación Pediátrica (Cura y Resina)",
+                "precio": 80.00, "adelanto": 20.00, "duracion": 30,
+                "descripcion": "Eliminación de caries en dientes temporales o permanentes jóvenes y restauración estética con resina del color del diente.",
+            },
+            {
+                "nombre": "Corona Pediátrica (Acero Inoxidable / Estética)",
+                "precio": 180.00, "adelanto": 50.00, "duracion": 45,
+                "descripcion": "Colocación de funda o corona infantil para proteger y restaurar la función de un diente temporal con gran destrucción.",
+            },
+            {
+                "nombre": "Pulpotomía / Pulpectomía (Endodoncia Infantil)",
+                "precio": 120.00, "adelanto": 30.00, "duracion": 45,
+                "descripcion": "Tratamiento del nervio en dientes de leche afectados por caries profundas para prevenir dolor, infecciones y extracciones prematuras.",
+            },
+            {
+                "nombre": "Mantenedor de Espacio (Fijo o Removible)",
+                "precio": 250.00, "adelanto": 70.00, "duracion": 45,
+                "descripcion": "Aparato diseñado para conservar la brecha de un diente de leche perdido prematuramente y permitir la correcta erupción del definitivo.",
+            },
+            {
+                "nombre": "Atención Infantil con Sedación Consciente (Óxido Nitroso)",
+                "precio": 200.00, "adelanto": 50.00, "duracion": 45,
+                "descripcion": "Manejo de conducta y relajación con gas de la risa para pacientes pediátricos temerosos o ansiosos durante el procedimiento.",
+            },
+        ],
+    },
 ]
 
 
