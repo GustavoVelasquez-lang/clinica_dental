@@ -97,6 +97,33 @@ GRUPOS = [
             },
         ],
     },
+    {
+        "especialidad": "Implantología",
+        "candidatos": ["implantologia"],
+        "descripcion": "Reposición de piezas dentales con implantes de titanio y prótesis fijas.",
+        "tratamientos": [
+            {
+                "nombre": "Implante Unitario",
+                "precio": 1200.00, "adelanto": 300.00, "duracion": 60,
+                "descripcion": "Reemplazo de un solo diente mediante un implante y una corona independiente. No desgasta los dientes vecinos.",
+            },
+            {
+                "nombre": "Puente sobre Implantes",
+                "precio": 2800.00, "adelanto": 700.00, "duracion": 90,
+                "descripcion": "Reposición de varias piezas seguidas mediante un puente fijo anclado a implantes, sin desgastar dientes sanos.",
+            },
+            {
+                "nombre": "Prótesis Híbrida (All-on-4 / All-on-6)",
+                "precio": 6500.00, "adelanto": 1500.00, "duracion": 120,
+                "descripcion": "Rehabilitación completa de una arcada sobre 4 o 6 implantes estratégicamente colocados. Dentadura fija que no se mueve.",
+            },
+            {
+                "nombre": "Sobredentadura sobre Implantes",
+                "precio": 3500.00, "adelanto": 800.00, "duracion": 90,
+                "descripcion": "Prótesis completa sujeta a los implantes con sistema de anclaje (retech o barras). Estable y removible para una fácil limpieza.",
+            },
+        ],
+    },
 ]
 
 
