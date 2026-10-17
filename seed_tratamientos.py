@@ -86,14 +86,49 @@ GRUPOS = [
         ],
     },
     {
-        "especialidad": "Diagnóstico por Imágenes",
-        "candidatos": ["diagnostico por imagenes", "radiologia e imagen 3d", "radiologia"],
-        "descripcion": "Radiografías y estudios de imagen para un diagnóstico preciso.",
+        "especialidad": "Radiología",
+        "candidatos": ["radiologia", "diagnostico por imagenes", "radiologia e imagen 3d"],
+        "descripcion": "Radiología y procedimientos guiados por imágenes para diagnóstico y tratamiento.",
         "tratamientos": [
             {
                 "nombre": "Radiografía Dental Periapical",
                 "precio": 30.00, "adelanto": 30.00, "duracion": 15,
                 "descripcion": "Imagen de la pieza dental y su raíz para un diagnóstico preciso.",
+            },
+            {
+                "nombre": "Angioplastia y Colocación de Stent",
+                "precio": 1500.00, "adelanto": 400.00, "duracion": 60,
+                "descripcion": "Apertura de arterias obstruidas mediante balón y colocación de malla metálica (stent) guiada por fluoroscopia o tomografía.",
+            },
+            {
+                "nombre": "Embolización Vascular (Aneurismas / Miomas)",
+                "precio": 1800.00, "adelanto": 500.00, "duracion": 90,
+                "descripcion": "Oclusión selectiva de vasos sanguíneos con coils o sustancias embolizantes para tratar aneurismas o reducir miomas.",
+            },
+            {
+                "nombre": "Quimioembolización",
+                "precio": 2200.00, "adelanto": 600.00, "duracion": 90,
+                "descripcion": "Inyección directa de quimioterapia y agentes oclusivos en las arterias que nutren lesiones tumorales.",
+            },
+            {
+                "nombre": "Drenaje Percutáneo de Abscesos y Colecciones",
+                "precio": 450.00, "adelanto": 120.00, "duracion": 45,
+                "descripcion": "Evacuación guiada por ecografía o tomografía de colecciones infectadas mediante catéter percutáneo.",
+            },
+            {
+                "nombre": "Infiltración y Bloqueo del Dolor Guiado por Imágenes",
+                "precio": 250.00, "adelanto": 60.00, "duracion": 30,
+                "descripcion": "Inyección precisa de antiinflamatorios y analgésicos en articulaciones o columna vertebral para el alivio del dolor crónico.",
+            },
+            {
+                "nombre": "Ablación por Radiofrecuencia / Microondas",
+                "precio": 1600.00, "adelanto": 450.00, "duracion": 60,
+                "descripcion": "Destrucción térmica localizada de tumores mediante aguja especial guiada por imágenes tomográficas o ecográficas.",
+            },
+            {
+                "nombre": "Radioterapia de Haz Externo / Braquiterapia",
+                "precio": 2000.00, "adelanto": 500.00, "duracion": 60,
+                "descripcion": "Planificación y aplicación de radiación ionizante milimétrica dirigida para tratamiento de tumores o colocación de fuentes radiactivas internas.",
             },
         ],
     },

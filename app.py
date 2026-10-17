@@ -1702,6 +1702,7 @@ ESPECIALIDAD_IMGS = {
     "cirugia": "extraccion.jpg",
     "odontopediatria": "limpieza_dental.jpg",
     "rehabilitacion oral": "remplazo.jpg",
+    "radiologia": "cuatro.jpg",
     "radiologia e imagen 3d": "cuatro.jpg",
     "urgencias odontologicas": "extraccion.jpg",
 }
@@ -1717,6 +1718,7 @@ ESPECIALIDAD_DESC = {
     "cirugia": "Extracciones y procedimientos quirúrgicos de la cavidad oral con máxima seguridad.",
     "odontopediatria": "Atención dental especializada para niños y adolescentes, con un trato cercano y sin miedo.",
     "rehabilitacion oral": "Restauración de la función y estética mediante coronas y prótesis a medida.",
+    "radiologia": "Radiología y procedimientos guiados por imágenes para diagnóstico y tratamiento.",
     "radiologia e imagen 3d": "Tomografías y escaneo intraoral de alta precisión para un diagnóstico exacto.",
     "urgencias odontologicas": "Atención rápida ante dolores agudos y traumatismos dentales.",
 }
