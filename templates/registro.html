@@ -116,14 +116,20 @@
             <div class="field-group">
               <label for="clave" class="form-label fw-semibold">Contrase&ntilde;a</label>
               <div class="input-group">
-                <input type="password" id="clave" name="clave" required minlength="4"
+                <input type="password" id="clave" name="clave" required minlength="8"
                        class="form-control border-end-0">
                 <button type="button" class="input-group-text bg-white border-start-0"
                         id="toggleClave" aria-label="Mostrar u ocultar contrase&ntilde;a">
                   <i class="fa-regular fa-eye" aria-hidden="true"></i>
                 </button>
               </div>
-              <div class="invalid-feedback">La contrase&ntilde;a debe tener al menos 4 caracteres.</div>
+              <ul class="pass-req" id="passRequisitos" aria-live="polite">
+                <li data-req="length"><i class="fa-regular fa-circle" aria-hidden="true"></i> M&iacute;nimo 8 caracteres</li>
+                <li data-req="upper"><i class="fa-regular fa-circle" aria-hidden="true"></i> Al menos una letra may&uacute;scula</li>
+                <li data-req="lower"><i class="fa-regular fa-circle" aria-hidden="true"></i> Al menos una letra min&uacute;scula</li>
+                <li data-req="number"><i class="fa-regular fa-circle" aria-hidden="true"></i> Al menos un n&uacute;mero</li>
+                <li data-req="special"><i class="fa-regular fa-circle" aria-hidden="true"></i> Al menos un car&aacute;cter especial (@, $, !, %, *, ?, &amp;, -, _)</li>
+              </ul>
             </div>
           </div>
 
@@ -138,7 +144,7 @@
                   <i class="fa-regular fa-eye" aria-hidden="true"></i>
                 </button>
               </div>
-              <div class="invalid-feedback">Las contrase&ntilde;as deben coincidir.</div>
+              <div id="passConfirmMsg" class="pass-mismatch" hidden>Las contrase&ntilde;as no coinciden.</div>
             </div>
           </div>
         </div>

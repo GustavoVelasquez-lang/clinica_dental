@@ -627,3 +627,34 @@
   text-decoration: underline;
   color: #1d4ed8;
 }
+
+/* Requisitos dinamicos de contrasena */
+.pass-req {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pass-req li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #9aa6b3;
+  transition: color 0.15s;
+}
+
+.pass-req li i { font-size: 11px; }
+.pass-req li.ok { color: #1a9e5c; }
+.pass-req li.bad { color: #d64b42; }
+
+.pass-mismatch {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #d64b42;
+}

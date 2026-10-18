@@ -1248,6 +1248,11 @@ def registro():
         if clave != confirmar:
             flash("❌ Las contraseñas no coinciden", "danger")
             return redirect(url_for("registro", next=siguiente))
+
+        if not _validar_password(clave):
+            flash(PASSWORD_MENSAJE, "danger")
+            return redirect(url_for("registro", next=siguiente))
+
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -1370,6 +1375,21 @@ def _validar_fenacimiento(valor):
     if edad is None or edad < 0 or edad > 100:
         return None, "Ingresa una fecha de nacimiento válida."
     return fecha, None
+
+
+# Contraseñas: mínimo 8 caracteres con mayúscula, minúscula, número y especial.
+PASSWORD_REGEX = re.compile(
+    r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_-])[A-Za-z\d@$!%*?&_-]{8,}$"
+)
+PASSWORD_MENSAJE = (
+    "❌ La contraseña debe tener al menos 8 caracteres e incluir una mayúscula, "
+    "una minúscula, un número y un carácter especial (@, $, !, %, *, ?, &, -, _)."
+)
+
+
+def _validar_password(clave):
+    """True si la contraseña cumple la política mínima de seguridad."""
+    return bool(PASSWORD_REGEX.fullmatch(clave or ""))
 
 
 def _destino_seguro(valor, por_defecto="inicio"):

@@ -48,6 +48,77 @@
     });
   }
 
+  /* ---------- Contrasena segura (validacion dinamica) ---------- */
+  var reglasPassword = [
+    { id: "length", test: function (v) { return v.length >= 8; } },
+    { id: "upper", test: function (v) { return /[A-Z]/.test(v); } },
+    { id: "lower", test: function (v) { return /[a-z]/.test(v); } },
+    { id: "number", test: function (v) { return /\d/.test(v); } },
+    { id: "special", test: function (v) { return /[@$!%*?&_-]/.test(v); } }
+  ];
+
+  var passReq = document.getElementById("passRequisitos");
+  var confirmMsg = document.getElementById("passConfirmMsg");
+  var tocadoPassword = false;
+
+  function passwordEsSegura(valor) {
+    return reglasPassword.every(function (r) { return r.test(valor); });
+  }
+
+  function actualizarRequisitos() {
+    if (!passReq) return;
+    var valor = clave ? clave.value : "";
+    reglasPassword.forEach(function (r) {
+      var li = passReq.querySelector('[data-req="' + r.id + '"]');
+      if (!li) return;
+      li.classList.remove("ok", "bad");
+      if (!tocadoPassword) return;
+      var cumple = r.test(valor);
+      li.classList.add(cumple ? "ok" : "bad");
+      var icono = li.querySelector("i");
+      if (icono) {
+        icono.className = cumple
+          ? "fa-solid fa-circle-check"
+          : "fa-solid fa-circle-xmark";
+      }
+    });
+  }
+
+  function actualizarBoton() {
+    if (boton) {
+      var claveOk = passwordEsSegura(clave.value);
+      var coincide = clave.value.length > 0 && clave.value === confirmar.value;
+      boton.disabled = !(claveOk && coincide);
+    }
+    if (confirmMsg) {
+      confirmMsg.hidden = !(confirmar.value.length > 0 && clave.value !== confirmar.value);
+    }
+  }
+
+  function actualizarPasswordUI() {
+    actualizarRequisitos();
+    actualizarBoton();
+  }
+
+  if (clave) {
+    clave.addEventListener("focus", function () {
+      tocadoPassword = true;
+      actualizarRequisitos();
+    });
+    clave.addEventListener("input", function () {
+      tocadoPassword = true;
+      actualizarPasswordUI();
+    });
+  }
+  if (confirmar) {
+    confirmar.addEventListener("input", actualizarBoton);
+  }
+
+  // Estado inicial: boton deshabilitado hasta cumplir los requisitos.
+  actualizarPasswordUI();
+  // Reaplica el estado si el navegador autorrellena o restaura el formulario.
+  window.addEventListener("pageshow", actualizarPasswordUI);
+
   /* ---------- Validacion al enviar ---------- */
   form.addEventListener("submit", function (ev) {
     var errores = [];
@@ -67,10 +138,10 @@
       errores.push("Ingresa un correo electronico valido.");
     }
 
-    if (!clave.value || clave.value.length < 4) {
-      errores.push("La contrasena debe tener al menos 4 caracteres.");
-    } else if (clave.value !== document.getElementById("confirmar").value) {
-      errores.push("Las contrasenas no coinciden.");
+    if (!passwordEsSegura(clave.value)) {
+      errores.push("La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial (@, $, !, %, *, ?, &, -, _).");
+    } else if (clave.value !== confirmar.value) {
+      errores.push("Las contraseñas no coinciden.");
     }
 
     if (errores.length) {
@@ -79,10 +150,9 @@
       return;
     }
 
-    var btn = document.getElementById("btnRegistro");
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = "Creando cuenta...";
+    if (boton) {
+      boton.disabled = true;
+      boton.textContent = "Creando cuenta...";
     }
   });
 })();
