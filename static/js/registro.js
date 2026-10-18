@@ -33,7 +33,13 @@
   /* ---------- Fecha de nacimiento ---------- */
   var fecha = document.getElementById("fenacimiento");
   if (fecha) {
-    fecha.max = new Date().toISOString().slice(0, 10);
+    // Solo mayores de edad: entre 1927 y 18 años atrás.
+    var hoyFecha = new Date();
+    var mes = hoyFecha.getMonth() + 1;
+    var dia = hoyFecha.getDate();
+    fecha.min = "1927-01-01";
+    fecha.max = (hoyFecha.getFullYear() - 18) + "-" +
+      (mes < 10 ? "0" + mes : mes) + "-" + (dia < 10 ? "0" + dia : dia);
   }
 
   /* ---------- Autocompletado por DNI ---------- */
@@ -124,14 +130,16 @@
     var errores = [];
 
     var dni = document.getElementById("dni");
-    if (dni && dni.value.trim() && !/^\d{8}$/.test(dni.value.trim())) {
-      errores.push("El DNI debe tener 8 dígitos.");
+    if (dni && !/^\d{8}$/.test(dni.value.trim())) {
+      errores.push("El DNI es obligatorio y debe tener 8 dígitos.");
     }
 
     if (fecha && !fecha.value) {
       errores.push("Ingresa tu fecha de nacimiento.");
     } else if (fecha && fecha.max && fecha.value > fecha.max) {
-      errores.push("La fecha de nacimiento no puede ser futura.");
+      errores.push("Debes ser mayor de edad (18 años) para poder registrarte.");
+    } else if (fecha && fecha.min && fecha.value < fecha.min) {
+      errores.push("La fecha de nacimiento no puede ser anterior a 1927.");
     }
 
     if (!correo.value.trim() || !RE_CORREO.test(correo.value.trim().toLowerCase())) {

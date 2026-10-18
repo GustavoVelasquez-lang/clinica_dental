@@ -1236,8 +1236,8 @@ def registro():
             flash("⚠️ Correo electrónico inválido", "warning")
             return redirect(url_for("registro", next=siguiente))
 
-        if dni and not re.fullmatch(r"\d{8}", dni):
-            flash("⚠️ El DNI debe tener 8 dígitos.", "warning")
+        if not re.fullmatch(r"\d{8}", dni):
+            flash("⚠️ El DNI es obligatorio y debe tener 8 dígitos.", "warning")
             return redirect(url_for("registro", next=siguiente))
 
         fecha_nac, error_fecha = _validar_fenacimiento(request.form.get("fenacimiento"))
@@ -1288,8 +1288,8 @@ def registro():
             nombre,
             apePaterno,
             apeMaterno,
-            dni or None,
-            "DNI" if dni else None,
+            dni,
+            "DNI",
             fecha_nac,
             correo,
             clave_hash
@@ -1357,10 +1357,16 @@ def _calcular_edad(fecha_nac):
     return hoy.year - fecha_nac.year - ((hoy.month, hoy.day) < (fecha_nac.month, fecha_nac.day))
 
 
+FECHA_NACIMIENTO_MIN = date(1927, 1, 1)
+EDAD_MINIMA = 18
+EDAD_MAXIMA = 100
+
+
 def _validar_fenacimiento(valor):
     """Valida una fecha de nacimiento (YYYY-MM-DD).
 
-    Devuelve (fecha: date | None, error: str | None).
+    Solo se admiten mayores de edad (18 años), hasta 100 años y no anteriores
+    a 1927. Devuelve (fecha: date | None, error: str | None).
     """
     valor = (valor or "").strip()
     if not valor:
@@ -1371,9 +1377,13 @@ def _validar_fenacimiento(valor):
         return None, "La fecha de nacimiento no es válida."
     if fecha > date.today():
         return None, "La fecha de nacimiento no puede ser futura."
+    if fecha < FECHA_NACIMIENTO_MIN:
+        return None, "La fecha de nacimiento no puede ser anterior a 1927."
     edad = _calcular_edad(fecha)
-    if edad is None or edad < 0 or edad > 100:
-        return None, "Ingresa una fecha de nacimiento válida."
+    if edad is None or edad < EDAD_MINIMA:
+        return None, "Debes ser mayor de edad (18 años) para poder registrarte."
+    if edad > EDAD_MAXIMA:
+        return None, "La edad no puede superar los 100 años."
     return fecha, None
 
 

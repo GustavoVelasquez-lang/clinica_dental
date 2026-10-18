@@ -14,9 +14,14 @@
   var fenacimiento = document.getElementById("fenacimiento");
   var telefono = document.getElementById("telefono");
 
-  // Fecha de nacimiento: no permitir fechas futuras.
+  // Fecha de nacimiento: solo mayores de edad (18 a 100 años), desde 1927.
   if (fenacimiento) {
-    fenacimiento.max = new Date().toISOString().slice(0, 10);
+    var hoyFecha = new Date();
+    var mes = hoyFecha.getMonth() + 1;
+    var dia = hoyFecha.getDate();
+    fenacimiento.min = "1927-01-01";
+    fenacimiento.max = (hoyFecha.getFullYear() - 18) + "-" +
+      (mes < 10 ? "0" + mes : mes) + "-" + (dia < 10 ? "0" + dia : dia);
   }
 
   // DNI: solo dígitos, máximo 8.
@@ -67,7 +72,9 @@
     if (fenacimiento && !fenacimiento.value) {
       errores.push("Ingresa tu fecha de nacimiento.");
     } else if (fenacimiento && fenacimiento.value > fenacimiento.max) {
-      errores.push("La fecha de nacimiento no puede ser futura.");
+      errores.push("Debes ser mayor de edad (18 años) para poder registrarte.");
+    } else if (fenacimiento && fenacimiento.value < fenacimiento.min) {
+      errores.push("La fecha de nacimiento no puede ser anterior a 1927.");
     }
 
     if (telefono && !/^[0-9+\s]{6,20}$/.test(telefono.value.trim())) {

@@ -101,7 +101,7 @@
               <label class="cp-label" for="fenacimiento">Fecha de nacimiento</label>
               <div class="cp-input-group">
                 <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
-                <input type="date" id="fenacimiento" name="fenacimiento" class="cp-input" required
+                <input type="date" id="fenacimiento" name="fenacimiento" class="cp-input" min="1927-01-01" required
                        value="{{ form_fenacimiento if form_fenacimiento is defined and form_fenacimiento else (datos.fenacimiento.isoformat() if datos and datos.fenacimiento else '') }}">
               </div>
             </div>
