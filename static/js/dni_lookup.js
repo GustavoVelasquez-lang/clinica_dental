@@ -75,6 +75,7 @@
 
       setStatus("Buscando en RENIEC...", "info");
       if (btn) btn.disabled = true;
+      if (window.showLoader) window.showLoader();
 
       fetch(ENDPOINT + valor, { headers: { Accept: "application/json" } })
         .then(function (resp) {
@@ -84,6 +85,7 @@
         })
         .then(function (res) {
           if (btn) btn.disabled = false;
+          if (window.hideLoader) window.hideLoader();
           if (res.data && res.data.success) {
             aplicar(res.data, forzar);
             setStatus("✅ Datos encontrados.", "ok");
@@ -94,6 +96,7 @@
         })
         .catch(function () {
           if (btn) btn.disabled = false;
+          if (window.hideLoader) window.hideLoader();
           setStatus("❌ No se pudo conectar. Intenta de nuevo.", "error");
         });
     }

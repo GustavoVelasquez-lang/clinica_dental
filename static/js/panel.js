@@ -125,6 +125,7 @@ function mostrarToast(mensaje, tipo) {
         return;
       }
       btn.disabled = true;
+      if (window.showLoader) window.showLoader();
       try {
         const resp = await fetch(endpoint, {
           method: 'POST',
@@ -160,6 +161,7 @@ function mostrarToast(mensaje, tipo) {
         mostrarToast('Error de conexión al guardar.', 'error');
       } finally {
         btn.disabled = false;
+        if (window.hideLoader) window.hideLoader();
       }
     };
 

@@ -26,6 +26,12 @@
 
 </head>
 <body>
+  <!-- Pantalla de carga global (presente en todas las rutas) -->
+  <div id="global-loader" class="loader-overlay hidden" role="status"
+       aria-live="polite" aria-label="Cargando">
+    <div class="spinner"></div>
+  </div>
+
   {% block flashes %}
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
