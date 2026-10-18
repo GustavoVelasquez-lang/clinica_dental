@@ -1,0 +1,107 @@
+{% extends "base_panel.html" %}
+
+{% block title %}Familiares — Clínica SELEDENT{% endblock %}
+{% block panel_titulo_top %}Familiares{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/familiares.css') }}">
+{% endblock %}
+
+{% block panel_content %}
+<div class="fam-wrap">
+
+  <header class="mc-header">
+    <div class="mc-header__text">
+      <h1 class="mc-title">Familiares a cargo</h1>
+      <p class="mc-subtitle">Registra a tus familiares o menores a cargo para agendar citas a su nombre. Tú sigues siendo el titular y responsable de la cuenta y del pago.</p>
+    </div>
+  </header>
+
+  <div class="fam-grid">
+
+    <!-- ── FORMULARIO ── -->
+    <section class="fam-card">
+      <h2 class="fam-card__title"><i class="fa-solid fa-user-plus"></i> Agregar familiar</h2>
+      <form method="POST" action="{{ url_for('familiar_agregar') }}" autocomplete="off">
+        <div class="fam-field">
+          <label for="famNombres">Nombres</label>
+          <input type="text" id="famNombres" name="nombres" class="fam-input"
+                 required maxlength="100" placeholder="Nombres del familiar">
+        </div>
+        <div class="fam-field">
+          <label for="famApellidos">Apellidos</label>
+          <input type="text" id="famApellidos" name="apellidos" class="fam-input"
+                 required maxlength="100" placeholder="Apellidos del familiar">
+        </div>
+        <div class="fam-row">
+          <div class="fam-field">
+            <label for="famDni">DNI <span>(opcional)</span></label>
+            <input type="text" id="famDni" name="dni" class="fam-input"
+                   inputmode="numeric" maxlength="8" placeholder="12345678">
+          </div>
+          <div class="fam-field">
+            <label for="famFenacimiento">Nacimiento <span>(opcional)</span></label>
+            <input type="date" id="famFenacimiento" name="fenacimiento"
+                   class="fam-input" min="1927-01-01" max="{{ hoy }}">
+          </div>
+        </div>
+        <div class="fam-field">
+          <label for="famParentesco">Parentesco</label>
+          <select id="famParentesco" name="parentesco" class="fam-input">
+            <option value="">— Selecciona —</option>
+            <option value="Hijo/a">Hijo/a</option>
+            <option value="Cónyuge">Cónyuge</option>
+            <option value="Padre">Padre</option>
+            <option value="Madre">Madre</option>
+            <option value="Hermano/a">Hermano/a</option>
+            <option value="Abuelo/a">Abuelo/a</option>
+            <option value="Nieto/a">Nieto/a</option>
+            <option value="Sobrino/a">Sobrino/a</option>
+            <option value="Tutorado/a">Tutorado/a (menor a cargo)</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <button type="submit" class="fam-btn">
+          <i class="fa-solid fa-plus"></i> Agregar familiar
+        </button>
+      </form>
+    </section>
+
+    <!-- ── LISTA ── -->
+    <section class="fam-card">
+      <h2 class="fam-card__title"><i class="fa-solid fa-people-roof"></i> Mis familiares</h2>
+      {% if familiares %}
+        <ul class="fam-list">
+          {% for f in familiares %}
+          <li class="fam-item">
+            <div class="fam-item__avatar">{{ (f.nombres or 'F')[0]|upper }}</div>
+            <div class="fam-item__info">
+              <strong>{{ f.nombres }} {{ f.apellidos }}</strong>
+              <span>
+                {% if f.parentesco %}{{ f.parentesco }}{% endif %}
+                {% if f.dni %} · DNI {{ f.dni }}{% endif %}
+                {% if f.fenacimiento %} · Nac. {{ f.fenacimiento.strftime('%d/%m/%Y') }}{% endif %}
+              </span>
+            </div>
+            <form method="POST" action="{{ url_for('familiar_eliminar', familiar_id=f.id) }}"
+                  onsubmit="return confirm('¿Eliminar a {{ f.nombres }} {{ f.apellidos }}?');">
+              <button type="submit" class="fam-del" aria-label="Eliminar familiar">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="fam-empty">
+          <i class="fa-solid fa-people-roof"></i>
+          <p>Aún no has registrado familiares</p>
+          <span>Agrega a tus hijos, padres u otros familiares a cargo para poder agendar citas a su nombre.</span>
+        </div>
+      {% endif %}
+    </section>
+
+  </div>
+</div>
+{% endblock %}

@@ -96,7 +96,23 @@
         <span>Tu primera cita incluirá una evaluación clínica integral y el diagnóstico para determinar el plan de tratamiento adecuado para ti.</span>
       </div>
 
-      <!-- ── 1. TIPO DE ATENCIÓN (orientado a síntomas) ── -->
+      <!-- ── 0. ¿PARA QUIÉN ES LA CITA? ── -->
+      {% if dependientes %}
+      <div class="field-group">
+        <div class="field-label">
+          <label for="dependiente_id">¿Para quién es la cita?</label>
+          <span class="campo-hint">Opcional</span>
+        </div>
+        <div class="select-wrap">
+          <select name="dependiente_id" id="dependiente_id" class="field-input">
+            <option value="">Para mí (titular de la cuenta)</option>
+            {% for d in dependientes %}
+              <option value="{{ d.id }}">{{ d.nombres }} {{ d.apellidos }}{% if d.parentesco %} ({{ d.parentesco }}){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      {% endif %}
       <div class="field-group">
         <div class="field-label">
           <label>¿Qué necesitas?</label>

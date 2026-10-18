@@ -35,6 +35,13 @@
         <i class="fa-solid fa-folder-open"></i> Documentos clínicos
       </a>
     </li>
+    {% if not es_doctor %}
+    <li>
+      <a href="{{ url_for('familiares') }}" class="{{ 'active' if request.endpoint == 'familiares' else '' }}">
+        <i class="fa-solid fa-people-roof"></i> Familiares
+      </a>
+    </li>
+    {% endif %}
   </ul>
 
   <div class="sb-foot">

@@ -1,0 +1,218 @@
+/* ============================================================
+   Clinica SELEDENT - Panel: Familiares a cargo
+   ============================================================ */
+
+.fam-wrap {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.fam-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) 1fr;
+  gap: 22px;
+  align-items: start;
+  margin-top: 8px;
+}
+
+.fam-card {
+  background: #fff;
+  border: 1px solid #e6ebf2;
+  border-radius: 16px;
+  padding: 22px 22px 24px;
+  box-shadow: 0 10px 30px rgba(16, 42, 74, 0.05);
+}
+
+.fam-card__title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 18px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #16202e;
+}
+
+.fam-card__title i {
+  color: #2f6fd0;
+}
+
+/* ---- Formulario ---- */
+.fam-field {
+  margin-bottom: 14px;
+}
+
+.fam-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #16202e;
+}
+
+.fam-field label span {
+  color: #8a97a6;
+  font-weight: 400;
+}
+
+.fam-input {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1.5px solid #dfe5ec;
+  border-radius: 10px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  color: #16202e;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.fam-input:focus {
+  border-color: #2f6fd0;
+  box-shadow: 0 0 0 3px rgba(47, 111, 208, 0.13);
+}
+
+.fam-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.fam-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 50px;
+  background: #2f6fd0;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(47, 111, 208, 0.28);
+  transition: background 0.2s, transform 0.15s;
+}
+
+.fam-btn:hover {
+  background: #1f57b3;
+  transform: translateY(-1px);
+}
+
+/* ---- Lista ---- */
+.fam-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fam-item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 15px;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  background: #fbfcfe;
+}
+
+.fam-item__avatar {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #eaf2fd;
+  color: #2f6fd0;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.fam-item__info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.fam-item__info strong {
+  display: block;
+  font-size: 14px;
+  color: #16202e;
+}
+
+.fam-item__info span {
+  display: block;
+  font-size: 12.5px;
+  color: #6f7d8d;
+  margin-top: 2px;
+}
+
+.fam-del {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid #f0d5d2;
+  border-radius: 10px;
+  background: #fff;
+  color: #d64b42;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.fam-del:hover {
+  background: #fdeceb;
+  border-color: #f5c6c3;
+}
+
+/* ---- Vacío ---- */
+.fam-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 34px 20px;
+  color: #8a97a6;
+}
+
+.fam-empty i {
+  font-size: 34px;
+  color: #c3cedb;
+  margin-bottom: 12px;
+}
+
+.fam-empty strong,
+.fam-empty p {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #46536a;
+}
+
+.fam-empty span {
+  font-size: 13px;
+  max-width: 340px;
+  line-height: 1.5;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 860px) {
+  .fam-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .fam-row {
+    grid-template-columns: 1fr;
+  }
+}

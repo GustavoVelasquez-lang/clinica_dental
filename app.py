@@ -410,6 +410,18 @@ def agendar():
     cursor.execute("SELECT id, nombre FROM especialidades")
     especialidades = cursor.fetchall()
 
+    # Familiares registrados por el titular (para agendar a su nombre).
+    cursor.execute(
+        """
+        SELECT id, nombres, apellidos, parentesco
+        FROM dependientes
+        WHERE titular_id = %s
+        ORDER BY nombres
+        """,
+        (session["usuario_id"],),
+    )
+    dependientes = cursor.fetchall()
+
     if request.method == "POST":
 
         fecha_str = request.form.get("fecha")
@@ -418,6 +430,7 @@ def agendar():
         mensaje = (request.form.get("mensaje") or "").strip()
         tipo_key = (request.form.get("tipo") or "").strip()
         tratamiento_id = (request.form.get("tratamiento") or "").strip() or None
+        dependiente_id = (request.form.get("dependiente_id") or "").strip() or None
         odontologo_id = (
             request.form.get("odontologo_id")
             or request.form.get("id_doctor")
@@ -472,7 +485,20 @@ def agendar():
             flash("❌ Solo pacientes pueden agendar citas", "danger")
             return redirect(url_for("inicio"))
 
-                                                       
+        # La cita puede ser para el titular (sin dependiente) o para uno de sus
+        # familiares registrados.
+        if dependiente_id:
+            if not dependiente_id.isdigit():
+                dependiente_id = None
+            else:
+                cursor.execute(
+                    "SELECT 1 FROM dependientes WHERE id = %s AND titular_id = %s",
+                    (int(dependiente_id), session["usuario_id"]),
+                )
+                if not cursor.fetchone():
+                    flash("❌ El familiar seleccionado no es válido.", "danger")
+                    return redirect(url_for("agendar"))
+
         cursor.execute("""
             SELECT id FROM citas
             WHERE especialidad_id = %s AND fecha = %s AND hora = %s
@@ -501,8 +527,8 @@ def agendar():
             cursor.execute("""
                 INSERT INTO citas 
                 (paciente_id, odontologo_id, especialidad_id, fecha, hora, estado, estado_pago,
-                 tipo_atencion, sede, prioridad, observaciones, adelanto)
-                VALUES (%s, %s, %s, %s, %s, 'pendiente', 'pendiente', %s, %s, %s, %s, %s)
+                 tipo_atencion, sede, prioridad, observaciones, adelanto, dependiente_id)
+                VALUES (%s, %s, %s, %s, %s, 'pendiente', 'pendiente', %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
                 session["usuario_id"],
@@ -515,6 +541,7 @@ def agendar():
                 PRIORIDAD_PRIORITARIA if es_urgencia else PRIORIDAD_NORMAL,
                 mensaje or None,
                 adelanto,
+                int(dependiente_id) if dependiente_id else None,
             ))
             cita_id = cursor.fetchone()["id"]
         except psycopg2.errors.UniqueViolation:
@@ -611,6 +638,7 @@ def agendar():
         especialidades=especialidades,
         especialidad_seleccionada=especialidad_param,
         tratamiento_seleccionado=tratamiento_param,
+        dependientes=dependientes,
         tipo_seleccionado=tipo_seleccionado,
         tipos_atencion=tipos_render,
     )
@@ -2077,10 +2105,12 @@ def mis_citas():
                COALESCE(
                    NULLIF(TRIM(CONCAT_WS(' ', o.nombre, o.apepaterno, o.apematerno)), ''),
                    'Por asignar'
-               ) AS odontologo
+               ) AS odontologo,
+               NULLIF(TRIM(CONCAT_WS(' ', d.nombres, d.apellidos)), '') AS familiar
         FROM citas c
         JOIN especialidades e ON c.especialidad_id = e.id
         LEFT JOIN usuarios o ON c.odontologo_id = o.id
+        LEFT JOIN dependientes d ON c.dependiente_id = d.id
         WHERE c.paciente_id = %s
         ORDER BY c.fecha DESC, c.hora DESC
     """, (SEDE_PREDETERMINADA, session["usuario_id"]))
@@ -2113,6 +2143,132 @@ def mis_citas():
 def documentos():
     """Centro de documentos clínicos del paciente (7 secciones)."""
     return render_template("documentos.html")
+
+
+def _validar_fecha_familiar(valor):
+    """Valida la fecha de nacimiento de un familiar (permite menores de edad).
+
+    Devuelve (fecha: date | None, error: str | None). Vacío => (None, None).
+    """
+    valor = (valor or "").strip()
+    if not valor:
+        return None, None
+    try:
+        fecha = datetime.strptime(valor, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return None, "La fecha de nacimiento no es válida."
+    if fecha > date.today():
+        return None, "La fecha de nacimiento no puede ser futura."
+    if fecha < FECHA_NACIMIENTO_MIN:
+        return None, "La fecha de nacimiento no puede ser anterior a 1927."
+    return fecha, None
+
+
+@app.route("/familiares")
+@login_required
+def familiares():
+    """Panel donde el titular registra y gestiona a sus familiares a cargo."""
+    if _es_doctor() or session.get("rol") == "admin":
+        flash("Solo los titulares (pacientes) pueden gestionar familiares.", "warning")
+        return redirect(url_for("mis_citas"))
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT id, dni, nombres, apellidos, fenacimiento, parentesco
+        FROM dependientes
+        WHERE titular_id = %s
+        ORDER BY fecha_registro DESC, id DESC
+        """,
+        (session["usuario_id"],),
+    )
+    lista = cursor.fetchall()
+    conn.close()
+    return render_template(
+        "familiares.html",
+        familiares=lista,
+        hoy=date.today().isoformat(),
+    )
+
+
+@app.route("/familiares/agregar", methods=["POST"])
+@login_required
+def familiar_agregar():
+    if _es_doctor() or session.get("rol") == "admin":
+        flash("Solo los titulares (pacientes) pueden registrar familiares.", "warning")
+        return redirect(url_for("mis_citas"))
+
+    nombres = (request.form.get("nombres") or "").strip()
+    apellidos = (request.form.get("apellidos") or "").strip()
+    dni = (request.form.get("dni") or "").strip()
+    parentesco = (request.form.get("parentesco") or "").strip()
+
+    if not nombres or not apellidos:
+        flash("⚠️ Ingresa los nombres y apellidos del familiar.", "warning")
+        return redirect(url_for("familiares"))
+
+    if dni and not re.fullmatch(r"\d{8}", dni):
+        flash("⚠️ El DNI del familiar debe tener 8 dígitos.", "warning")
+        return redirect(url_for("familiares"))
+
+    fecha_nac, error_fecha = _validar_fecha_familiar(request.form.get("fenacimiento"))
+    if error_fecha:
+        flash(f"⚠️ {error_fecha}", "warning")
+        return redirect(url_for("familiares"))
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO dependientes
+                (titular_id, dni, nombres, apellidos, fenacimiento, parentesco)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                session["usuario_id"],
+                dni or None,
+                nombres,
+                apellidos,
+                fecha_nac,
+                parentesco or None,
+            ),
+        )
+        conn.commit()
+        flash("✅ Familiar agregado correctamente.", "success")
+        _log_auditoria("agregar_familiar", detalle=f"{nombres} {apellidos}")
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error al agregar familiar: {e}")
+        flash("❌ No se pudo agregar el familiar.", "danger")
+    finally:
+        conn.close()
+    return redirect(url_for("familiares"))
+
+
+@app.route("/familiares/<int:familiar_id>/eliminar", methods=["POST"])
+@login_required
+def familiar_eliminar(familiar_id):
+    if _es_doctor() or session.get("rol") == "admin":
+        flash("Solo los titulares (pacientes) pueden gestionar familiares.", "warning")
+        return redirect(url_for("mis_citas"))
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "DELETE FROM dependientes WHERE id = %s AND titular_id = %s",
+        (familiar_id, session["usuario_id"]),
+    )
+    eliminado = cursor.rowcount
+    conn.commit()
+    conn.close()
+
+    if eliminado:
+        flash("✅ Familiar eliminado.", "success")
+    else:
+        flash("⚠️ No se encontró el familiar.", "warning")
+    return redirect(url_for("familiares"))
 
 
 @app.route("/citas/<int:cita_id>/cancelar", methods=["POST"])
@@ -3986,6 +4142,23 @@ def _asegurar_esquema_perfil():
         )
         cursor.execute(
             "ALTER TABLE citas ADD COLUMN IF NOT EXISTS metodo_pago VARCHAR(30)"
+        )
+        # --- Familiares / dependientes a cargo del titular --------------------
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS dependientes (
+                id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                titular_id INT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+                dni VARCHAR(20),
+                nombres VARCHAR(100) NOT NULL,
+                apellidos VARCHAR(100) NOT NULL,
+                fenacimiento DATE,
+                parentesco VARCHAR(30),
+                fecha_registro TIMESTAMP DEFAULT NOW()
+            )
+        """)
+        cursor.execute(
+            "ALTER TABLE citas ADD COLUMN IF NOT EXISTS dependiente_id INT "
+            "REFERENCES dependientes(id) ON DELETE SET NULL"
         )
         # 'pendiente_verificacion' (22 chars) excede VARCHAR(20): ampliar.
         cursor.execute(

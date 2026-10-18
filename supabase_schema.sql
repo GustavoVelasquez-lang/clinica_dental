@@ -189,6 +189,36 @@ END $$;
 
 
 -- ============================================================
+-- 4b. DEPENDIENTES / FAMILIARES A CARGO DEL TITULAR
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS dependientes (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    titular_id INT NOT NULL
+        REFERENCES usuarios(id)
+        ON DELETE CASCADE,
+
+    dni VARCHAR(20),
+
+    nombres VARCHAR(100) NOT NULL,
+
+    apellidos VARCHAR(100) NOT NULL,
+
+    fenacimiento DATE,
+
+    parentesco VARCHAR(30),
+
+    fecha_registro TIMESTAMP DEFAULT now()
+);
+
+-- Citas: a quién corresponde la cita (NULL = titular de la cuenta).
+ALTER TABLE citas ADD COLUMN IF NOT EXISTS dependiente_id INT
+    REFERENCES dependientes(id)
+    ON DELETE SET NULL;
+
+
+-- ============================================================
 -- 5. RECORDATORIOS
 -- ============================================================
 
