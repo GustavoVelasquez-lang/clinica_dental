@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}{% block panel_titulo %}Mis Citas{% endblock %} — Clínica SELEDENT{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/panel.css') }}">
+{% block panel_css %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+{% set nombre_user = session.get('nombre') or 'Usuario' %}
+<div class="panel-layout">
+
+  <!-- ══ SIDEBAR LATERAL ══ -->
+  <aside class="sidebar" id="panelSidebar">
+    <a class="sb-logo" href="{{ url_for('mis_citas') }}">
+      <div class="sb-logo-icon">
+        <svg viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M12 2C8.7 2 6 4.7 6 8c0 1.9.8 3.4 1.6 4.8.9 1.5 1.2 3.6 1.5 5.3.1.9.6 1.9 1.6 1.9 1.2 0 1.3-1.6 1.3-2.6 0-.9 0-2 0-2s.2-.6.5-.6.5.6.5.6v2c0 1 .1 2.6 1.3 2.6 1 0 1.5-1 1.6-1.9.3-1.7.6-3.8 1.5-5.3.8-1.4 1.6-2.9 1.6-4.8 0-3.3-2.7-6-6-6Z"/></svg>
+    </div>
+    <div class="sb-logo-text">
+      <strong>Sele Dent</strong>
+      <small>Mi panel</small>
+    </div>
+  </a>
+
+  <div class="sb-section">Menú</div>
+  <ul class="sb-nav">
+    <li>
+      <a href="{{ url_for('mis_citas') }}" class="{{ 'active' if request.endpoint == 'mis_citas' else '' }}">
+        <i class="fa-solid fa-calendar-check"></i> Mis citas
+      </a>
+    </li>
+    <li>
+      <a href="{{ url_for('documentos') }}" class="{{ 'active' if request.endpoint == 'documentos' else '' }}">
+        <i class="fa-solid fa-folder-open"></i> Documentos clínicos
+      </a>
+    </li>
+  </ul>
+
+  <div class="sb-foot">
+    <a href="{{ url_for('agendar_doctor') if es_doctor else url_for('agendar') }}"
+       class="sb-cta{{ ' sb-cta--doctor' if es_doctor else '' }}">
+      <i class="fa-solid {{ 'fa-user-doctor' if es_doctor else 'fa-plus' }}"></i>
+      {{ 'Agendar cita como doctor' if es_doctor else 'Agendar una cita' }}
+    </a>
+  </div>
+</aside>
+<div class="sb-overlay" id="sbOverlay"></div>
+
+<!-- MAIN -->
+<div class="panel-main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button type="button" class="tb-burger" id="sbToggle" aria-label="Abrir menú">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <div class="topbar-titles">
+        <h1>{% block panel_titulo_top %}Mis citas{% endblock %}</h1>
+        <p id="fechaHoy"></p>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="dropdown">
+        <button type="button" class="account-pill" data-bs-toggle="dropdown" aria-expanded="false">
+          <span class="account-pill__avatar">{{ (session.get('nombre') or 'U')[0]|upper }}</span>
+          <span class="account-pill__name">{{ session.get('nombre')|default('Usuario', true) }}</span>
+          <i class="fa-solid fa-chevron-down account-pill__caret"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end account-menu">
+          <li>
+            <a class="dropdown-item" href="{{ url_for('mi_cuenta') }}">
+              <i class="fa-solid fa-user-pen"></i> Mis datos
+            </a>
+          </li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <a class="dropdown-item dropdown-item--danger" href="{{ url_for('logout') }}">
+              <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-content">
+    {% block panel_content %}{% endblock %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/panel.js') }}"></script>
+{% block panel_js %}{% endblock %}
+{% endblock %}

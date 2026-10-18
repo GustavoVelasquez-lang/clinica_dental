@@ -1,0 +1,90 @@
+/* ============================================================
+   DOCUMENTOS CLÍNICOS · panel de usuario
+   Clínica SELEDENT
+   ============================================================ */
+
+.dc-dashboard {
+  width: 100%;
+  max-width: 1100px;
+}
+
+/* ---- Pestañas ---- */
+.dc-tabs {
+  gap: 6px;
+  border-bottom: 1px solid rgba(47, 111, 208, 0.14);
+  margin-bottom: 26px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.dc-tabs::-webkit-scrollbar { display: none; }
+
+.dc-tabs .nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #6f7d8d;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 12px 14px;
+  margin-bottom: -1px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.dc-tabs .nav-link i { font-size: 13px; }
+.dc-tabs .nav-link:hover { color: #2f6fd0; }
+.dc-tabs .nav-link.active {
+  color: #2f6fd0;
+  border-bottom-color: #2f6fd0;
+  background: transparent;
+}
+
+.dc-tab-content { padding-top: 2px; }
+
+/* ---- Estado vacío ---- */
+.dc-empty {
+  background: #fff;
+  border: 1px dashed rgba(47, 111, 208, 0.18);
+  border-radius: 16px;
+  padding: 60px 24px;
+  text-align: center;
+  box-shadow: 0 1px 2px rgba(15, 30, 51, 0.04), 0 12px 30px rgba(15, 30, 51, 0.06);
+}
+
+.dc-empty__icon {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eaf2fd;
+  color: #2f6fd0;
+  font-size: 30px;
+}
+
+.dc-empty__title {
+  font-size: 19px;
+  font-weight: 700;
+  color: #12283f;
+  margin: 0 0 6px;
+}
+
+.dc-empty__sub {
+  font-size: 14px;
+  color: #6f7d8d;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .dc-tabs .nav-link { font-size: 13px; padding: 11px 10px; }
+  .dc-empty { padding: 44px 18px; }
+}

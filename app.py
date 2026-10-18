@@ -331,6 +331,17 @@ def _es_doctor():
     return _rol_actual() in ROLES_DOCTOR
 
 
+@app.context_processor
+def inject_panel_context():
+    """Variables disponibles en el sidebar/topbar del panel de usuario."""
+    if not session.get("usuario_id"):
+        return {}
+    return {
+        "es_doctor": _es_doctor(),
+        "nombre_sesion": session.get("nombre") or "Usuario",
+    }
+
+
 def doctor_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -1369,7 +1380,7 @@ def completar_perfil():
 
         if session.get("rol") == "admin":
             return redirect(url_for("admin_dashboard"))
-        return redirect(_destino_seguro(siguiente, "agendar"))
+        return redirect(_destino_seguro(siguiente, "mis_citas"))
 
     siguiente = request.args.get("next")
     datos = _datos_perfil(usuario_id)
@@ -1473,7 +1484,7 @@ def login():
                 return redirect(siguiente)
             return redirect(url_for("admin_dashboard"))
         else:
-            return redirect(_destino_seguro(siguiente, "inicio"))
+            return redirect(_destino_seguro(siguiente, "mis_citas"))
 
     return render_template("login.html", next=request.args.get("next"))
 
@@ -1948,6 +1959,13 @@ def mis_citas():
     )
 
 
+@app.route("/documentos")
+@login_required
+def documentos():
+    """Centro de documentos clínicos del paciente (7 secciones)."""
+    return render_template("documentos.html")
+
+
 @app.route("/citas/<int:cita_id>/cancelar", methods=["POST"])
 @login_required
 def cancelar_cita(cita_id):
@@ -2203,6 +2221,9 @@ def mi_cuenta():
             u.apePaterno,
             u.apeMaterno,
             u.correo,
+            u.telefono,
+            u.direccion,
+            u.fenacimiento,
             COALESCE(r.nombre, 'paciente') AS rol,
             u.estado,
             u.fecha_registro
@@ -2224,7 +2245,59 @@ def mi_cuenta():
     citas = cursor.fetchall()
     conn.close()
 
-    return render_template("mi_cuenta.html", usuario=usuario, citas=citas)
+    edad = None
+    fnac = usuario.get("fenacimiento") if usuario else None
+    if fnac:
+        _hoy = date.today()
+        edad = _hoy.year - fnac.year - ((_hoy.month, _hoy.day) < (fnac.month, fnac.day))
+
+    return render_template("mi_cuenta.html", usuario=usuario, citas=citas, edad=edad)
+
+
+@app.route("/mi_cuenta/actualizar", methods=["POST"])
+@login_required
+def mi_cuenta_actualizar():
+    """Actualiza en caliente teléfono / correo / dirección del usuario."""
+    data = request.get_json(silent=True) or {}
+    campo = (data.get("campo") or "").strip()
+    valor = (data.get("valor") or "").strip()
+
+    permitidos = {"telefono", "correo", "direccion"}
+    if campo not in permitidos:
+        return jsonify({"ok": False, "mensaje": "Campo no permitido."}), 400
+
+    if campo == "telefono":
+        if valor and not re.fullmatch(r"[0-9+\s]{6,20}", valor):
+            return jsonify({"ok": False, "mensaje": "Ingresa un número de teléfono válido."}), 400
+    elif campo == "correo":
+        if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[A-Za-z]{2,}", valor):
+            return jsonify({"ok": False, "mensaje": "Ingresa un correo electrónico válido."}), 400
+        valor = valor.lower()
+    elif campo == "direccion":
+        if len(valor) > 255:
+            return jsonify({"ok": False, "mensaje": "La dirección es demasiado larga."}), 400
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            f"UPDATE usuarios SET {campo} = %s WHERE id = %s",
+            (valor or None, session["usuario_id"]),
+        )
+        conn.commit()
+        _log_auditoria("perfil_actualizado", session["usuario_id"])
+    except psycopg2.errors.UniqueViolation:
+        conn.rollback()
+        conn.close()
+        return jsonify({"ok": False, "mensaje": "Ese correo ya está registrado en otra cuenta."}), 409
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        logger.exception("mi_cuenta_actualizar: error al guardar %s", campo)
+        return jsonify({"ok": False, "mensaje": f"No se pudo guardar: {e}"}), 500
+    conn.close()
+
+    return jsonify({"ok": True, "campo": campo, "valor": valor, "mensaje": "Datos actualizados correctamente."})
 
 @app.route("/api/citas")
 @login_required
@@ -3453,6 +3526,7 @@ def _asegurar_esquema_perfil():
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS telefono VARCHAR(30)")
+        cursor.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS direccion VARCHAR(255)")
         cursor.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS perfil_completo BOOLEAN DEFAULT TRUE")
         cursor.execute("UPDATE usuarios SET perfil_completo = TRUE WHERE perfil_completo IS NULL")
         cursor.execute(

@@ -1,11 +1,11 @@
-{% extends "base.html" %}
+{% extends "base_panel.html" %}
 
 {% block title %}Mis Citas — Clínica SELEDENT{% endblock %}
+{% block panel_titulo_top %}Mis citas{% endblock %}
 
 {% block extra_css %}
+{{ super() }}
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/mis_citas.css') }}">
 {% endblock %}
 
@@ -105,107 +105,90 @@
 </article>
 {% endmacro %}
 
-{% block content %}
-{% set pagina = 'inicio' %}
-{% include "_navbar.html" %}
+{% block panel_content %}
+<div class="mc-dashboard">
 
-<div class="mc-page">
-  <div class="container">
+  <!-- ══ ENCABEZADO DEL DASHBOARD ══ -->
+  <header class="mc-header">
+    <div class="mc-header__text">
+      <h1 class="mc-title">
+        Hola, {{ session.get('nombre')|default('Paciente', true) }}
+        <span class="mc-title__wave" aria-hidden="true">👋</span>
+      </h1>
+      <p class="mc-subtitle">Gestiona tu historial médico y próximas consultas en Clínica SELEDENT.</p>
+    </div>
+  </header>
 
-    <!-- ══ ENCABEZADO DEL DASHBOARD ══ -->
-    <header class="mc-header">
-      <div class="mc-header__text">
-        <h1 class="mc-title">
-          Hola, {{ session.get('nombre')|default('Paciente', true) }}
-          <span class="mc-title__wave" aria-hidden="true">👋</span>
-        </h1>
-        <p class="mc-subtitle">Gestiona tu historial médico y próximas consultas en Clínica SELEDENT.</p>
-      </div>
+  <!-- ══ PESTAÑAS ══ -->
+  <ul class="nav mc-tabs" id="mcTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="tab-proximas" data-bs-toggle="tab"
+              data-bs-target="#panel-proximas" type="button" role="tab"
+              aria-controls="panel-proximas" aria-selected="true">
+        <i class="fa-solid fa-calendar-check"></i> Próximas citas
+        <span class="mc-tab-count">{{ proximas|length }}</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-historial" data-bs-toggle="tab"
+              data-bs-target="#panel-historial" type="button" role="tab"
+              aria-controls="panel-historial" aria-selected="false">
+        <i class="fa-solid fa-clock-rotate-left"></i> Historial
+        <span class="mc-tab-count">{{ historial|length }}</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-canceladas" data-bs-toggle="tab"
+              data-bs-target="#panel-canceladas" type="button" role="tab"
+              aria-controls="panel-canceladas" aria-selected="false">
+        <i class="fa-solid fa-circle-xmark"></i> Canceladas
+        <span class="mc-tab-count">{{ canceladas|length }}</span>
+      </button>
+    </li>
+  </ul>
 
-      <div class="mc-header__actions">
-        <a href="{{ url_for('logout') }}" class="mc-btn-logout">
-          <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
-        </a>
-        <a href="{{ url_for('agendar_doctor') if es_doctor else url_for('agendar') }}" class="mc-btn-new{% if es_doctor %} mc-btn-new--doctor{% endif %}">
-          <i class="fa-solid {{ 'fa-user-doctor' if es_doctor else 'fa-plus' }}"></i> {% if es_doctor %}Agendar cita como doctor{% else %}Agendar nueva cita{% endif %}
-        </a>
-      </div>
-    </header>
-
-    <!-- ══ PESTAÑAS ══ -->
-    <ul class="nav mc-tabs" id="mcTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="tab-proximas" data-bs-toggle="tab"
-                data-bs-target="#panel-proximas" type="button" role="tab"
-                aria-controls="panel-proximas" aria-selected="true">
-          <i class="fa-solid fa-calendar-check"></i> Próximas citas
-          <span class="mc-tab-count">{{ proximas|length }}</span>
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-historial" data-bs-toggle="tab"
-                data-bs-target="#panel-historial" type="button" role="tab"
-                aria-controls="panel-historial" aria-selected="false">
-          <i class="fa-solid fa-clock-rotate-left"></i> Historial de atenciones
-          <span class="mc-tab-count">{{ historial|length }}</span>
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-canceladas" data-bs-toggle="tab"
-                data-bs-target="#panel-canceladas" type="button" role="tab"
-                aria-controls="panel-canceladas" aria-selected="false">
-          <i class="fa-solid fa-ban"></i> Canceladas
-          <span class="mc-tab-count">{{ canceladas|length }}</span>
-        </button>
-      </li>
-    </ul>
-
-    <div class="tab-content mc-tab-content" id="mcTabsContent">
-
-      <!-- ── Próximas ── -->
-      <div class="tab-pane fade show active" id="panel-proximas" role="tabpanel" aria-labelledby="tab-proximas">
-        {% if proximas %}
+  <div class="tab-content mc-tab-content">
+    <div class="tab-pane fade show active" id="panel-proximas" role="tabpanel" aria-labelledby="tab-proximas">
+      {% if proximas %}
         <div class="mc-lista">{% for c in proximas %}{{ cita_card(c) }}{% endfor %}</div>
-        {% else %}
+      {% else %}
         <div class="mc-empty">
-          <div class="mc-empty__icon"><i class="fa-solid fa-calendar-plus"></i></div>
-          <h3 class="mc-empty__title">No tienes citas programadas por el momento</h3>
-          <p class="mc-empty__sub">Agenda tu próxima consulta y aparecerá aquí.</p>
-          <a href="{{ url_for('agendar_doctor') if es_doctor else url_for('agendar') }}" class="mc-btn-new mc-btn-new--lg{% if es_doctor %} mc-btn-new--doctor{% endif %}">
-            <i class="fa-solid {{ 'fa-user-doctor' if es_doctor else 'fa-calendar-plus' }}"></i> {% if es_doctor %}Agendar cita como doctor{% else %}Agendar cita{% endif %}
+          <div class="mc-empty__icon"><i class="fa-solid fa-calendar-day"></i></div>
+          <h3 class="mc-empty__title">No tienes citas próximas</h3>
+          <p class="mc-empty__sub">Cuando agendes una cita aparecerá aquí.</p>
+          <a href="{{ url_for('agendar_doctor') if es_doctor else url_for('agendar') }}" class="mc-btn-new{{ ' mc-btn-new--doctor' if es_doctor else '' }}">
+            <i class="fa-solid {{ 'fa-user-doctor' if es_doctor else 'fa-plus' }}"></i>
+            {{ 'Agendar cita como doctor' if es_doctor else 'Agendar una cita' }}
           </a>
         </div>
-        {% endif %}
-      </div>
+      {% endif %}
+    </div>
 
-      <!-- ── Historial ── -->
-      <div class="tab-pane fade" id="panel-historial" role="tabpanel" aria-labelledby="tab-historial">
-        {% if historial %}
+    <div class="tab-pane fade" id="panel-historial" role="tabpanel" aria-labelledby="tab-historial">
+      {% if historial %}
         <div class="mc-lista">{% for c in historial %}{{ cita_card(c) }}{% endfor %}</div>
-        {% else %}
+      {% else %}
         <div class="mc-empty">
-          <div class="mc-empty__icon"><i class="fa-solid fa-notes-medical"></i></div>
-          <h3 class="mc-empty__title">Aún no tienes atenciones registradas</h3>
-          <p class="mc-empty__sub">Tu historial médico aparecerá aquí tras tu primera consulta.</p>
+          <div class="mc-empty__icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+          <h3 class="mc-empty__title">Sin historial todavía</h3>
+          <p class="mc-empty__sub">Aquí verás tus citas atendidas.</p>
         </div>
-        {% endif %}
-      </div>
+      {% endif %}
+    </div>
 
-      <!-- ── Canceladas ── -->
-      <div class="tab-pane fade" id="panel-canceladas" role="tabpanel" aria-labelledby="tab-canceladas">
-        {% if canceladas %}
+    <div class="tab-pane fade" id="panel-canceladas" role="tabpanel" aria-labelledby="tab-canceladas">
+      {% if canceladas %}
         <div class="mc-lista">{% for c in canceladas %}{{ cita_card(c) }}{% endfor %}</div>
-        {% else %}
+      {% else %}
         <div class="mc-empty">
           <div class="mc-empty__icon"><i class="fa-solid fa-circle-check"></i></div>
           <h3 class="mc-empty__title">No tienes citas canceladas</h3>
           <p class="mc-empty__sub">¡Excelente! Ninguna de tus citas ha sido cancelada.</p>
         </div>
-        {% endif %}
-      </div>
-
+      {% endif %}
     </div>
   </div>
+
 </div>
 
 <!-- ══ MODAL · REPROGRAMAR ══ -->
@@ -229,12 +212,12 @@
           <div class="mc-field">
             <label for="rpHora">Nueva hora</label>
             <select id="rpHora" name="hora" required>
-              {% for h in horas %}<option value="{{ h }}">{{ h[:5] }}</option>{% endfor %}
+              {% for h in horas %}<option value="{{ h }}">{{ h }}</option>{% endfor %}
             </select>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="mc-act mc-act--sec" data-bs-dismiss="modal">Cerrar</button>
+          <button type="button" class="mc-act mc-act--sec" data-bs-dismiss="modal">Cancelar</button>
           <button type="submit" class="mc-act mc-act--primary">Guardar cambios</button>
         </div>
       </form>
@@ -258,9 +241,8 @@
             <span id="cnFecha">—</span>?
           </p>
           <div class="mc-field">
-            <label for="cnMotivo">Motivo (opcional)</label>
-            <textarea id="cnMotivo" name="motivo" rows="3"
-                      placeholder="Cuéntanos brevemente por qué cancelas…"></textarea>
+            <label for="cnMotivo">Motivo de cancelación (opcional)</label>
+            <textarea id="cnMotivo" name="motivo" rows="3" placeholder="Cuéntanos por qué cancelas..."></textarea>
           </div>
         </div>
         <div class="modal-footer">
@@ -271,10 +253,8 @@
     </div>
   </div>
 </div>
-
-{% include "_footer.html" %}
 {% endblock %}
 
-{% block extra_js %}
+{% block panel_js %}
 <script src="{{ url_for('static', filename='js/mis_citas.js') }}"></script>
 {% endblock %}

@@ -1,0 +1,372 @@
+/* ============================================================
+   PANEL DE USUARIO · layout con sidebar + topbar
+   Clínica SELEDENT
+   ============================================================ */
+
+:root {
+  --pn-teal:      #2f6fd0;
+  --pn-teal-dark: #1f57b3;
+  --pn-teal-xl:   #eaf2fd;
+  --pn-gold:      #c9a84c;
+  --pn-dark:      #12283f;
+  --pn-mid:       #2c4257;
+  --pn-muted:     #6f7d8d;
+  --pn-bg:        #f5f7fa;
+  --pn-sidebar:   248px;
+}
+
+body {
+  background: #f5f7fa;
+}
+
+.panel-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* ---------------- SIDEBAR --------------- */
+.sidebar {
+  width: var(--pn-sidebar);
+  flex-shrink: 0;
+  background: var(--pn-dark);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.sb-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 26px 22px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  text-decoration: none;
+}
+
+.sb-logo-icon {
+  width: 38px;
+  height: 36px;
+  background: var(--pn-teal);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sb-logo-icon svg { width: 22px; height: 22px; }
+
+.sb-logo-text strong {
+  display: block;
+  font-family: var(--font-d, 'Outfit', sans-serif);
+  font-size: 15px;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.sb-logo-text small {
+  font-size: 9.5px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sb-section {
+  padding: 22px 22px 8px;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sb-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0 12px;
+}
+
+.sb-nav li + li { margin-top: 4px; }
+
+.sb-nav a {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  color: rgba(255, 255, 255, 0.72);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.18s, color 0.18s;
+}
+
+.sb-nav a > i {
+  width: 18px;
+  text-align: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.sb-nav a:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+
+.sb-nav a.active {
+  background: var(--pn-teal);
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(47, 111, 208, 0.38);
+}
+
+.sb-foot {
+  margin-top: auto;
+  padding: 18px 16px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sb-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 13px;
+  background: var(--pn-teal);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 12px 26px rgba(47, 111, 208, 0.35);
+  transition: transform 0.18s, background 0.18s;
+}
+
+.sb-cta:hover { background: var(--pn-teal-dark); color: #fff; transform: translateY(-2px); }
+
+.sb-cta--doctor {
+  background: linear-gradient(135deg, #0d9488, #7c3aed);
+  box-shadow: 0 12px 26px rgba(124, 58, 237, 0.32);
+}
+
+.sb-cta--doctor:hover { background: linear-gradient(135deg, #0f766e, #6d28d9); }
+
+/* ==== MAIN ==== */
+.panel-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 68px;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(47, 111, 208, 0.12);
+}
+
+.topbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+
+.topbar-titles { min-width: 0; }
+
+.topbar-titles h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--pn-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-titles p { margin: 2px 0 0; font-size: 12px; color: var(--pn-muted); }
+
+.tb-burger {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(47, 111, 208, 0.16);
+  border-radius: 11px;
+  background: #fff;
+  color: var(--pn-mid);
+  font-size: 15px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s, color 0.18s;
+}
+
+.tb-burger:hover { background: var(--pn-teal-xl); color: var(--pn-teal); }
+
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+/* ==== Píldora de cuenta ==== */
+.account-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px 6px 6px;
+  border: 1px solid rgba(47, 111, 208, 0.16);
+  border-radius: 50px;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  transition: box-shadow 0.18s, border-color 0.18s;
+}
+
+.account-pill:hover {
+  border-color: rgba(47, 111, 208, 0.4);
+  box-shadow: 0 8px 20px rgba(47, 111, 208, 0.14);
+}
+
+.account-pill__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--pn-teal), var(--pn-gold));
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.account-pill__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--pn-dark);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-pill__caret { font-size: 11px; color: var(--pn-muted); }
+
+.account-menu {
+  border: none;
+  border-radius: 15px;
+  padding: 8px;
+  min-width: 220px;
+  box-shadow: 0 18px 44px rgba(15, 30, 51, 0.18);
+}
+
+.account-menu .dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pn-mid);
+}
+
+.account-menu .dropdown-item i { width: 18px; text-align: center; color: var(--pn-teal); }
+
+.account-pill ~ .dropdown-menu .dropdown-item:hover,
+.account-menu .dropdown-item:hover { background: var(--pn-teal-xl); color: var(--pn-teal); }
+
+.account-menu .dropdown-item--danger { color: #dc2626; }
+.account-menu .dropdown-item--danger i { color: #dc2626; }
+.account-menu .dropdown-item--danger:hover { background: #fdecec; color: #b91c1c; }
+
+.account-menu .dropdown-divider { margin: 6px 4px; }
+
+/* ==== Contenido ==== */
+.panel-content { flex: 1; padding: 30px 32px 56px; }
+
+.sb-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 40, 63, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 90;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.sb-overlay.show { display: block; opacity: 1; }
+
+/* ==== Toasts ==== */
+.pn-toast-stack {
+  position: fixed;
+  top: 84px;
+  right: 24px;
+  z-index: 2200;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(90vw, 340px);
+}
+
+.pn-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  border-radius: 13px;
+  background: #fff;
+  border: 1px solid rgba(47, 111, 208, 0.14);
+  box-shadow: 0 16px 36px rgba(15, 30, 51, 0.16);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--pn-dark);
+  animation: pnToastIn 0.28s ease both;
+}
+
+.pn-toast i { font-size: 16px; }
+.pn-toast--ok i { color: #16a34a; }
+.pn-toast--error i { color: #dc2626; }
+.pn-toast--out { opacity: 0; transform: translateX(14px); transition: all 0.28s ease; }
+
+@keyframes pnToastIn {
+  from { opacity: 0; transform: translateX(18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ==== Responsive ==== */
+@media (max-width: 1000px) {
+  .topbar { padding: 0 22px; }
+  .panel-content { padding: 24px 20px 48px; }
+}
+
+@media (max-width: 900px) {
+  .tb-burger { display: inline-flex; }
+
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    height: 100vh;
+    min-height: 0;
+    overflow-y: auto;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(.22, 1, .36, 1);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.25);
+  }
+
+  .sidebar.open { transform: translateX(0); }
+}
+
+@media (max-width: 560px) {
+  .account-pill__name { display: none; }
+  .account-pill { padding: 5px; }
+  .account-pill__caret { display: none; }
+  .topbar-titles h1 { font-size: 17px; }
+}

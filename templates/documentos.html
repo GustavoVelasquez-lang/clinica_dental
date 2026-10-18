@@ -1,0 +1,56 @@
+{% extends "base_panel.html" %}
+
+{% block title %}Documentos clínicos — Clínica SELEDENT{% endblock %}
+{% block panel_titulo_top %}Documentos clínicos{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/documentos.css') }}">
+{% endblock %}
+
+{% set docs = [
+  {'id': 'documentos',   'titulo': 'Documentos clínicos',      'icono': 'fa-file-medical'},
+  {'id': 'descansos',    'titulo': 'Descansos médicos',        'icono': 'fa-notes-medical'},
+  {'id': 'lab-ordenes',  'titulo': 'Órdenes de laboratorio',   'icono': 'fa-vial'},
+  {'id': 'img-ordenes',  'titulo': 'Órdenes de imágenes',      'icono': 'fa-x-ray'},
+  {'id': 'lab-informes', 'titulo': 'Informes de laboratorio',  'icono': 'fa-flask'},
+  {'id': 'img-informes', 'titulo': 'Informes de imágenes',     'icono': 'fa-image'},
+  {'id': 'recetas',      'titulo': 'Recetas médicas',          'icono': 'fa-prescription'}
+] %}
+
+{% block panel_content %}
+<div class="dc-dashboard">
+
+  <header class="mc-header">
+    <div class="mc-header__text">
+      <h1 class="mc-title">Documentos clínicos</h1>
+      <p class="mc-subtitle">Consulta y descarga los documentos de tu historial médico en Clínica SELEDENT.</p>
+    </div>
+  </header>
+
+  <ul class="nav dc-tabs" id="dcTabs" role="tablist">
+    {% for d in docs %}
+    <li class="nav-item" role="presentation">
+      <button class="nav-link{{ ' active' if loop.first else '' }}" id="tab-{{ d.id }}"
+              data-bs-toggle="tab" data-bs-target="#panel-{{ d.id }}" type="button" role="tab"
+              aria-controls="panel-{{ d.id }}" aria-selected="{{ 'true' if loop.first else 'false' }}">
+        <i class="fa-solid {{ d.icono }}"></i> {{ d.titulo }}
+      </button>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <div class="tab-content dc-tab-content">
+    {% for d in docs %}
+    <div class="tab-pane fade{{ ' show active' if loop.first else '' }}" id="panel-{{ d.id }}" role="tabpanel" aria-labelledby="tab-{{ d.id }}">
+      <div class="dc-empty">
+        <div class="dc-empty__icon"><i class="fa-solid {{ d.icono }}"></i></div>
+        <h3 class="dc-empty__title">Aún no tienes {{ d.titulo|lower }}</h3>
+        <p class="dc-empty__sub">Cuando la clínica registre documentos de este tipo aparecerán aquí.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

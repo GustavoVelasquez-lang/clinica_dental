@@ -31,11 +31,10 @@ html, body {
   min-height: 100vh;
 }
 
-.mc-page {
-  padding: 124px 0 80px;
+.mc-dashboard {
+  width: 100%;
+  max-width: 1100px;
 }
-
-.mc-page .container { max-width: 1080px; }
 
 /* ══════════════ ENCABEZADO ══════════════ */
 .mc-header {
@@ -539,7 +538,7 @@ html, body {
 }
 
 @media (max-width: 640px) {
-  .mc-page { padding: 108px 0 56px; }
+  .mc-dashboard { max-width: 100%; }
   .mc-header { align-items: stretch; }
   .mc-header__actions { width: 100%; }
   .mc-btn-new,

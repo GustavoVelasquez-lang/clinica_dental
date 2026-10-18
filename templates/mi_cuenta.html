@@ -1,107 +1,72 @@
-{% extends "base.html" %}
-{% block title %}Mi Cuenta — Clinica Dental{% endblock %}
+{% extends "base_panel.html" %}
+
+{% block title %}Mis datos — Clínica SELEDENT{% endblock %}
+{% block panel_titulo_top %}Mis datos{% endblock %}
+
 {% block extra_css %}
+{{ super() }}
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/mi_cuenta.css') }}">
 {% endblock %}
 
-{% block content %}
-<div class="cuenta-page">
+{% block panel_content %}
+<script>window.PANEL_CONFIG = { endpoint: "{{ url_for('mi_cuenta_actualizar') }}" };</script>
 
-  <a href="/" class="btn-back">
-    <i class="fa-solid fa-arrow-left"></i> Volver al inicio
-  </a>
+<div class="perfil-grid">
 
-  <div class="cuenta-card">
+  <!-- ══ COLUMNA CENTRAL · Mi perfil ══ -->
+  <section class="perfil-card">
+    <h2 class="perfil-card__title">Mi perfil</h2>
 
-    <!-- Cabecera -->
-    <div class="cuenta-header">
-      <div class="cuenta-avatar">
-        {{ usuario.nombre[0]|upper }}
-      </div>
-      <h2>{{ usuario.nombre ~ ' ' ~ usuario.apePaterno ~ ' ' ~ usuario.apeMaterno }}</h2>
-      <div class="cuenta-badge"><span></span> {{ usuario.rol|capitalize }}</div>
+    <div class="perfil-avatar">
+      <span>{{ (usuario.nombre or 'U')[0]|upper }}</span>
+      <button type="button" class="perfil-avatar__cam" title="Foto de perfil" aria-label="Foto de perfil">
+        <i class="fa-solid fa-camera"></i>
+      </button>
     </div>
 
-    <!-- Cuerpo -->
-    <div class="cuenta-body">
+    <h3 class="perfil-name">
+      {{ usuario.nombre }}{% if usuario.apepaterno %} {{ usuario.apepaterno }}{% endif %}{% if usuario.apematerno %} {{ usuario.apematerno }}{% endif %}
+    </h3>
+    <span class="perfil-rol">{{ usuario.rol|capitalize }}</span>
 
-      <!-- Datos -->
-      <div class="datos-card">
+    <ul class="perfil-meta">
+      <li><span class="perfil-meta__dot" aria-hidden="true"></span> Edad: <strong>{{ edad if edad is not none else '—' }}</strong></li>
+      <li><span class="perfil-meta__dot" aria-hidden="true"></span> DNI: <strong>{{ usuario.numero_documento or '—' }}</strong></li>
+    </ul>
+  </section>
 
-        <div class="dato-row">
-          <div class="dato-icon"><i class="fa-solid fa-id-card"></i></div>
-          <div class="dato-info">
-            <span class="dato-label">DNI</span>
-            <span class="dato-valor">{{ usuario.numero_documento }}</span>
-          </div>
-        </div>
+  <!-- ══ COLUMNA DERECHA · Datos de contacto ══ -->
+  <section class="contacto-card">
+    <h2 class="contacto-card__title">Datos de contacto</h2>
 
-        <div class="dato-row">
-          <div class="dato-icon"><i class="fa-solid fa-user"></i></div>
-          <div class="dato-info">
-            <span class="dato-label">Nombre completo</span>
-            <span class="dato-valor">{{ usuario.nombre ~ ' ' ~ usuario.apePaterno ~ ' ' ~ usuario.apeMaterno }}</span>
-          </div>
-        </div>
-
-        <div class="dato-row">
-          <div class="dato-icon"><i class="fa-solid fa-envelope"></i></div>
-          <div class="dato-info">
-            <span class="dato-label">Correo electronico</span>
-            <span class="dato-valor">{{ usuario.correo }}</span>
-          </div>
-        </div>
-
+    <div class="cf-row" data-campo="telefono">
+      <span class="cf-label">Teléfono</span>
+      <div class="cf-field">
+        <span class="cf-value">{{ usuario.telefono or '—' }}</span>
+        <input class="cf-input" type="text" value="{{ usuario.telefono or '' }}" hidden>
+        <button type="button" class="cf-edit">Editar <i class="fa-solid fa-chevron-right"></i></button>
       </div>
-
-      <!-- Citas -->
-      <div class="citas-section">
-        <h3 class="citas-section-title">Mis Citas</h3>
-
-        {% if citas %}
-          {% for c in citas %}
-          <div class="cita-item-card">
-            <div class="cita-item-left">
-              <span class="cita-especialidad">{% if c.tipo_atencion %}{{ c.tipo_atencion }}{% else %}{{ c.especialidad }}{% endif %}</span>
-              <span class="cita-fecha"><i class="fa-regular fa-calendar"></i> {{ c.fecha }}</span>
-              <span class="cita-hora"><i class="fa-regular fa-clock"></i> {{ c.hora }}</span>
-              {% if c.tipo_atencion %}
-              <span class="cita-hora"><i class="fa-solid fa-tooth"></i> {{ c.especialidad }}</span>
-              {% endif %}
-            </div>
-            <div class="cita-item-right">
-              {% if c.estado == 'pendiente' %}
-                <span class="badge-estado bg-warning">Pendiente</span>
-              {% elif c.estado == 'confirmada' %}
-                <span class="badge-estado bg-info">Confirmada</span>
-              {% elif c.estado == 'atendido' or c.estado == 'completada' %}
-                <span class="badge-estado bg-success">Completada</span>
-              {% elif c.estado == 'cancelado' %}
-                <span class="badge-estado bg-danger">Cancelada</span>
-              {% else %}
-                <span class="badge-estado bg-secondary">{{ c.estado }}</span>
-              {% endif %}
-            </div>
-          </div>
-          {% endfor %}
-        {% else %}
-          <div class="citas-empty">
-            <p>No tienes citas registradas</p>
-            <a href="{{ url_for('agendar') }}" class="btn-teal btn-agendar-margen">
-              Agendar una cita
-            </a>
-          </div>
-        {% endif %}
-      </div>
-
-      <!-- Acciones -->
-      <a href="{{ url_for('logout') }}" class="btn-outline-danger">
-        <i class="fa-solid fa-right-from-bracket"></i>
-        Cerrar sesion
-      </a>
-
     </div>
-  </div>
+
+    <div class="cf-row" data-campo="correo">
+      <span class="cf-label">Correo electrónico</span>
+      <div class="cf-field">
+        <span class="cf-value">{{ usuario.correo or '—' }}</span>
+        <input class="cf-input" type="email" value="{{ usuario.correo or '' }}" hidden>
+        <button type="button" class="cf-edit">Editar <i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <div class="cf-row" data-campo="direccion">
+      <span class="cf-label">Dirección</span>
+      <div class="cf-field">
+        <span class="cf-value">{{ usuario.direccion or '—' }}</span>
+        <input class="cf-input" type="text" value="{{ usuario.direccion or '' }}" hidden>
+        <button type="button" class="cf-edit">Editar <i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </section>
 
 </div>
 {% endblock %}
