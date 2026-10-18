@@ -3,6 +3,7 @@ import logging
 import os
 import random
 import re
+from math import ceil
 
 import psycopg2
 from collections import defaultdict
@@ -2527,14 +2528,92 @@ def _etiqueta_fecha(fecha, hoy):
     return f"{_DIAS_SEMANA[fecha.weekday()]} {fecha.day} {_MESES_ABREV[fecha.month - 1]}"
 
 
+def _rango_paginas(actual, total, margen=1):
+    """Páginas a mostrar en el paginador (None representa una elipsis)."""
+    if total <= 7:
+        return list(range(1, total + 1))
+    paginas = {1, total}
+    for p in range(actual - margen, actual + margen + 1):
+        if 1 <= p <= total:
+            paginas.add(p)
+    ordenadas = sorted(paginas)
+    resultado = []
+    anterior = None
+    for p in ordenadas:
+        if anterior is not None and p - anterior > 1:
+            resultado.append(None)
+        resultado.append(p)
+        anterior = p
+    return resultado
+
+
 @app.route("/admin/citas")
 @admin_required
 def admin_citas():
+    # ── Parámetros de paginación y filtros ──
+    def _int_arg(nombre, defecto):
+        try:
+            return int(request.args.get(nombre, defecto))
+        except (TypeError, ValueError):
+            return defecto
+
+    page = max(_int_arg("page", 1), 1)
+    per_page = min(max(_int_arg("per_page", 10), 1), 100)
+    estado = (request.args.get("estado") or "todos").strip().lower()
+    q = (request.args.get("q") or "").strip()
+    hoy = date.today()
+
+    # ── Filtros → cláusula WHERE con parámetros ──
+    condiciones = []
+    params = []
+    if estado == "pendiente":
+        condiciones.append("c.estado = %s"); params.append("pendiente")
+    elif estado == "confirmada":
+        condiciones.append("c.estado = %s"); params.append("confirmada")
+    elif estado == "cancelada":
+        condiciones.append("c.estado = %s"); params.append("cancelada")
+    elif estado == "atendida":
+        condiciones.append("c.estado IN ('atendida', 'atendido', 'completada')")
+    elif estado == "por_verificar":
+        condiciones.append("c.estado_pago = %s"); params.append("pendiente_verificacion")
+    elif estado == "hoy":
+        condiciones.append("c.fecha = %s"); params.append(hoy)
+
+    if q:
+        like = f"%{q}%"
+        condiciones.append("""(
+            u.nombre ILIKE %s OR u.apepaterno ILIKE %s OR u.apematerno ILIKE %s
+            OR e.nombre ILIKE %s OR c.tipo_atencion ILIKE %s
+            OR CAST(c.id AS TEXT) ILIKE %s
+            OR EXISTS (
+                SELECT 1 FROM cita_tratamiento ct2
+                JOIN tratamientos t2 ON t2.id_tratamiento = ct2.id_tratamiento
+                WHERE ct2.id_cita = c.id AND t2.nombre ILIKE %s
+            )
+        )""")
+        params.extend([like] * 7)
+
+    where = ("WHERE " + " AND ".join(condiciones)) if condiciones else ""
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
+    # ── Total de citas que cumplen los filtros (para las páginas) ──
+    cursor.execute(f"""
+        SELECT COUNT(*) AS total
+        FROM citas c
+        JOIN usuarios u ON c.paciente_id = u.id
+        JOIN especialidades e ON c.especialidad_id = e.id
+        {where}
+    """, params)
+    total = cursor.fetchone()["total"]
+
+    total_paginas = max(ceil(total / per_page), 1)
+    page = min(max(page, 1), total_paginas)
+    offset = (page - 1) * per_page
+
+    # ── Página solicitada (LIMIT / OFFSET) ──
+    cursor.execute(f"""
         SELECT c.id,
             TRIM(CONCAT_WS(' ', u.nombre, u.apepaterno, u.apematerno)) AS paciente,
             e.nombre AS especialidad,
@@ -2552,15 +2631,26 @@ def admin_citas():
         FROM citas c
         JOIN usuarios u ON c.paciente_id = u.id
         JOIN especialidades e ON c.especialidad_id = e.id
+        {where}
         -- Orden por la fecha en que el paciente AGENDÓ la cita (no la de
         -- atención): lo más reciente primero, así lo agendado hoy queda arriba.
         ORDER BY c.created_at DESC NULLS LAST, c.id DESC
-    """)
+        LIMIT %s OFFSET %s
+    """, params + [per_page, offset])
 
     citas = [dict(c) for c in cursor.fetchall()]
-    conn.close()
 
-    hoy = date.today()
+    # ── KPIs globales (independientes de filtros y paginación) ──
+    cursor.execute("""
+        SELECT COUNT(*) AS total,
+               COUNT(*) FILTER (WHERE estado = 'pendiente') AS pendientes,
+               COUNT(*) FILTER (WHERE estado = 'confirmada') AS confirmadas,
+               COUNT(*) FILTER (WHERE fecha = %s) AS hoy,
+               COUNT(*) FILTER (WHERE estado_pago = 'pendiente_verificacion') AS por_verificar
+        FROM citas
+    """, (hoy,))
+    kpi = cursor.fetchone()
+    conn.close()
 
     for c in citas:
         # Fecha en que el paciente AGENDÓ la cita (registro), no la de atención.
@@ -2584,11 +2674,21 @@ def admin_citas():
             })
         grupos[-1]["citas"].append(c)
 
-    citas_hoy = sum(1 for c in citas if c["es_hoy"])
-    por_verificar = sum(1 for c in citas if c["por_verificar"])
+    rango_inicio = offset + 1 if total else 0
+    rango_fin = min(offset + per_page, total)
 
-    return render_template("admin_citas.html", citas=citas, grupos=grupos,
-                           citas_hoy=citas_hoy, por_verificar=por_verificar)
+    return render_template(
+        "admin_citas.html",
+        citas=citas, grupos=grupos,
+        # Paginación
+        page=page, per_page=per_page, total=total, total_paginas=total_paginas,
+        rango_inicio=rango_inicio, rango_fin=rango_fin,
+        rango_paginas=_rango_paginas(page, total_paginas),
+        estado=estado, q=q,
+        # KPIs globales
+        total_citas=kpi["total"], kpi_pendientes=kpi["pendientes"],
+        kpi_confirmadas=kpi["confirmadas"], citas_hoy=kpi["hoy"],
+        por_verificar=kpi["por_verificar"])
 
 @app.route("/admin/enviar_recordatorios")
 @admin_required

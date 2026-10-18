@@ -1,98 +1,22 @@
 document.addEventListener('DOMContentLoaded', function () {
-  const filas = Array.from(document.querySelectorAll('.ctc-table .ctc-row'));
-  const grupos = Array.from(document.querySelectorAll('.ctc-table .ctc-grupo'));
+  // El filtrado y la paginación ahora se resuelven en el servidor; los chips y
+  // los botones de página son enlaces que conservan los filtros activos. Aquí
+  // solo añadimos el auto-envío del buscador (por el formulario GET).
+  const form = document.getElementById('ctcFiltrosForm');
   const buscar = document.getElementById('ctcBuscar');
-  const chips = Array.from(document.querySelectorAll('#ctcFiltros .ctc-chip'));
-  const sinResultados = document.getElementById('ctcSinResultados');
-  const verPendientes = document.getElementById('ctcVerPendientes');
-
-  let filtroEstado = 'todos';
-  let soloPorVerificar = false;
-  let termino = '';
-
-  // ── Estados que agrupa el chip "Atendidas" ──
-  const GRUPO_ATENDIDA = ['atendida', 'atendido', 'completada'];
-
-  function coincideEstado(fila, estado) {
-    if (soloPorVerificar) return fila.dataset.pago === 'pendiente_verificacion';
-    if (filtroEstado === 'todos') return true;
-    if (filtroEstado === 'hoy') return fila.dataset.hoy === '1';
-    if (filtroEstado === 'atendida') return GRUPO_ATENDIDA.includes(estado);
-    return estado === filtroEstado;
-  }
-
-  function aplicarFiltros() {
-    let visibles = 0;
-
-    filas.forEach(function (fila) {
-      const estado = (fila.dataset.estado || '').toLowerCase();
-      const texto = (fila.dataset.buscar || '');
-      const okEstado = coincideEstado(fila, estado);
-      const okTexto = !termino || texto.includes(termino);
-      const visible = okEstado && okTexto;
-
-      fila.classList.toggle('ctc-hidden', !visible);
-      if (visible) visibles++;
-    });
-
-    // Ocultar las secciones por fecha que quedaron vacías.
-    grupos.forEach(function (grupo) {
-      const hayVisibles = grupo.querySelector('.ctc-row:not(.ctc-hidden)');
-      grupo.classList.toggle('ctc-hidden', !hayVisibles);
-    });
-
-    if (sinResultados) {
-      sinResultados.hidden = !(filas.length > 0 && visibles === 0);
+  if (form && buscar) {
+    // Si venimos de una búsqueda, devolvemos el foco al campo para seguir tecleando.
+    if (buscar.value.trim()) {
+      buscar.focus();
+      buscar.setSelectionRange(buscar.value.length, buscar.value.length);
     }
-  }
 
-  function activarChip(filtro) {
-    soloPorVerificar = false;
-    if (verPendientes) verPendientes.classList.remove('active');
-    chips.forEach(function (c) {
-      c.classList.toggle('active', c.dataset.filtro === filtro);
-    });
-    filtroEstado = filtro;
-    aplicarFiltros();
-  }
-
-  // ── Búsqueda ──
-  if (buscar) {
+    let timer = null;
     buscar.addEventListener('input', function () {
-      termino = buscar.value.trim().toLowerCase();
-      aplicarFiltros();
+      clearTimeout(timer);
+      timer = setTimeout(function () { form.submit(); }, 500);
     });
   }
-
-  // ── Chips de estado ──
-  chips.forEach(function (chip) {
-    chip.addEventListener('click', function () {
-      activarChip(chip.dataset.filtro || 'todos');
-    });
-  });
-
-  // ── Botón "Pago pendiente por verificar" ──
-  if (verPendientes) {
-    verPendientes.addEventListener('click', function () {
-      soloPorVerificar = !soloPorVerificar;
-      verPendientes.classList.toggle('active', soloPorVerificar);
-      chips.forEach(function (c) {
-        c.classList.toggle('active', !soloPorVerificar && c.dataset.filtro === filtroEstado);
-      });
-      if (soloPorVerificar) filtroEstado = 'todos';
-      aplicarFiltros();
-    });
-  }
-
-  // ── KPI: citas de hoy ──
-  const kpiHoy = document.getElementById('kpiHoy');
-  if (kpiHoy) {
-    kpiHoy.textContent = filas.filter(function (fila) {
-      return fila.dataset.hoy === '1';
-    }).length;
-  }
-
-  aplicarFiltros();
 });
 
 // ── Modal: previsualizar voucher de Yape ──

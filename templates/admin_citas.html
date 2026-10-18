@@ -5,7 +5,7 @@
 
 {% block extra_css %}
 {{ super() }}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_citas.css') }}?v=3">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_citas.css') }}?v=4">
 {% endblock %}
 
 {% block admin_content %}
@@ -28,21 +28,21 @@
     <div class="ctc-kpi c-total">
       <div class="ctc-kpi-icon"><i class="fa-solid fa-calendar-days text-primary"></i></div>
       <div class="ctc-kpi-text">
-        <span class="ctc-kpi-num" id="kpiTotal">{{ citas|length }}</span>
+        <span class="ctc-kpi-num" id="kpiTotal">{{ total_citas }}</span>
         <span class="ctc-kpi-label">Total de citas</span>
       </div>
     </div>
     <div class="ctc-kpi c-pend">
       <div class="ctc-kpi-icon"><i class="fa-solid fa-clock text-warning"></i></div>
       <div class="ctc-kpi-text">
-        <span class="ctc-kpi-num" id="kpiPendientes">{{ citas|selectattr('estado','equalto','pendiente')|list|length }}</span>
+        <span class="ctc-kpi-num" id="kpiPendientes">{{ kpi_pendientes }}</span>
         <span class="ctc-kpi-label">Pendientes</span>
       </div>
     </div>
     <div class="ctc-kpi c-conf">
       <div class="ctc-kpi-icon"><i class="fa-solid fa-circle-check text-success"></i></div>
       <div class="ctc-kpi-text">
-        <span class="ctc-kpi-num" id="kpiConfirmadas">{{ citas|selectattr('estado','equalto','confirmada')|list|length }}</span>
+        <span class="ctc-kpi-num" id="kpiConfirmadas">{{ kpi_confirmadas }}</span>
         <span class="ctc-kpi-label">Confirmadas</span>
       </div>
     </div>
@@ -69,28 +69,44 @@
         {% endif %}
       </div>
     </div>
-    <button type="button" class="ctc-verif-btn" id="ctcVerPendientes"
-            data-count="{{ por_verificar }}"{% if not por_verificar %} disabled{% endif %}>
-      <i class="fa-solid fa-triangle-exclamation me-2"></i>Pago pendiente por verificar
-    </button>
+    {% if estado == 'por_verificar' %}
+      <a class="ctc-verif-btn active" id="ctcVerPendientes"
+         href="{{ url_for('admin_citas', estado='todos', q=q, per_page=per_page) }}">
+        <i class="fa-solid fa-xmark me-2"></i>Quitar filtro de pagos
+      </a>
+    {% elif por_verificar %}
+      <a class="ctc-verif-btn" id="ctcVerPendientes"
+         href="{{ url_for('admin_citas', estado='por_verificar', q=q, per_page=per_page) }}">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i>Pago pendiente por verificar
+      </a>
+    {% else %}
+      <span class="ctc-verif-btn ctc-verif-btn--off" id="ctcVerPendientes">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i>Pago pendiente por verificar
+      </span>
+    {% endif %}
   </div>
 
   <!-- ══ TOOLBAR ══ -->
-  <div class="ctc-toolbar">
+  {% set tabs = [('todos', 'Todas'), ('pendiente', 'Pendientes'),
+                 ('confirmada', 'Confirmadas'), ('atendida', 'Atendidas'),
+                 ('cancelada', 'Canceladas')] %}
+  <form class="ctc-toolbar" id="ctcFiltrosForm" method="get"
+        action="{{ url_for('admin_citas') }}">
     <div class="ctc-search">
       <i class="fa-solid fa-magnifying-glass"></i>
-      <input type="text" id="ctcBuscar"
+      <input type="text" name="q" id="ctcBuscar" value="{{ q }}"
              placeholder="Buscar por paciente, especialidad o tratamiento…"
              autocomplete="off">
     </div>
+    <input type="hidden" name="estado" value="{{ estado }}">
+    <input type="hidden" name="per_page" value="{{ per_page }}">
     <div class="ctc-filtros" id="ctcFiltros">
-      <button type="button" class="ctc-chip active" data-filtro="todos">Todas</button>
-      <button type="button" class="ctc-chip" data-filtro="pendiente">Pendientes</button>
-      <button type="button" class="ctc-chip" data-filtro="confirmada">Confirmadas</button>
-      <button type="button" class="ctc-chip" data-filtro="atendida">Atendidas</button>
-      <button type="button" class="ctc-chip" data-filtro="cancelada">Canceladas</button>
+      {% for valor, etiqueta in tabs %}
+        <a class="ctc-chip{% if estado == valor %} active{% endif %}"
+           href="{{ url_for('admin_citas', estado=valor, q=q, per_page=per_page) }}">{{ etiqueta }}</a>
+      {% endfor %}
     </div>
-  </div>
+  </form>
 
   <!-- ══ TABLA (agrupada por fecha de agendamiento) ══ -->
   <div class="chart-card ctc-card">
@@ -214,18 +230,62 @@
       </table>
     </div>
 
+    {% if total > 0 %}
+    <div class="ctc-paginacion" id="ctcPaginacion">
+      <span class="ctc-paginacion-info">
+        Mostrando <strong>{{ rango_inicio }}–{{ rango_fin }}</strong> de <strong>{{ total }}</strong> cita{{ 's' if total != 1 else '' }}
+      </span>
+      <div class="ctc-paginacion-nav">
+        {% if page > 1 %}
+          <a class="ctc-pag-btn" aria-label="Página anterior"
+             href="{{ url_for('admin_citas', page=page - 1, per_page=per_page, estado=estado, q=q) }}">
+            <i class="fa-solid fa-chevron-left"></i>
+          </a>
+        {% else %}
+          <span class="ctc-pag-btn ctc-pag-btn--disabled" aria-hidden="true">
+            <i class="fa-solid fa-chevron-left"></i>
+          </span>
+        {% endif %}
+
+        {% for p in rango_paginas %}
+          {% if p is none %}
+            <span class="ctc-pag-ellipsis">…</span>
+          {% elif p == page %}
+            <span class="ctc-pag-btn ctc-pag-btn--active" aria-current="page">{{ p }}</span>
+          {% else %}
+            <a class="ctc-pag-btn"
+               href="{{ url_for('admin_citas', page=p, per_page=per_page, estado=estado, q=q) }}">{{ p }}</a>
+          {% endif %}
+        {% endfor %}
+
+        {% if page < total_paginas %}
+          <a class="ctc-pag-btn" aria-label="Página siguiente"
+             href="{{ url_for('admin_citas', page=page + 1, per_page=per_page, estado=estado, q=q) }}">
+            <i class="fa-solid fa-chevron-right"></i>
+          </a>
+        {% else %}
+          <span class="ctc-pag-btn ctc-pag-btn--disabled" aria-hidden="true">
+            <i class="fa-solid fa-chevron-right"></i>
+          </span>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
     {% if not citas %}
-      <div class="ctc-empty" id="ctcVacioInicial">
-        <div class="ctc-empty-icon"><i class="fa-solid fa-calendar-xmark"></i></div>
-        <p class="ctc-empty-title">No hay citas registradas aún</p>
-        <p class="ctc-empty-sub">Las citas agendadas por los pacientes aparecerán aquí.</p>
-      </div>
-    {% else %}
-      <div class="ctc-empty" id="ctcSinResultados" hidden>
-        <div class="ctc-empty-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-        <p class="ctc-empty-title">Sin resultados</p>
-        <p class="ctc-empty-sub">No se encontraron citas con esos filtros.</p>
-      </div>
+      {% if estado != 'todos' or q %}
+        <div class="ctc-empty" id="ctcSinResultados">
+          <div class="ctc-empty-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+          <p class="ctc-empty-title">Sin resultados</p>
+          <p class="ctc-empty-sub">No se encontraron citas con esos filtros.</p>
+        </div>
+      {% else %}
+        <div class="ctc-empty" id="ctcVacioInicial">
+          <div class="ctc-empty-icon"><i class="fa-solid fa-calendar-xmark"></i></div>
+          <p class="ctc-empty-title">No hay citas registradas aún</p>
+          <p class="ctc-empty-sub">Las citas agendadas por los pacientes aparecerán aquí.</p>
+        </div>
+      {% endif %}
     {% endif %}
   </div>
 
@@ -263,5 +323,5 @@
 {% endblock %}
 
 {% block admin_js %}
-<script src="{{ url_for('static', filename='js/admin_citas.js') }}?v=4"></script>
+<script src="{{ url_for('static', filename='js/admin_citas.js') }}?v=5"></script>
 {% endblock %}
