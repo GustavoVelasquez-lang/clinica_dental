@@ -40,6 +40,18 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "clave_secreta_segura")
 bcrypt = Bcrypt(app)
 
+
+@app.after_request
+def add_header(response):
+    """Cabeceras anti-caché para que el botón "atrás" no muestre páginas
+    protegidas expiradas desde la caché del navegador. Se excluyen los
+    archivos estáticos para no forzar su re-descarga en cada visita."""
+    if request.endpoint != "static":
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
 # --- Pasarela de pago Culqi (tarjeta + Yape) ------------------------------
 CULQI_PUBLIC_KEY = os.getenv("CULQI_PUBLIC_KEY", "")
 CULQI_SECRET_KEY = os.getenv("CULQI_SECRET_KEY", "")
@@ -337,6 +349,24 @@ def _es_doctor():
     return _rol_actual() in ROLES_DOCTOR
 
 
+def _redirigir_roles_no_paciente():
+    """Evita que admins y doctores usen el flujo de agendamiento del paciente.
+
+    Si el usuario autenticado es admin/administrador o doctor, devuelve la
+    redirección (con flash) hacia su panel correspondiente. Si es paciente (o
+    invitado, que ya habría sido llevado al login por @login_required),
+    devuelve None para permitir el acceso.
+    """
+    rol = (session.get("rol") or "").lower()
+    if rol in ("admin", "administrador"):
+        flash("Para gestionar o agendar citas administrativas, utiliza el panel de control.", "warning")
+        return redirect(url_for("admin_citas"))
+    if _es_doctor():
+        flash("Como doctor, agenda y gestiona tus citas desde tu panel.", "warning")
+        return redirect(url_for("doctor_dashboard"))
+    return None
+
+
 @app.context_processor
 def inject_panel_context():
     """Variables disponibles en el sidebar/topbar del panel de usuario."""
@@ -363,6 +393,11 @@ def doctor_required(f):
 @app.route("/agendar", methods=["GET", "POST"])
 @login_required
 def agendar():
+
+    # Admins y doctores no usan el flujo de agendamiento del paciente.
+    redirigido = _redirigir_roles_no_paciente()
+    if redirigido:
+        return redirigido
 
     if not _perfil_esta_completo(session["usuario_id"]):
         flash("Completa tu perfil (DNI y WhatsApp) para poder agendar tu cita.", "warning")
@@ -603,6 +638,11 @@ def _buscar_especialidad(cursor, valor):
 @login_required
 def agendar_evaluacion():
     """Vista de reserva de evaluación especializada."""
+    # Admins y doctores no usan el flujo de agendamiento del paciente.
+    redirigido = _redirigir_roles_no_paciente()
+    if redirigido:
+        return redirigido
+
     if not _perfil_esta_completo(session["usuario_id"]):
         flash("Completa tu perfil (DNI y WhatsApp) para poder agendar tu evaluación.", "warning")
         return redirect(url_for("completar_perfil", next=url_for("agendar_evaluacion")))
@@ -2142,6 +2182,13 @@ def reprogramar_cita(cita_id):
     _log_auditoria("reprogramar_cita_paciente", detalle=f"cita #{cita_id}")
 
     flash("✅ Tu cita fue reprogramada correctamente.", "success")
+    return redirect(url_for("mis_citas"))
+
+
+@app.route("/doctor/dashboard")
+@doctor_required
+def doctor_dashboard():
+    """Punto de entrada del panel del doctor (su vista de citas)."""
     return redirect(url_for("mis_citas"))
 
 
