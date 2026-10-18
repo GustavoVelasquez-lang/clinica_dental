@@ -66,6 +66,28 @@ function mostrarToast(mensaje, tipo) {
 
   const endpoint = (typeof PANEL_CONFIG !== 'undefined' && PANEL_CONFIG.endpoint) || '';
 
+  /* Rellena nombres/apellidos tras consultar el DNI. */
+  const aplicarNombres = (nombres) => {
+    const mapa = {
+      nombre: nombres.nombre,
+      apepaterno: nombres.apepaterno,
+      apematerno: nombres.apematerno
+    };
+    Object.keys(mapa).forEach(clave => {
+      const fila = document.querySelector('.cf-row[data-campo="' + clave + '"]');
+      if (!fila) return;
+      const valorEl = fila.querySelector('.cf-value');
+      const inputEl = fila.querySelector('.cf-input');
+      if (valorEl) valorEl.textContent = mapa[clave] || '—';
+      if (inputEl) inputEl.value = mapa[clave] || '';
+    });
+    const header = document.getElementById('perfilNombre');
+    if (header) {
+      header.textContent = [nombres.nombre, nombres.apepaterno, nombres.apematerno]
+        .filter(Boolean).join(' ');
+    }
+  };
+
   filas.forEach(fila => {
     const valorEl = fila.querySelector('.cf-value');
     const inputEl = fila.querySelector('.cf-input');
@@ -74,6 +96,12 @@ function mostrarToast(mensaje, tipo) {
 
     const campo = fila.dataset.campo;
     let original = inputEl.value;
+
+    if (campo === 'dni') {
+      inputEl.addEventListener('input', () => {
+        inputEl.value = inputEl.value.replace(/\D/g, '').slice(0, 8);
+      });
+    }
 
     const modoEdicion = (activo) => {
       fila.classList.toggle('is-editing', activo);
@@ -112,6 +140,11 @@ function mostrarToast(mensaje, tipo) {
         original = data.valor != null ? data.valor : valor;
         inputEl.value = original;
         valorEl.textContent = original || '—';
+        if (campo === 'dni' && data.nombres) {
+          aplicarNombres(data.nombres);
+          const dniPerfil = document.getElementById('perfilDni');
+          if (dniPerfil) dniPerfil.textContent = original;
+        }
         modoEdicion(false);
         mostrarToast(data.mensaje || 'Datos actualizados correctamente.', 'ok');
       } catch (err) {

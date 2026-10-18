@@ -47,6 +47,11 @@ CULQI_MONEDA = os.getenv("CULQI_MONEDA", "PEN")
 # URL pública del sitio (para el webhook y retornos de pago).
 BASE_URL = os.getenv("BASE_URL", "http://localhost:5000").rstrip("/")
 
+# --- Consulta de DNI (RENIEC vía Decolecta) -------------------------------
+DECOLECTA_API_URL = os.getenv(
+    "DECOLECTA_API_URL", "https://api.decolecta.com/v1/reniec/dni"
+)
+
 # Horas de atención disponibles para agendar/reprogramar citas.
 HORAS_SISTEMA = ["09:00:00", "10:00:00", "11:00:00", "12:00:00", "15:00:00", "16:00:00"]
 SEDE_PREDETERMINADA = "Sede Principal - El Tambo, Huancayo"
@@ -1180,6 +1185,7 @@ def registro():
         nombre = request.form["nombre"]
         apePaterno = request.form["apePaterno"]
         apeMaterno = request.form["apeMaterno"]
+        dni = (request.form.get("dni") or "").strip()
         correo = (request.form["correo"] or "").strip().lower()
         clave = request.form["clave"]
         confirmar = request.form["confirmar"]
@@ -1187,6 +1193,10 @@ def registro():
 
         if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[A-Za-z]{2,}", correo):
             flash("⚠️ Correo electrónico inválido", "warning")
+            return redirect(url_for("registro", next=siguiente))
+
+        if dni and not re.fullmatch(r"\d{8}", dni):
+            flash("⚠️ El DNI debe tener 8 dígitos.", "warning")
             return redirect(url_for("registro", next=siguiente))
 
         if clave != confirmar:
@@ -1213,22 +1223,32 @@ def registro():
                 nombre,
                 apePaterno,
                 apeMaterno,
+                numero_documento,
+                tipo_documento,
                 correo,
                 contrasenia,
                 id_rol,
                 perfil_completo
             )   
-            VALUES (%s,%s,%s,%s,%s,2,FALSE)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,2,FALSE)
             RETURNING id, nombre
         """, (
             nombre,
             apePaterno,
             apeMaterno,
+            dni or None,
+            "DNI" if dni else None,
             correo,
             clave_hash
-        ))  
-        nuevo = cursor.fetchone()
-        conn.commit()
+        ))
+        try:
+            nuevo = cursor.fetchone()
+            conn.commit()
+        except psycopg2.errors.UniqueViolation:
+            conn.rollback()
+            conn.close()
+            flash("⚠️ Ese DNI ya está registrado en otra cuenta.", "warning")
+            return redirect(url_for("registro", next=siguiente))
         conn.close()
 
         # Iniciar sesión y forzar a completar el perfil (DNI y WhatsApp) una
@@ -1308,11 +1328,24 @@ def completar_perfil():
             usuario_id, dni, telefono,
         )
 
+        nombre = (request.form.get("nombre") or "").strip()
+        ape_paterno = (request.form.get("apePaterno") or "").strip()
+        ape_materno = (request.form.get("apeMaterno") or "").strip()
+
         error = None
         if not re.fullmatch(r"\d{8}", dni):
             error = "⚠️ El DNI debe tener exactamente 8 dígitos."
         elif not re.fullmatch(r"[0-9+\s]{6,20}", telefono):
             error = "⚠️ Ingresa un número de WhatsApp válido."
+        elif not nombre:
+            error = "⚠️ Ingresa tus nombres."
+        elif not ape_paterno or not ape_materno:
+            error = "⚠️ Ingresa tus apellidos."
+
+        form_extra = dict(
+            form_dni=dni, form_telefono=telefono,
+            form_nombre=nombre, form_apePaterno=ape_paterno, form_apeMaterno=ape_materno,
+        )
 
         if error:
             logger.warning(
@@ -1320,8 +1353,7 @@ def completar_perfil():
             )
             return render_template(
                 "completar_perfil.html", datos=_datos_perfil(usuario_id),
-                next=siguiente, error=error,
-                form_dni=dni, form_telefono=telefono,
+                next=siguiente, error=error, **form_extra,
             )
 
         conn = get_connection()
@@ -1332,9 +1364,12 @@ def completar_perfil():
                 SET numero_documento = %s,
                     tipo_documento   = COALESCE(tipo_documento, 'DNI'),
                     telefono         = %s,
+                    nombre           = %s,
+                    apepaterno       = %s,
+                    apematerno       = %s,
                     perfil_completo  = TRUE
                 WHERE id = %s
-            """, (dni, telefono, usuario_id))
+            """, (dni, telefono, nombre, ape_paterno, ape_materno, usuario_id))
             filas = cursor.rowcount
             conn.commit()
             logger.info(
@@ -1352,7 +1387,7 @@ def completar_perfil():
                 "completar_perfil.html", datos=_datos_perfil(usuario_id),
                 next=siguiente,
                 error="⚠️ Ese DNI ya está registrado en otra cuenta.",
-                form_dni=dni, form_telefono=telefono,
+                **form_extra,
             )
         except Exception as e:
             conn.rollback()
@@ -1366,7 +1401,7 @@ def completar_perfil():
                 "completar_perfil.html", datos=_datos_perfil(usuario_id),
                 next=siguiente,
                 error=f"❌ No se pudo guardar tu perfil: {e}",
-                form_dni=dni, form_telefono=telefono,
+                **form_extra,
             )
 
         conn.close()
@@ -2262,9 +2297,11 @@ def mi_cuenta_actualizar():
     campo = (data.get("campo") or "").strip()
     valor = (data.get("valor") or "").strip()
 
-    permitidos = {"telefono", "correo", "direccion"}
+    permitidos = {"telefono", "correo", "direccion", "dni", "nombre", "apepaterno", "apematerno"}
     if campo not in permitidos:
         return jsonify({"ok": False, "mensaje": "Campo no permitido."}), 400
+
+    nombres_actualizados = None
 
     if campo == "telefono":
         if valor and not re.fullmatch(r"[0-9+\s]{6,20}", valor):
@@ -2276,20 +2313,49 @@ def mi_cuenta_actualizar():
     elif campo == "direccion":
         if len(valor) > 255:
             return jsonify({"ok": False, "mensaje": "La dirección es demasiado larga."}), 400
+    elif campo == "dni":
+        if not re.fullmatch(r"\d{8}", valor):
+            return jsonify({"ok": False, "mensaje": "El DNI debe tener 8 dígitos."}), 400
+        ok, payload, status = consultar_dni_api(valor)
+        if not ok:
+            return jsonify({"ok": False, "mensaje": payload.get("message", "Error al consultar el DNI.")}), status
+        nombres_actualizados = {
+            "nombre": payload.get("nombres", ""),
+            "apepaterno": payload.get("apePaterno", ""),
+            "apematerno": payload.get("apeMaterno", ""),
+        }
+    elif campo in ("nombre", "apepaterno", "apematerno"):
+        if not valor:
+            return jsonify({"ok": False, "mensaje": "Este campo no puede quedar vacío."}), 400
+        if len(valor) > 100:
+            return jsonify({"ok": False, "mensaje": "El valor es demasiado largo."}), 400
 
     conn = get_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute(
-            f"UPDATE usuarios SET {campo} = %s WHERE id = %s",
-            (valor or None, session["usuario_id"]),
-        )
+        if campo == "dni":
+            cursor.execute("""
+                UPDATE usuarios
+                SET numero_documento = %s,
+                    tipo_documento   = 'DNI',
+                    nombre           = %s,
+                    apepaterno       = %s,
+                    apematerno       = %s
+                WHERE id = %s
+            """, (valor, nombres_actualizados["nombre"],
+                  nombres_actualizados["apepaterno"],
+                  nombres_actualizados["apematerno"], session["usuario_id"]))
+        else:
+            cursor.execute(
+                f"UPDATE usuarios SET {campo} = %s WHERE id = %s",
+                (valor or None, session["usuario_id"]),
+            )
         conn.commit()
         _log_auditoria("perfil_actualizado", session["usuario_id"])
     except psycopg2.errors.UniqueViolation:
         conn.rollback()
         conn.close()
-        return jsonify({"ok": False, "mensaje": "Ese correo ya está registrado en otra cuenta."}), 409
+        return jsonify({"ok": False, "mensaje": "Ese dato ya está registrado en otra cuenta."}), 409
     except Exception as e:
         conn.rollback()
         conn.close()
@@ -2297,7 +2363,13 @@ def mi_cuenta_actualizar():
         return jsonify({"ok": False, "mensaje": f"No se pudo guardar: {e}"}), 500
     conn.close()
 
-    return jsonify({"ok": True, "campo": campo, "valor": valor, "mensaje": "Datos actualizados correctamente."})
+    respuesta = {
+        "ok": True, "campo": campo, "valor": valor,
+        "mensaje": "Datos actualizados correctamente.",
+    }
+    if nombres_actualizados is not None:
+        respuesta["nombres"] = nombres_actualizados
+    return jsonify(respuesta)
 
 @app.route("/api/citas")
 @login_required
@@ -3425,9 +3497,114 @@ def authorize_google():
         return redirect(url_for('login', next=siguiente))
 
 
-@app.route("/api/consultar_dni/<dni>")
+def _token_decolecta():
+    """Token de Decolecta (acepta DECOLECTA_TOKEN o DNI_API_TOKEN)."""
+    return (os.getenv("DECOLECTA_TOKEN") or os.getenv("DNI_API_TOKEN") or "").strip()
+
+
+def _normalizar_respuesta_dni(data, dni):
+    """Normaliza la respuesta de Decolecta a (nombres, apePaterno, apeMaterno)."""
+    if not isinstance(data, dict):
+        return "", "", ""
+
+    def pick(*claves):
+        for clave in claves:
+            valor = data.get(clave)
+            if valor:
+                return str(valor).strip()
+        return ""
+
+    nombres = pick("first_name", "nombres", "name", "given_name")
+    ape_paterno = pick("first_last_name", "apellido_paterno", "paternal_surname")
+    ape_materno = pick("second_last_name", "apellido_materno", "maternal_surname")
+
+    # Fallback: derivar de full_name / nombre_completo si faltan campos.
+    if not (nombres and ape_paterno):
+        completo = pick("full_name", "nombre_completo", "nombreCompleto")
+        if completo:
+            partes = completo.split()
+            if len(partes) >= 3:
+                ape_paterno = ape_paterno or partes[0]
+                ape_materno = ape_materno or partes[1]
+                nombres = nombres or " ".join(partes[2:])
+            elif len(partes) == 2:
+                ape_paterno = ape_paterno or partes[0]
+                nombres = nombres or partes[1]
+
+    return nombres, ape_paterno, ape_materno
+
+
+def consultar_dni_api(dni):
+    """Consulta un DNI en Decolecta.
+
+    Devuelve (ok, payload, status_http) donde payload incluye los datos
+    normalizados o un mensaje de error.
+    """
+    token = _token_decolecta()
+    if not token:
+        return False, {"message": "Consulta de DNI no configurada (falta el token)."}, 503
+
+    try:
+        respuesta = requests.get(
+            DECOLECTA_API_URL,
+            params={"numero": dni},
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/json",
+            },
+            timeout=8,
+        )
+    except requests.RequestException as e:
+        logger.error("Decolecta: error de conexión al consultar %s: %s", dni, e)
+        return False, {"message": "No se pudo conectar con el servicio de DNI."}, 502
+
+    if respuesta.status_code == 200:
+        try:
+            data = respuesta.json()
+        except ValueError:
+            return False, {"message": "Respuesta inválida del servicio de DNI."}, 502
+
+        nombres, ape_paterno, ape_materno = _normalizar_respuesta_dni(data, dni)
+        if not nombres:
+            return False, {"message": "No se encontraron datos para ese DNI."}, 404
+        return True, {
+            "dni": dni,
+            "nombres": nombres,
+            "apePaterno": ape_paterno,
+            "apeMaterno": ape_materno,
+            "nombreCompleto": " ".join(p for p in (nombres, ape_paterno, ape_materno) if p),
+        }, 200
+
+    if respuesta.status_code in (401, 403):
+        logger.warning("Decolecta: token inválido o sin permisos (status %s)", respuesta.status_code)
+        return False, {"message": "Token de Decolecta inválido o sin permisos."}, 502
+    if respuesta.status_code == 404:
+        return False, {"message": "DNI no encontrado en RENIEC."}, 404
+    if respuesta.status_code == 429:
+        return False, {"message": "Límite de consultas alcanzado. Intenta más tarde."}, 429
+
+    logger.warning("Decolecta: respuesta inesperada %s para el DNI %s", respuesta.status_code, dni)
+    return False, {"message": "Error al consultar el DNI."}, 502
+
+
+@app.route("/api/consultar-dni/<dni>")
 def consultar_dni(dni):
-    return jsonify({"success": False, "message": "Consulta por DNI deshabilitada"}), 400
+    """Consulta el DNI en Decolecta y devuelve nombres y apellidos."""
+    dni = (dni or "").strip()
+    if not re.fullmatch(r"\d{8}", dni):
+        return jsonify({"success": False, "message": "El DNI debe tener 8 dígitos."}), 400
+
+    ok, payload, status = consultar_dni_api(dni)
+    if not ok:
+        return jsonify({"success": False, "message": payload.get("message", "Error.")}), status
+
+    return jsonify({"success": True, **payload}), 200
+
+
+@app.route("/api/consultar_dni/<dni>")
+def consultar_dni_legacy(dni):
+    """Alias compatible con la ruta antigua (guion bajo)."""
+    return consultar_dni(dni)
 
 
 MAX_INTENTOS   = 5                                           

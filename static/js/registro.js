@@ -1,32 +1,76 @@
-﻿const dniInput = document.getElementById("dni");
-const nombreInput = document.getElementById("nombre");
-const apePaternoInput = document.getElementById("apePaterno");
-const apeMaternoInput = document.getElementById("apeMaterno");
-const resultado = document.getElementById("resultado");
+﻿// ============================================================
+// Clinica Sele Dent - Registro (validacion + autocompletado DNI)
+// ============================================================
+(function () {
+  "use strict";
 
-// Detectar cuando el usuario escribe en el campo DNI
-dniInput.addEventListener("input", async () => {
-  const dni = dniInput.value.trim();
+  var form = document.getElementById("formRegistro");
+  if (!form) return;
 
-  // Limpiar formulario y mensaje si no tiene 8 dígitos
-  if (dni.length !== 8) {
-    limpiarCampos();
-    resultado.textContent = "";
-    return;
+  var correo = document.getElementById("correo");
+  var clave = document.getElementById("clave");
+  var confirmar = document.getElementById("confirmar");
+  var boton = document.getElementById("btnRegistro");
+
+  var RE_CORREO = /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/;
+
+  /* ---------- Mostrar / ocultar contrasenas ---------- */
+  function enlazarToggle(toggleId, inputId) {
+    var toggle = document.getElementById(toggleId);
+    var input = document.getElementById(inputId);
+    if (!toggle || !input) return;
+    toggle.addEventListener("click", function () {
+      var visible = input.type === "text";
+      input.type = visible ? "password" : "text";
+      toggle.innerHTML = visible
+        ? '<i class="fa-regular fa-eye" aria-hidden="true"></i>'
+        : '<i class="fa-regular fa-eye-slash" aria-hidden="true"></i>';
+    });
+  }
+  enlazarToggle("toggleClave", "clave");
+  enlazarToggle("toggleConfirmar", "confirmar");
+
+  /* ---------- Autocompletado por DNI ---------- */
+  if (window.SeleDentDNI) {
+    window.SeleDentDNI.attach({
+      dniId: "dni",
+      btnId: "btnConsultarDni",
+      statusId: "dniStatus",
+      nombreId: "nombre",
+      apePaternoId: "apePaterno",
+      apeMaternoId: "apeMaterno"
+    });
   }
 
-  if (/^\d{8}$/.test(dni)) {
-    await consultarDNI(dni);
-  }
-});
+  /* ---------- Validacion al enviar ---------- */
+  form.addEventListener("submit", function (ev) {
+    var errores = [];
 
-async function consultarDNI(dni) {
-  resultado.textContent = "";
+    var dni = document.getElementById("dni");
+    if (dni && dni.value.trim() && !/^\d{8}$/.test(dni.value.trim())) {
+      errores.push("El DNI debe tener 8 dígitos.");
+    }
 
-  try {
-    const response = await fetch(`/api/consultar_dni/${dni}`);
-    const res = await response.json();
+    if (!correo.value.trim() || !RE_CORREO.test(correo.value.trim().toLowerCase())) {
+      errores.push("Ingresa un correo electronico valido.");
+    }
 
-    if (!res.success || !res.data) {
-      resultado.className = "mt-3 text-center text-danger fw-bold";
-      resultado.textContent = " 
+    if (!clave.value || clave.value.length < 4) {
+      errores.push("La contrasena debe tener al menos 4 caracteres.");
+    } else if (clave.value !== document.getElementById("confirmar").value) {
+      errores.push("Las contrasenas no coinciden.");
+    }
+
+    if (errores.length) {
+      ev.preventDefault();
+      window.alert(errores.join("\n"));
+      return;
+    }
+
+    var btn = document.getElementById("btnRegistro");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Creando cuenta...";
+    }
+  });
+})();

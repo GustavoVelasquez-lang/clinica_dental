@@ -25,14 +25,14 @@
       </button>
     </div>
 
-    <h3 class="perfil-name">
+    <h3 class="perfil-name" id="perfilNombre">
       {{ usuario.nombre }}{% if usuario.apepaterno %} {{ usuario.apepaterno }}{% endif %}{% if usuario.apematerno %} {{ usuario.apematerno }}{% endif %}
     </h3>
     <span class="perfil-rol">{{ usuario.rol|capitalize }}</span>
 
     <ul class="perfil-meta">
       <li><span class="perfil-meta__dot" aria-hidden="true"></span> Edad: <strong>{{ edad if edad is not none else '—' }}</strong></li>
-      <li><span class="perfil-meta__dot" aria-hidden="true"></span> DNI: <strong>{{ usuario.numero_documento or '—' }}</strong></li>
+      <li><span class="perfil-meta__dot" aria-hidden="true"></span> DNI: <strong id="perfilDni">{{ usuario.numero_documento or '—' }}</strong></li>
     </ul>
   </section>
 
@@ -63,6 +63,51 @@
       <div class="cf-field">
         <span class="cf-value">{{ usuario.direccion or '—' }}</span>
         <input class="cf-input" type="text" value="{{ usuario.direccion or '' }}" hidden>
+        <button type="button" class="cf-edit">Editar <i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FILA COMPLETA · Documento de identidad ══ -->
+  <section class="contacto-card perfil-grid__full">
+    <h2 class="contacto-card__title">Documento de identidad</h2>
+    <p class="identidad-hint">
+      Ingresa o edita tu DNI y completaremos automáticamente tus nombres y apellidos.
+    </p>
+
+    <div class="cf-row" data-campo="dni">
+      <span class="cf-label">DNI</span>
+      <div class="cf-field">
+        <span class="cf-value">{{ usuario.numero_documento or '—' }}</span>
+        <input class="cf-input" type="text" inputmode="numeric" maxlength="8"
+               value="{{ usuario.numero_documento or '' }}" hidden>
+        <button type="button" class="cf-edit">Editar <i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <div class="cf-row" data-campo="nombre">
+      <span class="cf-label">Nombres</span>
+      <div class="cf-field">
+        <span class="cf-value">{{ usuario.nombre or '—' }}</span>
+        <input class="cf-input" type="text" value="{{ usuario.nombre or '' }}" hidden>
+        <button type="button" class="cf-edit">Editar <i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <div class="cf-row" data-campo="apepaterno">
+      <span class="cf-label">Apellido paterno</span>
+      <div class="cf-field">
+        <span class="cf-value">{{ usuario.apepaterno or '—' }}</span>
+        <input class="cf-input" type="text" value="{{ usuario.apepaterno or '' }}" hidden>
+        <button type="button" class="cf-edit">Editar <i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <div class="cf-row" data-campo="apematerno">
+      <span class="cf-label">Apellido materno</span>
+      <div class="cf-field">
+        <span class="cf-value">{{ usuario.apematerno or '—' }}</span>
+        <input class="cf-input" type="text" value="{{ usuario.apematerno or '' }}" hidden>
         <button type="button" class="cf-edit">Editar <i class="fa-solid fa-chevron-right"></i></button>
       </div>
     </div>

@@ -60,6 +60,39 @@
                 <input type="text" id="dni" name="dni" class="cp-input"
                        placeholder="Ej. 70123456" inputmode="numeric" maxlength="8" required
                        value="{{ form_dni if form_dni is defined and form_dni else (datos.numero_documento if datos and datos.numero_documento else '') }}">
+                <button type="button" class="cp-dni-btn" id="btnConsultarDni"
+                        aria-label="Consultar DNI">
+                  <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div id="dniStatus" class="dni-status text-muted small" aria-live="polite"></div>
+            </div>
+
+            <!-- Nombres y apellidos (autocompletados por DNI) -->
+            <div class="cp-field">
+              <label class="cp-label" for="nombre">Nombres</label>
+              <div class="cp-input-group">
+                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                <input type="text" id="nombre" name="nombre" class="cp-input" required
+                       value="{{ form_nombre if form_nombre is defined and form_nombre else (datos.nombre if datos and datos.nombre else '') }}">
+              </div>
+            </div>
+
+            <div class="cp-field">
+              <label class="cp-label" for="apePaterno">Apellido paterno</label>
+              <div class="cp-input-group">
+                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                <input type="text" id="apePaterno" name="apePaterno" class="cp-input" required
+                       value="{{ form_apePaterno if form_apePaterno is defined and form_apePaterno else (datos.apepaterno if datos and datos.apepaterno else '') }}">
+              </div>
+            </div>
+
+            <div class="cp-field">
+              <label class="cp-label" for="apeMaterno">Apellido materno</label>
+              <div class="cp-input-group">
+                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                <input type="text" id="apeMaterno" name="apeMaterno" class="cp-input" required
+                       value="{{ form_apeMaterno if form_apeMaterno is defined and form_apeMaterno else (datos.apematerno if datos and datos.apematerno else '') }}">
               </div>
             </div>
 
@@ -110,5 +143,6 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/dni_lookup.js') }}"></script>
 <script src="{{ url_for('static', filename='js/completar_perfil.js') }}"></script>
 {% endblock %}

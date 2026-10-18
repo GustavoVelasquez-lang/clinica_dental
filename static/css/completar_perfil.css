@@ -137,6 +137,32 @@
   color: #94a3b8;
 }
 
+/* Botón de consulta de DNI dentro del campo */
+#dni.cp-input { padding-right: 50px; }
+
+.cp-dni-btn {
+  position: absolute;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: rgba(47, 111, 208, 0.10);
+  color: var(--teal);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.cp-dni-btn:hover { background: var(--teal); color: #fff; }
+.cp-dni-btn:disabled { opacity: 0.6; cursor: wait; }
+
+.dni-status { display: block; margin-top: 6px; font-size: 12px; min-height: 1em; }
+
 /* ---------- Botón ---------- */
 .cp-submit {
   margin-top: 8px;

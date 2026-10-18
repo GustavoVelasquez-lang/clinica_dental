@@ -58,6 +58,22 @@
       <form method="POST" id="formRegistro" autocomplete="off" novalidate>
         <input type="hidden" name="next" value="{{ next or '' }}">
 
+        <div class="field-group">
+          <label for="dni" class="form-label fw-semibold">
+            DNI <span class="text-muted fw-normal">(opcional)</span>
+          </label>
+          <div class="input-group">
+            <input type="text" id="dni" name="dni" inputmode="numeric"
+                   maxlength="8" class="form-control border-end-0"
+                   placeholder="12345678">
+            <button type="button" class="input-group-text bg-white border-start-0"
+                    id="btnConsultarDni" aria-label="Consultar DNI">
+              <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div id="dniStatus" class="dni-status text-muted small" aria-live="polite"></div>
+        </div>
+
         <div class="row g-3">
           <div class="col-md-6">
             <div class="field-group">
@@ -146,4 +162,6 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dni_lookup.js') }}"></script>
+<script src="{{ url_for('static', filename='js/registro.js') }}"></script>
 {% endblock %}

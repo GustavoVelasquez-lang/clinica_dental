@@ -12,6 +12,15 @@
   align-items: start;
 }
 
+.perfil-grid__full { grid-column: 1 / -1; }
+
+.identidad-hint {
+  margin: -6px 0 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #64748b;
+}
+
 /* ===== Columna central · Mi perfil ===== */
 .perfil-card {
   background: #fff;
