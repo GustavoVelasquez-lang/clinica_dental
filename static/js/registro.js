@@ -30,6 +30,12 @@
   enlazarToggle("toggleClave", "clave");
   enlazarToggle("toggleConfirmar", "confirmar");
 
+  /* ---------- Fecha de nacimiento ---------- */
+  var fecha = document.getElementById("fenacimiento");
+  if (fecha) {
+    fecha.max = new Date().toISOString().slice(0, 10);
+  }
+
   /* ---------- Autocompletado por DNI ---------- */
   if (window.SeleDentDNI) {
     window.SeleDentDNI.attach({
@@ -49,6 +55,12 @@
     var dni = document.getElementById("dni");
     if (dni && dni.value.trim() && !/^\d{8}$/.test(dni.value.trim())) {
       errores.push("El DNI debe tener 8 dígitos.");
+    }
+
+    if (fecha && !fecha.value) {
+      errores.push("Ingresa tu fecha de nacimiento.");
+    } else if (fecha && fecha.max && fecha.value > fecha.max) {
+      errores.push("La fecha de nacimiento no puede ser futura.");
     }
 
     if (!correo.value.trim() || !RE_CORREO.test(correo.value.trim().toLowerCase())) {

@@ -1199,6 +1199,11 @@ def registro():
             flash("⚠️ El DNI debe tener 8 dígitos.", "warning")
             return redirect(url_for("registro", next=siguiente))
 
+        fecha_nac, error_fecha = _validar_fenacimiento(request.form.get("fenacimiento"))
+        if error_fecha:
+            flash(f"⚠️ {error_fecha}", "warning")
+            return redirect(url_for("registro", next=siguiente))
+
         if clave != confirmar:
             flash("❌ Las contraseñas no coinciden", "danger")
             return redirect(url_for("registro", next=siguiente))
@@ -1225,12 +1230,13 @@ def registro():
                 apeMaterno,
                 numero_documento,
                 tipo_documento,
+                fenacimiento,
                 correo,
                 contrasenia,
                 id_rol,
                 perfil_completo
             )   
-            VALUES (%s,%s,%s,%s,%s,%s,%s,2,FALSE)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,2,FALSE)
             RETURNING id, nombre
         """, (
             nombre,
@@ -1238,6 +1244,7 @@ def registro():
             apeMaterno,
             dni or None,
             "DNI" if dni else None,
+            fecha_nac,
             correo,
             clave_hash
         ))
@@ -1287,12 +1294,41 @@ def _datos_perfil(usuario_id):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT correo, nombre, apepaterno, apematerno, numero_documento, telefono
+        SELECT correo, nombre, apepaterno, apematerno, numero_documento,
+               telefono, fenacimiento
         FROM usuarios WHERE id = %s
     """, (usuario_id,))
     fila = cursor.fetchone()
     conn.close()
     return fila
+
+
+def _calcular_edad(fecha_nac):
+    """Calcula la edad (int) a partir de una fecha de nacimiento (date)."""
+    if not fecha_nac:
+        return None
+    hoy = date.today()
+    return hoy.year - fecha_nac.year - ((hoy.month, hoy.day) < (fecha_nac.month, fecha_nac.day))
+
+
+def _validar_fenacimiento(valor):
+    """Valida una fecha de nacimiento (YYYY-MM-DD).
+
+    Devuelve (fecha: date | None, error: str | None).
+    """
+    valor = (valor or "").strip()
+    if not valor:
+        return None, "La fecha de nacimiento es obligatoria."
+    try:
+        fecha = datetime.strptime(valor, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return None, "La fecha de nacimiento no es válida."
+    if fecha > date.today():
+        return None, "La fecha de nacimiento no puede ser futura."
+    edad = _calcular_edad(fecha)
+    if edad is None or edad < 0 or edad > 100:
+        return None, "Ingresa una fecha de nacimiento válida."
+    return fecha, None
 
 
 def _destino_seguro(valor, por_defecto="inicio"):
@@ -1331,6 +1367,8 @@ def completar_perfil():
         nombre = (request.form.get("nombre") or "").strip()
         ape_paterno = (request.form.get("apePaterno") or "").strip()
         ape_materno = (request.form.get("apeMaterno") or "").strip()
+        fecha_raw = (request.form.get("fenacimiento") or "").strip()
+        fecha_nac, error_fecha = _validar_fenacimiento(fecha_raw)
 
         error = None
         if not re.fullmatch(r"\d{8}", dni):
@@ -1341,10 +1379,13 @@ def completar_perfil():
             error = "⚠️ Ingresa tus nombres."
         elif not ape_paterno or not ape_materno:
             error = "⚠️ Ingresa tus apellidos."
+        elif error_fecha:
+            error = f"⚠️ {error_fecha}"
 
         form_extra = dict(
             form_dni=dni, form_telefono=telefono,
             form_nombre=nombre, form_apePaterno=ape_paterno, form_apeMaterno=ape_materno,
+            form_fenacimiento=fecha_raw,
         )
 
         if error:
@@ -1367,9 +1408,11 @@ def completar_perfil():
                     nombre           = %s,
                     apepaterno       = %s,
                     apematerno       = %s,
+                    fenacimiento     = %s,
                     perfil_completo  = TRUE
                 WHERE id = %s
-            """, (dni, telefono, nombre, ape_paterno, ape_materno, usuario_id))
+            """, (dni, telefono, nombre, ape_paterno, ape_materno,
+                  fecha_nac, usuario_id))
             filas = cursor.rowcount
             conn.commit()
             logger.info(
@@ -2280,11 +2323,7 @@ def mi_cuenta():
     citas = cursor.fetchall()
     conn.close()
 
-    edad = None
-    fnac = usuario.get("fenacimiento") if usuario else None
-    if fnac:
-        _hoy = date.today()
-        edad = _hoy.year - fnac.year - ((_hoy.month, _hoy.day) < (fnac.month, fnac.day))
+    edad = _calcular_edad(usuario.get("fenacimiento")) if usuario else None
 
     return render_template("mi_cuenta.html", usuario=usuario, citas=citas, edad=edad)
 
@@ -2297,11 +2336,13 @@ def mi_cuenta_actualizar():
     campo = (data.get("campo") or "").strip()
     valor = (data.get("valor") or "").strip()
 
-    permitidos = {"telefono", "correo", "direccion", "dni", "nombre", "apepaterno", "apematerno"}
+    permitidos = {"telefono", "correo", "direccion", "dni", "nombre",
+                  "apepaterno", "apematerno", "fenacimiento"}
     if campo not in permitidos:
         return jsonify({"ok": False, "mensaje": "Campo no permitido."}), 400
 
     nombres_actualizados = None
+    fecha_nac = None
 
     if campo == "telefono":
         if valor and not re.fullmatch(r"[0-9+\s]{6,20}", valor):
@@ -2329,11 +2370,20 @@ def mi_cuenta_actualizar():
             return jsonify({"ok": False, "mensaje": "Este campo no puede quedar vacío."}), 400
         if len(valor) > 100:
             return jsonify({"ok": False, "mensaje": "El valor es demasiado largo."}), 400
+    elif campo == "fenacimiento":
+        fecha_nac, error_fecha = _validar_fenacimiento(valor)
+        if error_fecha:
+            return jsonify({"ok": False, "mensaje": error_fecha}), 400
 
     conn = get_connection()
     cursor = conn.cursor()
     try:
-        if campo == "dni":
+        if campo == "fenacimiento":
+            cursor.execute(
+                "UPDATE usuarios SET fenacimiento = %s WHERE id = %s",
+                (fecha_nac, session["usuario_id"]),
+            )
+        elif campo == "dni":
             cursor.execute("""
                 UPDATE usuarios
                 SET numero_documento = %s,
@@ -2369,6 +2419,9 @@ def mi_cuenta_actualizar():
     }
     if nombres_actualizados is not None:
         respuesta["nombres"] = nombres_actualizados
+    if campo == "fenacimiento":
+        respuesta["edad"] = _calcular_edad(fecha_nac)
+        respuesta["valor"] = fecha_nac.strftime("%Y-%m-%d")
     return jsonify(respuesta)
 
 @app.route("/api/citas")

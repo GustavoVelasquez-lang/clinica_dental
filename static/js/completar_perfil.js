@@ -11,7 +11,13 @@
   var nombre = document.getElementById("nombre");
   var apePaterno = document.getElementById("apePaterno");
   var apeMaterno = document.getElementById("apeMaterno");
+  var fenacimiento = document.getElementById("fenacimiento");
   var telefono = document.getElementById("telefono");
+
+  // Fecha de nacimiento: no permitir fechas futuras.
+  if (fenacimiento) {
+    fenacimiento.max = new Date().toISOString().slice(0, 10);
+  }
 
   // DNI: solo dígitos, máximo 8.
   if (dni) {
@@ -56,6 +62,12 @@
 
     if (apeMaterno && !apeMaterno.value.trim()) {
       errores.push("Ingresa tu apellido materno.");
+    }
+
+    if (fenacimiento && !fenacimiento.value) {
+      errores.push("Ingresa tu fecha de nacimiento.");
+    } else if (fenacimiento && fenacimiento.value > fenacimiento.max) {
+      errores.push("La fecha de nacimiento no puede ser futura.");
     }
 
     if (telefono && !/^[0-9+\s]{6,20}$/.test(telefono.value.trim())) {

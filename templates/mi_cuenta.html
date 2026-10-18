@@ -31,7 +31,7 @@
     <span class="perfil-rol">{{ usuario.rol|capitalize }}</span>
 
     <ul class="perfil-meta">
-      <li><span class="perfil-meta__dot" aria-hidden="true"></span> Edad: <strong>{{ edad if edad is not none else '—' }}</strong></li>
+      <li><span class="perfil-meta__dot" aria-hidden="true"></span> Edad: <strong id="perfilEdad">{{ edad if edad is not none else '—' }}</strong></li>
       <li><span class="perfil-meta__dot" aria-hidden="true"></span> DNI: <strong id="perfilDni">{{ usuario.numero_documento or '—' }}</strong></li>
     </ul>
   </section>
@@ -68,9 +68,9 @@
     </div>
   </section>
 
-  <!-- ══ FILA COMPLETA · Documento de identidad ══ -->
+  <!-- ══ FILA COMPLETA · Datos personales ══ -->
   <section class="contacto-card perfil-grid__full">
-    <h2 class="contacto-card__title">Documento de identidad</h2>
+    <h2 class="contacto-card__title">Datos personales</h2>
     <p class="identidad-hint">
       Ingresa o edita tu DNI y completaremos automáticamente tus nombres y apellidos.
     </p>
@@ -108,6 +108,16 @@
       <div class="cf-field">
         <span class="cf-value">{{ usuario.apematerno or '—' }}</span>
         <input class="cf-input" type="text" value="{{ usuario.apematerno or '' }}" hidden>
+        <button type="button" class="cf-edit">Editar <i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <div class="cf-row" data-campo="fenacimiento">
+      <span class="cf-label">Fecha de nacimiento</span>
+      <div class="cf-field">
+        <span class="cf-value">{{ usuario.fenacimiento.strftime('%d/%m/%Y') if usuario.fenacimiento else '—' }}</span>
+        <input class="cf-input" type="date"
+               value="{{ usuario.fenacimiento.isoformat() if usuario.fenacimiento else '' }}" hidden>
         <button type="button" class="cf-edit">Editar <i class="fa-solid fa-chevron-right"></i></button>
       </div>
     </div>

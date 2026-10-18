@@ -139,11 +139,20 @@ function mostrarToast(mensaje, tipo) {
         }
         original = data.valor != null ? data.valor : valor;
         inputEl.value = original;
-        valorEl.textContent = original || '—';
+        let valorMostrado = original || '—';
+        if (campo === 'fenacimiento' && original) {
+          const partes = String(original).split('-');
+          if (partes.length === 3) valorMostrado = partes[2] + '/' + partes[1] + '/' + partes[0];
+        }
+        valorEl.textContent = valorMostrado;
         if (campo === 'dni' && data.nombres) {
           aplicarNombres(data.nombres);
           const dniPerfil = document.getElementById('perfilDni');
           if (dniPerfil) dniPerfil.textContent = original;
+        }
+        if (campo === 'fenacimiento' && typeof data.edad === 'number') {
+          const edadEl = document.getElementById('perfilEdad');
+          if (edadEl) edadEl.textContent = data.edad;
         }
         modoEdicion(false);
         mostrarToast(data.mensaje || 'Datos actualizados correctamente.', 'ok');
