@@ -2148,11 +2148,11 @@ def documentos():
 def _validar_fecha_familiar(valor):
     """Valida la fecha de nacimiento de un familiar (permite menores de edad).
 
-    Devuelve (fecha: date | None, error: str | None). Vacío => (None, None).
+    Devuelve (fecha: date | None, error: str | None). Vacío => error (obligatoria).
     """
     valor = (valor or "").strip()
     if not valor:
-        return None, None
+        return None, "La fecha de nacimiento es obligatoria."
     try:
         fecha = datetime.strptime(valor, "%Y-%m-%d").date()
     except (ValueError, TypeError):
@@ -2200,16 +2200,18 @@ def familiar_agregar():
         return redirect(url_for("mis_citas"))
 
     nombres = (request.form.get("nombres") or "").strip()
-    apellidos = (request.form.get("apellidos") or "").strip()
+    ape_paterno = (request.form.get("ape_paterno") or "").strip()
+    ape_materno = (request.form.get("ape_materno") or "").strip()
+    apellidos = " ".join(p for p in (ape_paterno, ape_materno) if p)[:100]
     dni = (request.form.get("dni") or "").strip()
     parentesco = (request.form.get("parentesco") or "").strip()
 
-    if not nombres or not apellidos:
-        flash("⚠️ Ingresa los nombres y apellidos del familiar.", "warning")
+    if not nombres or not ape_paterno:
+        flash("⚠️ Ingresa los nombres y el apellido paterno del familiar.", "warning")
         return redirect(url_for("familiares"))
 
-    if dni and not re.fullmatch(r"\d{8}", dni):
-        flash("⚠️ El DNI del familiar debe tener 8 dígitos.", "warning")
+    if not re.fullmatch(r"\d{8}", dni):
+        flash("⚠️ El DNI del familiar es obligatorio y debe tener 8 dígitos.", "warning")
         return redirect(url_for("familiares"))
 
     fecha_nac, error_fecha = _validar_fecha_familiar(request.form.get("fenacimiento"))
@@ -2228,7 +2230,7 @@ def familiar_agregar():
             """,
             (
                 session["usuario_id"],
-                dni or None,
+                dni,
                 nombres,
                 apellidos,
                 fecha_nac,

@@ -72,6 +72,48 @@
   box-shadow: 0 0 0 3px rgba(47, 111, 208, 0.13);
 }
 
+.fam-input-group {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.fam-input-group .fam-input {
+  flex: 1 1 auto;
+}
+
+.fam-input-btn {
+  flex: 0 0 auto;
+  width: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #dfe5ec;
+  border-radius: 10px;
+  background: #f4f8fe;
+  color: #2f6fd0;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.fam-input-btn:hover {
+  background: #e6f0fe;
+  border-color: #bcd4f4;
+}
+
+.fam-input-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.dni-status {
+  display: block;
+  min-height: 16px;
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .fam-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

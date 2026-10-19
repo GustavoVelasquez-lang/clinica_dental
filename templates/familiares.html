@@ -23,44 +23,57 @@
     <!-- ── FORMULARIO ── -->
     <section class="fam-card">
       <h2 class="fam-card__title"><i class="fa-solid fa-user-plus"></i> Agregar familiar</h2>
-      <form method="POST" action="{{ url_for('familiar_agregar') }}" autocomplete="off">
+      <form method="POST" action="{{ url_for('familiar_agregar') }}" id="formFamiliar" autocomplete="off">
+        <div class="fam-field">
+          <label for="famDni">DNI</label>
+          <div class="fam-input-group">
+            <input type="text" id="famDni" name="dni" class="fam-input"
+                   inputmode="numeric" maxlength="8" placeholder="12345678" required>
+            <button type="button" class="fam-input-btn" id="btnFamConsultarDni" aria-label="Consultar DNI">
+              <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div id="famDniStatus" class="dni-status text-muted" aria-live="polite"></div>
+        </div>
         <div class="fam-field">
           <label for="famNombres">Nombres</label>
           <input type="text" id="famNombres" name="nombres" class="fam-input"
-                 required maxlength="100" placeholder="Nombres del familiar">
-        </div>
-        <div class="fam-field">
-          <label for="famApellidos">Apellidos</label>
-          <input type="text" id="famApellidos" name="apellidos" class="fam-input"
-                 required maxlength="100" placeholder="Apellidos del familiar">
+                 required maxlength="60" placeholder="Nombres del familiar">
         </div>
         <div class="fam-row">
           <div class="fam-field">
-            <label for="famDni">DNI <span>(opcional)</span></label>
-            <input type="text" id="famDni" name="dni" class="fam-input"
-                   inputmode="numeric" maxlength="8" placeholder="12345678">
+            <label for="famApePaterno">Apellido paterno</label>
+            <input type="text" id="famApePaterno" name="ape_paterno" class="fam-input"
+                   required maxlength="60" placeholder="Apellido paterno">
           </div>
           <div class="fam-field">
-            <label for="famFenacimiento">Nacimiento <span>(opcional)</span></label>
-            <input type="date" id="famFenacimiento" name="fenacimiento"
-                   class="fam-input" min="1927-01-01" max="{{ hoy }}">
+            <label for="famApeMaterno">Apellido materno</label>
+            <input type="text" id="famApeMaterno" name="ape_materno" class="fam-input"
+                   maxlength="60" placeholder="Apellido materno">
           </div>
         </div>
-        <div class="fam-field">
-          <label for="famParentesco">Parentesco</label>
-          <select id="famParentesco" name="parentesco" class="fam-input">
-            <option value="">— Selecciona —</option>
-            <option value="Hijo/a">Hijo/a</option>
-            <option value="Cónyuge">Cónyuge</option>
-            <option value="Padre">Padre</option>
-            <option value="Madre">Madre</option>
-            <option value="Hermano/a">Hermano/a</option>
-            <option value="Abuelo/a">Abuelo/a</option>
-            <option value="Nieto/a">Nieto/a</option>
-            <option value="Sobrino/a">Sobrino/a</option>
-            <option value="Tutorado/a">Tutorado/a (menor a cargo)</option>
-            <option value="Otro">Otro</option>
-          </select>
+        <div class="fam-row">
+          <div class="fam-field">
+            <label for="famFenacimiento">Nacimiento</label>
+            <input type="date" id="famFenacimiento" name="fenacimiento"
+                   class="fam-input" min="1927-01-01" max="{{ hoy }}" required>
+          </div>
+          <div class="fam-field">
+            <label for="famParentesco">Parentesco</label>
+            <select id="famParentesco" name="parentesco" class="fam-input">
+              <option value="">— Selecciona —</option>
+              <option value="Hijo/a">Hijo/a</option>
+              <option value="Cónyuge">Cónyuge</option>
+              <option value="Padre">Padre</option>
+              <option value="Madre">Madre</option>
+              <option value="Hermano/a">Hermano/a</option>
+              <option value="Abuelo/a">Abuelo/a</option>
+              <option value="Nieto/a">Nieto/a</option>
+              <option value="Sobrino/a">Sobrino/a</option>
+              <option value="Tutorado/a">Tutorado/a (menor a cargo)</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
         </div>
         <button type="submit" class="fam-btn">
           <i class="fa-solid fa-plus"></i> Agregar familiar
@@ -104,4 +117,9 @@
 
   </div>
 </div>
+{% endblock %}
+
+{% block panel_js %}
+<script src="{{ url_for('static', filename='js/dni_lookup.js') }}"></script>
+<script src="{{ url_for('static', filename='js/familiares.js') }}"></script>
 {% endblock %}
