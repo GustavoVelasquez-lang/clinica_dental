@@ -46,7 +46,7 @@ html, body {
   justify-content: space-between;
   position: relative;
   height: 100vh;
-  overflow: hidden;
+  overflow-y: auto;
 }
 .panel-left::before {
   content: '';
@@ -124,7 +124,9 @@ html, body {
 .panel-right {
   background: var(--cream);
   padding: 48px 52px;
-  display: flex; flex-direction: column; justify-content: center;
+  display: flex; flex-direction: column;
+  justify-content: center;
+  justify-content: safe center;
   height: 100vh;
   overflow-y: auto;
 }
@@ -356,6 +358,34 @@ textarea.field-input {
 .resumen-row:last-child { margin-bottom: 0; }
 .resumen-row i { color: var(--teal); width: 16px; text-align: center; font-size: 12px; }
 .resumen-row strong { color: var(--dark); }
+
+/* ── Pantallas bajas (laptops): compactar para que quepa exacto en pantalla ── */
+@media (max-height: 880px) {
+  .panel-left  { padding: 30px 42px; }
+  .pl-logo-img { height: 50px; }
+  .pl-badge    { margin-bottom: 12px; padding: 4px 12px; font-size: 10px; }
+  .pl-hero h1  { font-size: clamp(24px, 2.6vw, 32px); margin-bottom: 10px; }
+  .pl-hero p   { font-size: 13px; line-height: 1.55; }
+  .pl-info     { gap: 8px; }
+  .pl-info-card{ padding: 10px 14px; }
+  .pl-info-icon{ width: 30px; height: 30px; font-size: 14px; }
+  .pl-info-text strong { font-size: 12px; }
+  .pl-info-text span   { font-size: 11px; }
+
+  .panel-right { padding: 26px 44px; }
+  .link-volver { margin-bottom: 12px; }
+  .form-header { margin-bottom: 16px; }
+  .form-header h2 { font-size: 21px; margin-bottom: 4px; }
+  .form-header p  { font-size: 12px; }
+  .steps       { margin-bottom: 18px; }
+  .info-banner { padding: 11px 14px; margin-bottom: 14px; font-size: 12px; line-height: 1.5; }
+  .field-group { margin-bottom: 12px; }
+  .field-label { margin-bottom: 5px; }
+  .field-input { padding: 10px 14px; }
+  .tipo-cards  { gap: 9px; }
+  .tipo-card   { padding: 13px 16px; }
+  .btn-agendar { padding: 12px; font-size: 14px; margin-top: 4px; }
+}
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
