@@ -422,6 +422,20 @@ def agendar():
     )
     dependientes = cursor.fetchall()
 
+    # Nombre completo del titular para identificarlo en el selector de paciente.
+    cursor.execute(
+        "SELECT nombre, apepaterno, apematerno FROM usuarios WHERE id = %s",
+        (session["usuario_id"],),
+    )
+    fila_titular = cursor.fetchone() or {}
+    titular_nombre = " ".join(
+        p for p in (
+            fila_titular.get("nombre"),
+            fila_titular.get("apepaterno"),
+            fila_titular.get("apematerno"),
+        ) if p
+    ).strip() or (session.get("nombre") or "Titular de la cuenta")
+
     if request.method == "POST":
 
         fecha_str = request.form.get("fecha")
@@ -639,6 +653,7 @@ def agendar():
         especialidad_seleccionada=especialidad_param,
         tratamiento_seleccionado=tratamiento_param,
         dependientes=dependientes,
+        titular_nombre=titular_nombre,
         tipo_seleccionado=tipo_seleccionado,
         tipos_atencion=tipos_render,
     )

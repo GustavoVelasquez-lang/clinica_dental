@@ -32,7 +32,8 @@ body {
   background: var(--pn-dark);
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  align-self: flex-start;
+  height: 100vh;
   position: sticky;
   top: 0;
 }

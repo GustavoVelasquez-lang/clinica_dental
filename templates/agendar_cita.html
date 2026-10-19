@@ -105,7 +105,7 @@
         </div>
         <div class="select-wrap">
           <select name="dependiente_id" id="dependiente_id" class="field-input">
-            <option value="">Para mí (titular de la cuenta)</option>
+            <option value="">Para mí{% if titular_nombre and titular_nombre != 'Titular de la cuenta' %} ({{ titular_nombre }}){% endif %}</option>
             {% for d in dependientes %}
               <option value="{{ d.id }}">{{ d.nombres }} {{ d.apellidos }}{% if d.parentesco %} ({{ d.parentesco }}){% endif %}</option>
             {% endfor %}
