@@ -31,9 +31,10 @@ html, body {
    LAYOUT
 ═══════════════════════════════════════ */
 .page-agendar {
-  min-height: 100vh;
+  height: 100vh;
   display: grid;
   grid-template-columns: 1fr 1.1fr;
+  overflow: hidden;
 }
 
 /* ── Panel izquierdo (verde) ── */
@@ -44,6 +45,7 @@ html, body {
   flex-direction: column;
   justify-content: space-between;
   position: relative;
+  height: 100vh;
   overflow: hidden;
 }
 .panel-left::before {
@@ -64,22 +66,9 @@ html, body {
   display: flex; align-items: center; gap: 12px;
   text-decoration: none; position: relative; z-index: 2;
 }
-.pl-logo-icon {
-  width: 40px; height: 40px;
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 11px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.pl-logo-icon svg { width: 22px; height: 22px; }
-.pl-logo-text strong {
-  display: block; font-family: var(--font-d);
-  font-size: 15px; color: white; line-height: 1.1;
-}
-.pl-logo-text small {
-  font-size: 10px; color: rgba(255,255,255,0.45);
-  letter-spacing: 0.1em; text-transform: uppercase;
+.pl-logo-img {
+  display: block; height: 64px; width: auto; max-width: 100%;
+  object-fit: contain; object-position: left center;
 }
 
 /* texto central */
@@ -136,6 +125,7 @@ html, body {
   background: var(--cream);
   padding: 48px 52px;
   display: flex; flex-direction: column; justify-content: center;
+  height: 100vh;
   overflow-y: auto;
 }
 
@@ -369,9 +359,9 @@ textarea.field-input {
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
-  .page-agendar { grid-template-columns: 1fr; }
-  .panel-left   { padding: 36px 28px; min-height: unset; }
-  .panel-right  { padding: 36px 28px; }
+  .page-agendar { grid-template-columns: 1fr; height: auto; overflow: visible; }
+  .panel-left   { padding: 36px 28px; min-height: unset; height: auto; }
+  .panel-right  { padding: 36px 28px; height: auto; overflow-y: visible; }
   .pl-hero h1   { font-size: 28px; }
 }
 @media (max-width: 480px) {
