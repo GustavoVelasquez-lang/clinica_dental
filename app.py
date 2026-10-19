@@ -583,6 +583,8 @@ def agendar():
         mensaje = (request.form.get("mensaje") or "").strip()
         tipo_key = (request.form.get("tipo") or "").strip()
         tratamiento_id = (request.form.get("tratamiento") or "").strip() or None
+        if tratamiento_id and not tratamiento_id.isdigit():
+            tratamiento_id = None
         dependiente_id = (request.form.get("dependiente_id") or "").strip() or None
         odontologo_id = (
             request.form.get("odontologo_id")
@@ -617,6 +619,29 @@ def agendar():
         if not hora:
             flash("❌ Debes seleccionar una hora", "danger")
             return redirect(url_for("agendar"))
+
+        # El tipo "tratamiento" exige elegir uno: es el que define el adelanto
+        # de la cita (sin tratamiento, la especialidad puede no requerirlo).
+        if tipo_key == "tratamiento" and not tratamiento_id:
+            flash("❌ Debes seleccionar un tratamiento para continuar", "danger")
+            return redirect(url_for("agendar"))
+
+        # El tratamiento elegido debe ser activo y pertenecer a la especialidad.
+        if tratamiento_id and str(especialidad_id).isdigit():
+            cursor.execute(
+                """
+                SELECT 1 FROM tratamientos
+                WHERE id_tratamiento = %s AND id_especialidad = %s
+                  AND COALESCE(activo, TRUE) = TRUE
+                """,
+                (int(tratamiento_id), int(especialidad_id)),
+            )
+            if not cursor.fetchone():
+                flash(
+                    "❌ El tratamiento seleccionado no corresponde a la especialidad",
+                    "danger",
+                )
+                return redirect(url_for("agendar"))
 
                            
         try:

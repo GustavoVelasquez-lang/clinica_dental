@@ -156,13 +156,16 @@
       <div class="field-group" id="grupoTratamiento" style="display:none">
         <div class="field-label">
           <label for="tratamiento">Tratamiento</label>
-          <span class="field-required">Opcional</span>
+          <span class="field-required" id="tratamientoBadge">Opcional</span>
         </div>
         <div class="select-wrap">
           <select name="tratamiento" id="tratamiento" class="field-input">
             <option value="">— Selecciona un tratamiento (opcional) —</option>
           </select>
         </div>
+        <p class="error-text" id="tratamientoError" hidden>
+          Debes seleccionar un tratamiento para continuar.
+        </p>
       </div>
 
       <!-- ── 1d. DOCTOR / ESPECIALISTA (según la especialidad) ── -->

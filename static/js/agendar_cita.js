@@ -10,6 +10,8 @@ tipData.forEach(function (t) {
 const espSelect  = document.getElementById('especialidad');
 const tratSelect = document.getElementById('tratamiento');
 const grupoTrat  = document.getElementById('grupoTratamiento');
+const tratBadge  = document.getElementById('tratamientoBadge');
+const tratError  = document.getElementById('tratamientoError');
 const docSelect  = document.getElementById('odontologo');
 const grupoDoc   = document.getElementById('grupoDoctor');
 const fechaInput = document.getElementById('fecha');
@@ -25,6 +27,46 @@ const charCount  = document.getElementById('charCount');
 const tipoSelect = document.getElementById('tipo');
 const grupoEsp   = document.getElementById('grupoEspecialidad');
 const tipoDesc   = document.getElementById('tipoDesc');
+
+// ── Obligatoriedad del tratamiento ─────────────────────────────────────────
+// El tipo "tratamiento" exige elegir un tratamiento: es el que define el
+// adelanto de la cita (sin él, la especialidad puede no tener adelanto).
+const TIPO_TRATAMIENTO = 'tratamiento';
+
+function tratamientoObligatorio() {
+  return tipoSelect.value === TIPO_TRATAMIENTO;
+}
+
+function sincronizarTratamiento() {
+  const obligatorio = tratamientoObligatorio();
+  if (tratBadge) tratBadge.textContent = obligatorio ? 'Requerido' : 'Opcional';
+  if (tratSelect) tratSelect.required = obligatorio;
+  const vacio = tratSelect && tratSelect.querySelector('option[value=""]');
+  if (vacio) {
+    vacio.textContent = obligatorio
+      ? '— Selecciona un tratamiento —'
+      : '— Selecciona un tratamiento (opcional) —';
+  }
+  if (!obligatorio) ocultarErrorTratamiento();
+}
+
+function mostrarErrorTratamiento() {
+  if (tratError) tratError.hidden = false;
+  if (tratSelect) tratSelect.classList.add('error');
+  if (grupoTrat) grupoTrat.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function ocultarErrorTratamiento() {
+  if (tratError) tratError.hidden = true;
+  if (tratSelect) tratSelect.classList.remove('error');
+}
+
+function htmlOpcionVaciaTratamiento() {
+  const texto = tratamientoObligatorio()
+    ? '— Selecciona un tratamiento —'
+    : '— Selecciona un tratamiento (opcional) —';
+  return '<option value="">' + texto + '</option>';
+}
 
 // Aplica el tipo de atención al formulario (compartido entre el evento
 // 'change' y la carga inicial desde la URL).
@@ -51,6 +93,9 @@ function aplicarTipo(key, opciones) {
 
   // Modo urgencia: fecha de hoy + especialidad de emergencias.
   aplicarModoUrgencia(key === 'urgencia');
+
+  // El tratamiento pasa a ser obligatorio/según el tipo elegido.
+  sincronizarTratamiento();
 }
 
 tipoSelect.addEventListener('change', () => {
@@ -87,6 +132,10 @@ espSelect.addEventListener('change',  cargarHorarios);
 espSelect.addEventListener('change',  cargarTratamientos);
 espSelect.addEventListener('change',  cargarDoctores);
 tratSelect.addEventListener('change', cargarDoctores);
+tratSelect.addEventListener('change', function () {
+  ocultarErrorTratamiento();
+  validarFormulario();
+});
 fechaInput.addEventListener('change', cargarHorarios);
 
 // ── Cargar tratamientos según la especialidad elegida ──
@@ -104,17 +153,20 @@ async function cargarTratamientos(preseleccion) {
   // Sin especialidad seleccionada (o especialidad fija): ocultar tratamientos.
   if (!esp || !espVisible) {
     grupoTrat.style.display = 'none';
-    tratSelect.innerHTML = '<option value="">— Selecciona un tratamiento (opcional) —</option>';
+    tratSelect.innerHTML = htmlOpcionVaciaTratamiento();
+    sincronizarTratamiento();
+    validarFormulario();
     return;
   }
 
   tratSelect.innerHTML = '<option value="">Cargando tratamientos…</option>';
+  validarFormulario();
   try {
     const res = await fetch('/tratamientos_por_especialidad?especialidad_id=' +
       encodeURIComponent(esp));
     const data = await res.json();
 
-    tratSelect.innerHTML = '<option value="">— Selecciona un tratamiento (opcional) —</option>';
+    tratSelect.innerHTML = htmlOpcionVaciaTratamiento();
     if (Array.isArray(data) && data.length) {
       data.forEach(function (t) {
         const op = document.createElement('option');
@@ -140,6 +192,7 @@ async function cargarTratamientos(preseleccion) {
   } catch (e) {
     grupoTrat.style.display = 'none';
   }
+  validarFormulario();
 }
 
 // ── Cargar doctores/odontólogos según la especialidad ──
@@ -317,7 +370,9 @@ function ocultarResumen() {
 }
 
 function validarFormulario() {
-  const ok = tipoSelect.value && espSelect.value && fechaInput.value && horaHidden.value;
+  const faltaTratamiento = tratamientoObligatorio() && !tratSelect.value;
+  const ok = tipoSelect.value && espSelect.value && fechaInput.value &&
+             horaHidden.value && !faltaTratamiento;
   btnAgendar.disabled = !ok;
 }
 
@@ -436,6 +491,11 @@ const TRAT_INICIAL = (formCita.dataset.tratamiento || '').trim();
 // Validación antes de enviar
 let navegarAPago = false;
 document.getElementById('formCita').addEventListener('submit', function(e) {
+  if (tratamientoObligatorio() && !tratSelect.value) {
+    e.preventDefault();
+    mostrarErrorTratamiento();
+    return;
+  }
   if (!horaHidden.value) {
     e.preventDefault();
     badgeEl.innerHTML = `<div class="disponibilidad-badge badge-ocupada">
