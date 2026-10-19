@@ -534,9 +534,9 @@ def _crear_cita_desde_reserva(reserva, estado_pago="pendiente", voucher=None):
         tratamiento_id = reserva.get("tratamiento_id")
         if tratamiento_id and str(tratamiento_id).isdigit():
             cursor.execute("""
-                INSERT INTO cita_tratamiento (id_cita, id_tratamiento, precio_aplicado)
-                VALUES (%s, %s, (SELECT precio_base FROM tratamientos WHERE id_tratamiento = %s))
-            """, (cita_id, int(tratamiento_id), int(tratamiento_id)))
+                INSERT INTO cita_tratamiento (id_cita, id_tratamiento, precio_aplicado, paciente_id)
+                VALUES (%s, %s, (SELECT precio_base FROM tratamientos WHERE id_tratamiento = %s), %s)
+            """, (cita_id, int(tratamiento_id), int(tratamiento_id), reserva.get("paciente_id")))
             # El precio del tratamiento pasa a ser el total a cobrar de la cita.
             cursor.execute("""
                 UPDATE citas SET monto_total = (
@@ -2941,13 +2941,10 @@ def agendar_doctor():
         if tratamiento_id and str(tratamiento_id).isdigit():
             cursor.execute(
                 """
-                INSERT INTO cita_tratamiento (id_cita, id_tratamiento, precio_aplicado)
-                VALUES (
-                    %s, %s,
-                    (SELECT precio_base FROM tratamientos WHERE id_tratamiento = %s)
-                )
+                INSERT INTO cita_tratamiento (id_cita, id_tratamiento, precio_aplicado, paciente_id)
+                VALUES (%s, %s, (SELECT precio_base FROM tratamientos WHERE id_tratamiento = %s), %s)
                 """,
-                (cita_id, int(tratamiento_id), int(tratamiento_id)),
+                (cita_id, int(tratamiento_id), int(tratamiento_id), paciente_id),
             )
             # El precio del tratamiento pasa a ser el total a cobrar de la cita.
             cursor.execute(

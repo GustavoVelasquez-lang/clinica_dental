@@ -467,12 +467,18 @@ CREATE TABLE IF NOT EXISTS cita_tratamiento (
     fecha_ejecucion TIMESTAMP,
 
     -- NUEVO: imagen del comprobante de pago (ruta relativa)
-    comprobante_pago VARCHAR(255)
+    comprobante_pago VARCHAR(255),
+
+    -- NUEVO: paciente que agendó este tratamiento (FK directa)
+    paciente_id INT REFERENCES usuarios(id)
 );
 
 -- Compatibilidad con tablas ya creadas (columnas nuevas)
 ALTER TABLE cita_tratamiento ADD COLUMN IF NOT EXISTS fecha_ejecucion TIMESTAMP;
 ALTER TABLE cita_tratamiento ADD COLUMN IF NOT EXISTS comprobante_pago VARCHAR(255);
+ALTER TABLE cita_tratamiento ADD COLUMN IF NOT EXISTS paciente_id INT;
+ALTER TABLE cita_tratamiento ADD CONSTRAINT cita_tratamiento_paciente_id_fkey
+  FOREIGN KEY (paciente_id) REFERENCES usuarios(id);
 
 
 -- ============================================================
