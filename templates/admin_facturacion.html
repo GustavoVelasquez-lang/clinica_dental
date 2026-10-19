@@ -37,6 +37,7 @@
         <th>Método</th>
         <th>Monto</th>
         <th>Fecha pago</th>
+        <th>Detalles</th>
       </tr>
     </thead>
     <tbody>
@@ -50,9 +51,15 @@
         <td>{{ p.metodo }}</td>
         <td class="tb-strong">S/ {{ p.monto }}</td>
         <td class="tb-muted">{{ (p.fecha or '—')|string }}</td>
+        <td>
+          <a href="{{ url_for('facturacion_pdf', pago_id=p.id) }}" target="_blank"
+             class="btn-a btn-teal" title="Descargar Comprobante PDF">
+            <i class="fa-solid fa-file-pdf me-1"></i>Ver PDF
+          </a>
+        </td>
       </tr>
       {% else %}
-      <tr><td colspan="8" class="empty">No hay pagos registrados aún.</td></tr>
+      <tr><td colspan="9" class="empty">No hay pagos registrados aún.</td></tr>
       {% endfor %}
     </tbody>
   </table>

@@ -4095,6 +4095,366 @@ def admin_facturacion():
                            total_adelantos=total_adelantos)
 
 
+# Datos institucionales que se imprimen en el comprobante.
+CLINICA_NOMBRE = "Clínica Dental SELEDENT"
+CLINICA_RUC = "20601234567"
+CLINICA_DIRECCION = "Av. Real 123, Huancayo — Junín, Perú"
+CLINICA_TELEFONO = "+51 999 999 999"
+
+_MESES_ES = (
+    "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
+    "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+)
+
+
+def _fecha_es(valor):
+    """Fecha 'dd de mes de yyyy' (o cadena vacía) para el comprobante."""
+    if not valor:
+        return "—"
+    if isinstance(valor, datetime):
+        valor = valor.date()
+    if isinstance(valor, date):
+        return f"{valor.day} de {_MESES_ES[valor.month - 1]} de {valor.year}"
+    return str(valor)
+
+
+def _fecha_hora_es(valor):
+    """Fecha y hora exactas del pago (para el comprobante)."""
+    if not valor:
+        return "—"
+    if isinstance(valor, datetime):
+        return (
+            f"{valor.day} de {_MESES_ES[valor.month - 1]} de {valor.year}, "
+            f"{valor.strftime('%H:%M')} h"
+        )
+    return _fecha_es(valor)
+
+
+def _tipo_pago_etiqueta(tipo, gateway):
+    """Etiqueta legible del tipo de movimiento (adelanto/saldo/caja)."""
+    tipo = (tipo or "").strip().lower()
+    gateway = (gateway or "").strip().lower()
+    if tipo == "completo" or gateway in ("efectivo", "pos_tarjeta", "yape_presencial"):
+        return "Cobro en caja"
+    if tipo == "adelanto":
+        return "Adelanto de reserva"
+    return tipo.capitalize() if tipo else "Pago"
+
+
+def _metodo_pago_etiqueta(metodo):
+    """Normaliza la etiqueta del método de pago."""
+    clave = (metodo or "").strip().lower()
+    mapa = {
+        "yape_manual": "Yape (manual)",
+        "yape": "Yape",
+        "yape_presencial": "Yape presencial",
+        "culqi": "Culqi",
+        "tarjeta": "Tarjeta (Culqi)",
+        "efectivo": "Efectivo",
+        "pos": "POS / Tarjeta",
+        "pos_tarjeta": "POS / Tarjeta",
+    }
+    return mapa.get(clave, (metodo or "—"))
+
+
+@app.route("/admin/facturacion/pdf/<int:pago_id>")
+@admin_required
+def facturacion_pdf(pago_id):
+    """Comprobante interno de caja en PDF para un movimiento de pago."""
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import mm
+    from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate,
+                                    Spacer, Table, TableStyle)
+
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT p.id, p.tipo, p.monto, p.fecha, p.gateway, p.estado,
+               c.fecha AS fecha_cita, c.hora AS hora_cita,
+               c.tipo_atencion, c.metodo_pago, c.nro_operacion,
+               u.nombre, u.apepaterno, u.apematerno, u.numero_documento,
+               e.nombre AS especialidad,
+               COALESCE(
+                   (SELECT t.nombre
+                      FROM cita_tratamiento ct
+                      JOIN tratamientos t ON t.id_tratamiento = ct.id_tratamiento
+                     WHERE ct.id_cita = c.id
+                     ORDER BY ct.id LIMIT 1),
+                   c.tipo_atencion, e.nombre
+               ) AS tratamiento,
+               COALESCE(mp.nombre, p.gateway, 'Yape') AS metodo
+        FROM pagos p
+        JOIN citas c ON p.id_cita = c.id
+        JOIN usuarios u ON c.paciente_id = u.id
+        JOIN especialidades e ON c.especialidad_id = e.id
+        LEFT JOIN comprobantes_pago cp ON cp.id_pago = p.id
+        LEFT JOIN metodos_pago mp ON mp.id_metodo_pago = cp.id_metodo_pago
+        WHERE p.id = %s
+        """,
+        (pago_id,),
+    )
+    pago = cur.fetchone()
+    conn.close()
+
+    if not pago:
+        abort(404)
+
+    paciente = " ".join(
+        x for x in (
+            pago.get("nombre"), pago.get("apepaterno"), pago.get("apematerno")
+        ) if x
+    ).strip() or "—"
+
+    azul = colors.HexColor("#2f6fd0")
+    azul_d = colors.HexColor("#1f57b3")
+    azul_xl = colors.HexColor("#eaf2fd")
+    dorado = colors.HexColor("#c9a84c")
+    gris = colors.HexColor("#6f7d8d")
+    oscuro = colors.HexColor("#12283f")
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=20 * mm,
+        rightMargin=20 * mm,
+        topMargin=18 * mm,
+        bottomMargin=22 * mm,
+        title=f"Comprobante SELEDENT {pago_id}",
+        author=CLINICA_NOMBRE,
+    )
+
+    est = getSampleStyleSheet()
+    titulo = ParagraphStyle(
+        "Titulo", parent=est["Title"], fontName="Helvetica-Bold",
+        fontSize=18, textColor=azul_d, spaceAfter=2, alignment=0,
+    )
+    lema = ParagraphStyle(
+        "Lema", parent=est["Normal"], fontName="Helvetica-Oblique",
+        fontSize=9, textColor=dorado, alignment=0,
+    )
+    der = ParagraphStyle(
+        "Der", parent=est["Normal"], fontName="Helvetica", fontSize=8.5,
+        textColor=gris, alignment=2, leading=12,
+    )
+    sec = ParagraphStyle(
+        "Sec", parent=est["Normal"], fontName="Helvetica-Bold", fontSize=10,
+        textColor=azul_d, spaceBefore=10, spaceAfter=4,
+    )
+    celda_lbl = ParagraphStyle(
+        "Lbl", parent=est["Normal"], fontName="Helvetica-Bold", fontSize=9,
+        textColor=gris,
+    )
+    celda_val = ParagraphStyle(
+        "Val", parent=est["Normal"], fontName="Helvetica", fontSize=10,
+        textColor=oscuro,
+    )
+    nota = ParagraphStyle(
+        "Nota", parent=est["Normal"], fontName="Helvetica", fontSize=8,
+        textColor=gris, alignment=1, leading=11,
+    )
+    pie = ParagraphStyle(
+        "Pie", parent=est["Normal"], fontName="Helvetica", fontSize=8,
+        textColor=gris, alignment=1, leading=11,
+    )
+
+    el = []
+
+    # ── Encabezado institucional: logo + datos ──────────────────────────
+    logo = None
+    for ruta_logo in (
+        os.path.join(app.static_folder, "img", "logo.png"),
+        os.path.join(app.static_folder, "img", "logo-seledent.png"),
+        os.path.join(app.static_folder, "img", "logo.jpeg"),
+    ):
+        if os.path.exists(ruta_logo):
+            try:
+                logo = Image(ruta_logo, width=20 * mm, height=20 * mm,
+                             kind="proportional")
+                break
+            except Exception:
+                logo = None
+
+    marca = [
+        Paragraph(CLINICA_NOMBRE, titulo),
+        Paragraph("Odontología de especialidad • Huancayo", lema),
+        Spacer(1, 4),
+        Paragraph(f"RUC: {CLINICA_RUC}", der),
+        Paragraph(CLINICA_DIRECCION, der),
+        Paragraph(f"Tel: {CLINICA_TELEFONO}", der),
+    ]
+    cabecera_datos = Table(
+        [[logo, marca]] if logo else [[marca]],
+        colWidths=([24 * mm, 116 * mm] if logo else [140 * mm]),
+    )
+    cabecera_datos.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    el.append(cabecera_datos)
+    el.append(Spacer(1, 6))
+
+    # Caja del N° de comprobante.
+    caja_comp = Table(
+        [[Paragraph(
+            f"<b>COMPROBANTE INTERNO DE CAJA</b><br/>"
+            f"N° {str(pago_id).zfill(6)}",
+            ParagraphStyle(
+                "Comp", parent=est["Normal"], fontName="Helvetica-Bold",
+                fontSize=12, textColor=azul_d, alignment=1, leading=17,
+            ),
+        )]],
+        colWidths=[140 * mm],
+    )
+    caja_comp.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), azul_xl),
+        ("BOX", (0, 0), (-1, -1), 0.8, azul),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    el.append(caja_comp)
+    el.append(Spacer(1, 12))
+
+    # ── Datos del paciente ──────────────────────────────────────────────
+    el.append(Paragraph("DATOS DEL PACIENTE", sec))
+    doc_pac = pago.get("numero_documento") or "—"
+    tabla_pac = Table([
+        [Paragraph("Paciente", celda_lbl), Paragraph(paciente, celda_val)],
+        [Paragraph("Documento / DNI", celda_lbl), Paragraph(doc_pac, celda_val)],
+    ], colWidths=[45 * mm, 95 * mm])
+    tabla_pac.setStyle(TableStyle([
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("LINEBELOW", (0, 0), (-1, -2), 0.4, colors.HexColor("#e6e9ee")),
+    ]))
+    el.append(tabla_pac)
+
+    # ── Detalle del movimiento ──────────────────────────────────────────
+    el.append(Paragraph("DETALLE DEL MOVIMIENTO", sec))
+    filas = [
+        ["Concepto", "Descripción", "Monto"],
+        [
+            Paragraph("Atención odontológica", celda_val),
+            Paragraph(pago.get("tratamiento") or "—", celda_val),
+            "",
+        ],
+        [
+            Paragraph("Especialidad", celda_lbl),
+            Paragraph(pago.get("especialidad") or "—", celda_val),
+            "",
+        ],
+        [
+            Paragraph("Tipo de pago", celda_lbl),
+            Paragraph(
+                _tipo_pago_etiqueta(pago.get("tipo"), pago.get("gateway") or pago.get("metodo")),
+                celda_val,
+            ),
+            "",
+        ],
+        [
+            Paragraph("Método de pago", celda_lbl),
+            Paragraph(_metodo_pago_etiqueta(pago.get("metodo")), celda_val),
+            "",
+        ],
+        [
+            Paragraph("Fecha de la cita", celda_lbl),
+            Paragraph(
+                f"{_fecha_es(pago.get('fecha_cita'))}"
+                + (f" · {str(pago.get('hora_cita'))[:5]} h"
+                   if pago.get("hora_cita") else ""),
+                celda_val,
+            ),
+            "",
+        ],
+    ]
+    if pago.get("nro_operacion"):
+        filas.append([
+            Paragraph("N° de operación", celda_lbl),
+            Paragraph(str(pago.get("nro_operacion")), celda_val),
+            "",
+        ])
+
+    monto_txt = f"S/ {float(pago.get('monto') or 0):,.2f}"
+    filas.append([
+        Paragraph("Monto abonado", celda_lbl),
+        Paragraph("", celda_val),
+        Paragraph(f"<b>{monto_txt}</b>", ParagraphStyle(
+            "Monto", parent=celda_val, textColor=azul_d, alignment=2,
+        )),
+    ])
+
+    tabla_det = Table(filas, colWidths=[45 * mm, 70 * mm, 25 * mm], repeatRows=1)
+    tabla_det.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), azul_d),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, 0), 9),
+        ("ALIGN", (2, 0), (2, 0), "RIGHT"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1),
+         [colors.white, colors.HexColor("#f7f9fc")]),
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#e6e9ee")),
+        ("BACKGROUND", (0, len(filas) - 1), (-1, len(filas) - 1), azul_xl),
+        ("SPAN", (1, len(filas) - 1), (1, len(filas) - 1)),
+    ]))
+    el.append(tabla_det)
+    el.append(Spacer(1, 10))
+
+    # ── Total + fecha y hora exacta del pago ────────────────────────────
+    total_tab = Table([
+        [
+            Paragraph("Fecha y hora del pago", celda_lbl),
+            Paragraph(_fecha_hora_es(pago.get("fecha")), celda_val),
+            Paragraph("<b>TOTAL ABONADO</b>", ParagraphStyle(
+                "TT", parent=celda_lbl, textColor=azul_d, alignment=2)),
+            Paragraph(f"<b>{monto_txt}</b>", ParagraphStyle(
+                "TV", parent=celda_val, textColor=azul_d, fontSize=13,
+                alignment=2)),
+        ]
+    ], colWidths=[45 * mm, 47 * mm, 30 * mm, 18 * mm])
+    total_tab.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("BACKGROUND", (2, 0), (3, 0), azul_xl),
+        ("BOX", (2, 0), (3, 0), 0.8, azul),
+        ("TOPPADDING", (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    el.append(total_tab)
+    el.append(Spacer(1, 24))
+
+    el.append(Paragraph(
+        "Este documento es un <b>comprobante interno de caja</b> emitido por "
+        f"{CLINICA_NOMBRE} y no constituye comprobante de pago electrónico "
+        "(boleta o factura). Conserve este documento para cualquier consulta.",
+        nota,
+    ))
+    el.append(Spacer(1, 6))
+    el.append(Paragraph(
+        f"{CLINICA_NOMBRE} · RUC {CLINICA_RUC} · {CLINICA_DIRECCION} · "
+        f"{CLINICA_TELEFONO}",
+        pie,
+    ))
+
+    doc.build(el)
+
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        mimetype="application/pdf",
+        as_attachment=False,
+        download_name=f"Comprobante_SELEDENT_{pago_id}.pdf",
+    )
+
+
 @app.route("/admin/personal")
 @admin_required
 def admin_personal():
