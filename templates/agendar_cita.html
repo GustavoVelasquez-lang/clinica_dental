@@ -260,7 +260,7 @@
       <!-- ── BOTÓN ── -->
       <button type="submit" class="btn-agendar" id="btnAgendar" disabled>
         <i class="fa-solid fa-calendar-check"></i>
-        Confirmar cita
+        Continuar al pago
       </button>
 
     </form>
@@ -272,6 +272,30 @@
     </div>
 
   </div><!-- /panel-right -->
+</div>
+
+<!-- ── MODAL: confirmación antes de abandonar el agendamiento ── -->
+<div class="modal fade" id="modalAbandonar" tabindex="-1" aria-hidden="true"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">¿Abandonar el agendamiento?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p>Si regresas o sales de esta página, los datos ingresados y el horario seleccionado se perderán.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" id="btnContinuarAgendamiento">
+          Continuar agendamiento
+        </button>
+        <button type="button" class="btn btn-danger" id="btnAbandonarAgendamiento">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 

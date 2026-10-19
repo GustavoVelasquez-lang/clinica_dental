@@ -217,6 +217,22 @@
 .pago-modal-ok p { font-size:15px;color:var(--mid);line-height:1.6;margin:0 0 22px; }
 .pago-modal-ok p strong { color:#b45309; }
 
+.btn-pagar-despues {
+  margin-top:12px;
+  background:white;color:var(--teal-dark);
+  border:1.5px solid var(--teal);
+  box-shadow:none;
+}
+.btn-pagar-despues:hover {
+  background:var(--teal-xl);color:var(--teal-dark);
+  border-color:var(--teal-dark);transform:none;box-shadow:none;
+}
+.pago-nota-despues {
+  margin:12px 0 0;font-size:12px;color:var(--muted);
+  text-align:center;line-height:1.55;
+}
+.pago-nota-despues a { color:var(--teal-dark);font-weight:600; }
+
 @media (max-width:768px) {
   .page-agendar { flex-direction:column; }
   .panel-left { width:100%;padding:32px 24px; }

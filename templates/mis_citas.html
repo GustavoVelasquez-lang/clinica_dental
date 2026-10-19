@@ -24,7 +24,11 @@
       {% elif c.estado == 'confirmada' %}
         <span class="mc-badge mc-badge--confirmada"><i class="fa-solid fa-circle-check"></i> Confirmada</span>
       {% elif c.estado == 'pendiente' %}
+        {% if c.estado_pago == 'pendiente' %}
+        <span class="mc-badge mc-badge--pendiente"><i class="fa-solid fa-hourglass-half"></i> Pendiente de Pago</span>
+        {% else %}
         <span class="mc-badge mc-badge--pendiente"><i class="fa-solid fa-hourglass-half"></i> Pendiente</span>
+        {% endif %}
       {% elif c.estado in ['atendida', 'atendido', 'completada'] %}
         <span class="mc-badge mc-badge--atendida"><i class="fa-solid fa-tooth"></i> Atendida</span>
       {% elif c.estado in ['cancelada', 'cancelado'] %}

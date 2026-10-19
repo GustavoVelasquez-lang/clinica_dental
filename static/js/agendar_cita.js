@@ -434,6 +434,7 @@ const TRAT_INICIAL = (formCita.dataset.tratamiento || '').trim();
 })();
 
 // Validación antes de enviar
+let navegarAPago = false;
 document.getElementById('formCita').addEventListener('submit', function(e) {
   if (!horaHidden.value) {
     e.preventDefault();
@@ -442,6 +443,96 @@ document.getElementById('formCita').addEventListener('submit', function(e) {
     </div>`;
     return;
   }
+  // La navegación a la pantalla de pago es esperada: no preguntar al salir.
+  navegarAPago = true;
   btnAgendar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Registrando...';
   btnAgendar.disabled  = true;
 });
+
+// ── Alertas de salida ──────────────────────────────────────────────────────
+// Evita perder la reserva a medias: al cerrar/refrescar la pestaña
+// (beforeunload) o al usar el botón "atrás" del navegador (popstate) se
+// avisa de que los datos y el horario elegido se perderán.
+(function () {
+  if (!document.getElementById('formCita')) return;
+
+  let modalAbierto = false;
+  let bsModal = null;
+
+  function hayDatosIngresados() {
+    return !!(
+      tipoSelect.value ||
+      espSelect.value ||
+      fechaInput.value ||
+      horaHidden.value ||
+      msgArea.value.trim()
+    );
+  }
+
+  function obtenerModal() {
+    if (bsModal) return bsModal;
+    const modalEl = document.getElementById('modalAbandonar');
+    if (!modalEl || !window.bootstrap || !bootstrap.Modal) return null;
+    bsModal = new bootstrap.Modal(modalEl);
+    modalEl.addEventListener('hidden.bs.modal', function () {
+      modalAbierto = false;
+    });
+    return bsModal;
+  }
+
+  function mostrarModal() {
+    const modal = obtenerModal();
+    if (!modal) return;
+    modalAbierto = true;
+    modal.show();
+  }
+
+  // 1) Cerrar pestaña / refrescar / navegar a otro sitio.
+  window.addEventListener('beforeunload', function (e) {
+    if (navegarAPago || modalAbierto || !hayDatosIngresados()) return undefined;
+    const aviso =
+      'Si sales de esta página, los datos ingresados y el horario ' +
+      'seleccionado se perderán.';
+    e.preventDefault();
+    e.returnValue = aviso;
+    return aviso;
+  });
+
+  // 2) Botón "atrás" del navegador.
+  history.pushState({ pantallaAgendar: true }, '', window.location.href);
+  window.addEventListener('popstate', function () {
+    if (navegarAPago) return;
+    if (modalAbierto) {
+      // Ya se está avisando: permanecer en la página mientras decide.
+      history.pushState({ pantallaAgendar: true }, '', window.location.href);
+      return;
+    }
+    if (hayDatosIngresados()) {
+      history.pushState({ pantallaAgendar: true }, '', window.location.href);
+      mostrarModal();
+    }
+    // Sin datos ingresados se permite la navegación "atrás" habitual.
+  });
+
+  const btnContinuar = document.getElementById('btnContinuarAgendamiento');
+  const btnAbandonar = document.getElementById('btnAbandonarAgendamiento');
+
+  if (btnContinuar) {
+    btnContinuar.addEventListener('click', function () {
+      const modal = obtenerModal();
+      if (modal) modal.hide();
+    });
+  }
+
+  if (btnAbandonar) {
+    btnAbandonar.addEventListener('click', function () {
+      navegarAPago = true; // no volver a preguntar al salir
+      const modal = obtenerModal();
+      if (modal) modal.hide();
+      // Salir de la página de agendamiento (a la que vino el paciente).
+      const referrer = document.referrer;
+      window.location.href =
+        referrer && referrer !== window.location.href ? referrer : '/';
+    });
+  }
+})();

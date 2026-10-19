@@ -6,6 +6,16 @@
 {% endblock %}
 
 {% block content %}
+{% set modo_reserva = reserva is not none %}
+{% if modo_reserva %}
+  {% set resumen_esp = reserva.tipo_atencion or reserva.especialidad or 'Cita dental' %}
+  {% set resumen_fecha = reserva.fecha %}
+  {% set resumen_hora = reserva.hora %}
+{% else %}
+  {% set resumen_esp = cita.tipo_atencion or cita.especialidad %}
+  {% set resumen_fecha = cita.fecha %}
+  {% set resumen_hora = cita.hora %}
+{% endif %}
 <div class="page-agendar">
 
   <div class="panel-left">
@@ -55,37 +65,46 @@
 
   <div class="panel-right">
 
-    <a href="{{ url_for('mis_citas') }}" class="link-volver">
-      <i class="fa-solid fa-arrow-left"></i> Volver a mis citas
+    <a href="{{ url_for('agendar') if modo_reserva else url_for('mis_citas') }}" class="link-volver">
+      <i class="fa-solid fa-arrow-left"></i> {{ 'Volver a agendar' if modo_reserva else 'Volver a mis citas' }}
     </a>
 
     <div class="form-header">
-      {% if monto_adelanto > 0 %}
-        <h2>Adelanto de cita — S/ {{ '%.2f'|format(monto_adelanto) }}</h2>
+      {% if modo_reserva %}
+        {% if monto_adelanto > 0 %}
+          <h2>Confirma tu reserva — S/ {{ '%.2f'|format(monto_adelanto) }}</h2>
+        {% else %}
+          <h2>Confirma tu reserva</h2>
+        {% endif %}
+        <p>Tu horario quedará reservado recién cuando confirmes el pago o elijas pagar después.</p>
       {% else %}
-        <h2>Adelanto de cita</h2>
+        {% if monto_adelanto > 0 %}
+          <h2>Adelanto de cita — S/ {{ '%.2f'|format(monto_adelanto) }}</h2>
+        {% else %}
+          <h2>Adelanto de cita</h2>
+        {% endif %}
+        <p>Paga el adelanto por Yape y adjunta tu comprobante para validar tu reserva.</p>
       {% endif %}
-      <p>Paga el adelanto por Yape y adjunta tu comprobante para validar tu reserva.</p>
     </div>
 
     <div class="pago-resumen">
       <div class="pago-resumen-grid">
         <div>
           <p class="pago-etiqueta">Especialidad</p>
-          <p class="pago-dato-teal">{% if cita.tipo_atencion %}{{ cita.tipo_atencion }}{% else %}{{ cita.especialidad }}{% endif %}</p>
+          <p class="pago-dato-teal">{{ resumen_esp }}</p>
         </div>
         <div>
           <p class="pago-etiqueta">Fecha</p>
-          <p class="pago-dato-dark">{{ cita.fecha }}</p>
+          <p class="pago-dato-dark">{{ resumen_fecha }}</p>
         </div>
         <div>
           <p class="pago-etiqueta">Hora</p>
-          <p class="pago-dato-dark">{{ cita.hora }}</p>
+          <p class="pago-dato-dark">{{ resumen_hora }}</p>
         </div>
       </div>
     </div>
 
-    {% if cita.estado_pago == 'pagado' %}
+    {% if cita and cita.estado_pago == 'pagado' %}
 
       <div class="pago-ok">
         <span class="pago-ok-icon">✅</span>
@@ -95,7 +114,7 @@
         </div>
       </div>
 
-    {% elif cita.estado_pago == 'pendiente_verificacion' %}
+    {% elif cita and cita.estado_pago == 'pendiente_verificacion' %}
 
       <div class="pago-ok pago-ok--warn">
         <span class="pago-ok-icon">⏳</span>
@@ -137,6 +156,14 @@
           <p>Puedes reservar sin pago previo.</p>
         </div>
       </div>
+
+      {% if modo_reserva %}
+      <form method="POST" action="{{ url_for('pago_reserva_pagar_despues') }}">
+        <button type="submit" class="btn-agendar" id="btnPagarDespues">
+          <i class="fa-solid fa-check-circle"></i> Confirmar mi reserva
+        </button>
+      </form>
+      {% endif %}
 
     {% else %}
 
@@ -182,8 +209,8 @@
         </p>
       </div>
 
-      <form method="POST" action="{{ url_for('pago_manual', cita_id=cita.id) }}"
-            enctype="multipart/form-data">
+      <form method="POST" enctype="multipart/form-data"
+            action="{{ url_for('pago_reserva_manual') if modo_reserva else url_for('pago_manual', cita_id=cita.id) }}">
 
         <div class="field-group">
           <div class="field-label">
@@ -222,9 +249,16 @@
         <div class="pago-alerta-aviso">
           <span class="pago-alerta-icono">⏰</span>
           <p>
-            ⚠️ <strong>Importante:</strong> Tu cita no estará confirmada hasta que realices
+            ⚠️ <strong>Importante:</strong>
+            {% if modo_reserva %}
+            Tu reserva se registra recién al enviar el comprobante. En ese momento
+            quedará en estado <strong>'Pendiente de Verificación'</strong> hasta que
+            el equipo de recepción valide el pago.
+            {% else %}
+            Tu cita no estará confirmada hasta que realices
             el abono, subas tu comprobante y el equipo de recepción valide el pago. Tu reserva
             permanecerá en estado <strong>'Pendiente de Verificación'</strong>.
+            {% endif %}
           </p>
         </div>
 
@@ -232,6 +266,17 @@
           <i class="fa-solid fa-check-circle"></i>
           Enviar pago — S/ {{ '%.2f'|format(monto_adelanto) }}
         </button>
+
+        {% if modo_reserva %}
+        <button type="submit" id="btnPagarDespues" class="btn-agendar btn-outline-secondary btn-pagar-despues"
+                formaction="{{ url_for('pago_reserva_pagar_despues') }}" formnovalidate>
+          <i class="fa-regular fa-clock"></i> Pagar después
+        </button>
+        <p class="pago-nota-despues">
+          Tu cita quedará registrada como <strong>Pendiente de Pago</strong> y podrás
+          realizar el adelanto cuando quieras desde <a href="{{ url_for('mis_citas') }}">Mis citas</a>.
+        </p>
+        {% endif %}
       </form>
 
     {% endif %}
@@ -285,15 +330,21 @@
 {% endblock %}
 
 {% block extra_js %}
+{% set modo_reserva = reserva is not none %}
 <script>
   window.PAGO_CONFIG = {
     publicKey: {{ culqi_public_key|tojson }},
     amountCents: {{ (monto_adelanto * 100)|round|int }},
     currency: "PEN",
     title: "Clinica Sele Dent",
+    {% if modo_reserva %}
+    description: "Adelanto de tu reserva - Clinica Sele Dent",
+    endpoint: "{{ url_for('pago_reserva_culqi') }}",
+    retryUrlPrefix: "{{ url_for('pago', cita_id=0)[:-1] }}",
+    {% else %}
     description: "Adelanto cita #{{ cita.id }}",
-    citaId: {{ cita.id }},
     endpoint: "{{ url_for('pago_culqi', cita_id=cita.id) }}",
+    {% endif %}
     redirect: "{{ url_for('mis_citas') }}"
   };
 </script>

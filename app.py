@@ -390,6 +390,145 @@ def doctor_required(f):
     return decorated_function
 
 
+def _crear_cita_desde_reserva(reserva, estado_pago="pendiente", voucher=None):
+    """Registra la cita (y su tratamiento) a partir de la reserva en sesión.
+
+    La reserva en sí vive en `session["reserva"]` y solo se materializa en la
+    tabla `citas` cuando el paciente envía el comprobante o elige pagar
+    después. `voucher` (opcional) es un dict con los datos del comprobante
+    (nro_operacion, ruta_rel, datos, mime). Devuelve (cita_id, error).
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            INSERT INTO citas
+            (paciente_id, odontologo_id, especialidad_id, fecha, hora, estado, estado_pago,
+             tipo_atencion, sede, prioridad, observaciones, adelanto, dependiente_id)
+            VALUES (%s, %s, %s, %s, %s, 'pendiente', %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+        """, (
+            reserva["paciente_id"],
+            reserva.get("odontologo_id"),
+            reserva["especialidad_id"],
+            datetime.strptime(reserva["fecha"], "%Y-%m-%d").date(),
+            reserva["hora"],
+            estado_pago,
+            reserva.get("tipo_atencion"),
+            reserva.get("sede") or SEDE_PREDETERMINADA,
+            reserva.get("prioridad") or PRIORIDAD_NORMAL,
+            reserva.get("observaciones"),
+            float(reserva.get("adelanto") or 0),
+            reserva.get("dependiente_id"),
+        ))
+        cita_id = cursor.fetchone()["id"]
+
+        # Vincular el tratamiento elegido (para el adelanto y el historial).
+        tratamiento_id = reserva.get("tratamiento_id")
+        if tratamiento_id and str(tratamiento_id).isdigit():
+            cursor.execute("""
+                INSERT INTO cita_tratamiento (id_cita, id_tratamiento, precio_aplicado)
+                VALUES (%s, %s, (SELECT precio_base FROM tratamientos WHERE id_tratamiento = %s))
+            """, (cita_id, int(tratamiento_id), int(tratamiento_id)))
+
+        if voucher:
+            cursor.execute("""
+                UPDATE citas
+                SET metodo_pago = 'yape_manual',
+                    nro_operacion = %s,
+                    voucher_url = %s,
+                    comprobante = %s,
+                    voucher_data = %s,
+                    voucher_mime = %s
+                WHERE id = %s
+            """, (
+                voucher["nro_operacion"],
+                voucher["ruta_rel"],
+                voucher["ruta_rel"],
+                psycopg2.Binary(voucher["datos"]),
+                voucher["mime"],
+                cita_id,
+            ))
+            cursor.execute("""
+                UPDATE cita_tratamiento
+                SET fecha_ejecucion = now(),
+                    comprobante_pago = %s
+                WHERE id_cita = %s
+            """, (voucher["ruta_rel"], cita_id))
+
+        conn.commit()
+        return cita_id, None
+    except psycopg2.errors.UniqueViolation:
+        conn.rollback()
+        return None, (
+            "Ese especialista ya tiene una cita a esa hora. "
+            "Elige otro horario."
+        )
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error al registrar la cita desde la reserva: {e}")
+        return None, "No se pudo registrar la cita. Intenta de nuevo."
+    finally:
+        conn.close()
+
+
+def _notificar_admin_nueva_cita(cita_id, con_comprobante=False):
+    """Avisa al administrador del alta de una cita (en segundo plano)."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        datos = _datos_notificacion_admin(cursor, cita_id)
+        ruta_rel = None
+        if con_comprobante:
+            cursor.execute("SELECT comprobante FROM citas WHERE id = %s", (cita_id,))
+            fila = cursor.fetchone()
+            ruta_rel = (fila or {}).get("comprobante")
+        conn.close()
+        if not datos:
+            return
+        if con_comprobante and ruta_rel:
+            enviar_en_segundo_plano(
+                enviar_alerta_comprobante_admin,
+                nombre_paciente=datos["nombre_paciente"],
+                telefono=datos["telefono"],
+                correo=datos["correo"],
+                tratamiento=datos["tratamiento"],
+                especialista=datos["doctor"],
+                fecha=datos["fecha"],
+                hora=datos["hora"],
+                monto_adelanto=datos["monto_adelanto"],
+                panel_url=f"{BASE_URL}/admin/citas",
+                comprobante_path=os.path.join(
+                    app.root_path, *ruta_rel.split("/")
+                ),
+            )
+        else:
+            enviar_en_segundo_plano(
+                enviar_notificacion_agendamiento_admin,
+                nombre_paciente=datos["nombre_paciente"],
+                telefono=datos["telefono"],
+                correo=datos["correo"],
+                tratamiento=datos["tratamiento"],
+                doctor=datos["doctor"],
+                fecha=datos["fecha"],
+                hora=datos["hora"],
+                monto_adelanto=datos["monto_adelanto"],
+                con_comprobante=datos["con_comprobante"],
+            )
+    except Exception as e:
+        logger.error(f"Error al notificar la cita {cita_id} al administrador: {e}")
+
+
+def _reserva_en_sesion():
+    """Devuelve la reserva pendiente de pago o None si ya no existe."""
+    reserva = session.get("reserva")
+    if not isinstance(reserva, dict):
+        return None
+    if not reserva.get("fecha") or not reserva.get("hora"):
+        return None
+    return reserva
+
+
 @app.route("/agendar", methods=["GET", "POST"])
 @login_required
 def agendar():
@@ -537,76 +676,36 @@ def agendar():
                          
         adelanto = _resolver_adelanto(cursor, especialidad_id, tratamiento_id)
 
-        try:
-            cursor.execute("""
-                INSERT INTO citas 
-                (paciente_id, odontologo_id, especialidad_id, fecha, hora, estado, estado_pago,
-                 tipo_atencion, sede, prioridad, observaciones, adelanto, dependiente_id)
-                VALUES (%s, %s, %s, %s, %s, 'pendiente', 'pendiente', %s, %s, %s, %s, %s, %s)
-                RETURNING id
-            """, (
-                session["usuario_id"],
-                int(odontologo_id) if odontologo_id else None,
-                especialidad_id,
-                fecha,
-                hora,
-                tipo_label,
-                SEDE_PREDETERMINADA,
-                PRIORIDAD_PRIORITARIA if es_urgencia else PRIORIDAD_NORMAL,
-                mensaje or None,
-                adelanto,
-                int(dependiente_id) if dependiente_id else None,
-            ))
-            cita_id = cursor.fetchone()["id"]
-        except psycopg2.errors.UniqueViolation:
-            conn.rollback()
-            conn.close()
-            flash("❌ Ese especialista ya tiene una cita a esa hora. Elige otro horario.", "danger")
+        if not str(especialidad_id).isdigit():
+            flash("❌ Debes seleccionar una especialidad", "danger")
             return redirect(url_for("agendar"))
+        especialidad_id = int(especialidad_id)
 
-        # Vincular el tratamiento elegido a la cita (para resolver el
-        # adelanto por tratamiento en consultas posteriores).
-        if tratamiento_id and str(tratamiento_id).isdigit():
-            cursor.execute(
-                """
-                INSERT INTO cita_tratamiento (id_cita, id_tratamiento, precio_aplicado)
-                VALUES (
-                    %s, %s,
-                    (SELECT precio_base FROM tratamientos WHERE id_tratamiento = %s)
-                )
-                """,
-                (cita_id, int(tratamiento_id), int(tratamiento_id)),
-            )
+        nombre_especialidad = next(
+            (e["nombre"] for e in especialidades if int(e["id"]) == especialidad_id),
+            None,
+        )
 
-        conn.commit()
+        # La cita NO se registra todavía: se guarda la reserva en la sesión y
+        # se recién inserta en `citas` cuando el paciente envía el comprobante
+        # de pago o elige "Pagar después".
+        session["reserva"] = {
+            "paciente_id": session["usuario_id"],
+            "odontologo_id": int(odontologo_id) if odontologo_id else None,
+            "especialidad_id": especialidad_id,
+            "especialidad": nombre_especialidad,
+            "fecha": fecha_str,
+            "hora": hora,
+            "tipo_atencion": tipo_label,
+            "prioridad": PRIORIDAD_PRIORITARIA if es_urgencia else PRIORIDAD_NORMAL,
+            "observaciones": mensaje or None,
+            "adelanto": float(adelanto or 0),
+            "dependiente_id": int(dependiente_id) if dependiente_id else None,
+            "tratamiento_id": int(tratamiento_id) if tratamiento_id else None,
+        }
         conn.close()
-        _log_auditoria("agendar_cita", detalle=f"cita #{cita_id}")
-
-                                                            
-        # Notificar al administrador del agendamiento (en segundo plano).
-        try:
-            conn = get_connection()
-            cursor = conn.cursor()
-            datos = _datos_notificacion_admin(cursor, cita_id)
-            conn.close()
-
-            if datos:
-                enviar_en_segundo_plano(
-                    enviar_notificacion_agendamiento_admin,
-                    nombre_paciente=datos["nombre_paciente"],
-                    telefono=datos["telefono"],
-                    correo=datos["correo"],
-                    tratamiento=datos["tratamiento"],
-                    doctor=datos["doctor"],
-                    fecha=datos["fecha"],
-                    hora=datos["hora"],
-                    monto_adelanto=datos["monto_adelanto"],
-                    con_comprobante=datos["con_comprobante"],
-                )
-        except Exception as e:
-            logger.error(f"Error al notificar la cita {cita_id} al administrador: {e}")
-
-        return redirect(url_for("pago", cita_id=cita_id))
+        _log_auditoria("agendar_cita", detalle="reserva en pantalla de pago")
+        return redirect(url_for("pago_reserva"))
 
     # ---------- GET: parámetros de la URL ----------
     especialidad_param = (request.args.get("especialidad") or "").strip()
@@ -821,20 +920,13 @@ def pago(cita_id):
     if actualizado:
         conn.commit()
 
-    config = dotenv_values()
-    yape_numero = config.get("YAPE_NUMERO", "946536766")
-    yape_nombre = config.get("YAPE_NOMBRE", "Clinica Sele Dent")
-    yape_qr = config.get("YAPE_QR", "static/img/QR.yape.jpeg")
+    yape_numero, yape_nombre, yape_qr_url = _contexto_pago_yape()
 
     conn.close()
-    if yape_qr.startswith("http"):
-        yape_qr_url = yape_qr
-    else:
-        qr_filename = yape_qr.replace("static/", "")
-        yape_qr_url = url_for("static", filename=qr_filename)
     return render_template(
         "pago.html",
         cita=cita,
+        reserva=None,
         yape_numero=yape_numero,
         yape_numero_fmt=_formatear_numero_yape(yape_numero),
         yape_nombre=yape_nombre,
@@ -866,8 +958,9 @@ def _guardar_voucher(cita_id, archivo):
         return None, None, None, "El archivo del comprobante está vacío."
 
     mime = "image/png" if ext == ".png" else "image/jpeg"
+    etiqueta = f"cita_{cita_id}" if cita_id else "reserva"
     nombre = secure_filename(
-        f"voucher_cita_{cita_id}_{datetime.now():%Y%m%d%H%M%S}{ext}"
+        f"voucher_{etiqueta}_{datetime.now():%Y%m%d%H%M%S}{ext}"
     )
     upload_dir = os.path.join(app.root_path, "static", "uploads", "vouchers")
     try:
@@ -986,6 +1079,213 @@ def pago_manual(cita_id):
         "success",
     )
     return redirect(url_for("pago", cita_id=cita_id, enviado=1))
+
+
+def _contexto_pago_yape():
+    """Configuración de Yape (número, titular y QR) para las pantallas de pago."""
+    config = dotenv_values()
+    yape_numero = config.get("YAPE_NUMERO", "946536766")
+    yape_nombre = config.get("YAPE_NOMBRE", "Clinica Sele Dent")
+    yape_qr = config.get("YAPE_QR", "static/img/QR.yape.jpeg")
+    if yape_qr.startswith("http"):
+        yape_qr_url = yape_qr
+    else:
+        yape_qr_url = url_for("static", filename=yape_qr.replace("static/", ""))
+    return yape_numero, yape_nombre, yape_qr_url
+
+
+@app.route("/pago/reserva", methods=["GET"])
+@login_required
+def pago_reserva():
+    """Pantalla de pago de una reserva todavía no registrada en `citas`.
+
+    El paciente elige aquí cómo confirmar la cita: subir el comprobante de
+    Yape o dejar el pago para después. Solo entonces se inserta la fila.
+    """
+    reserva = _reserva_en_sesion()
+    if not reserva:
+        flash("No tienes ninguna reserva en curso.", "warning")
+        return redirect(url_for("agendar"))
+
+    yape_numero, yape_nombre, yape_qr_url = _contexto_pago_yape()
+
+    return render_template(
+        "pago.html",
+        cita=None,
+        reserva=reserva,
+        yape_numero=yape_numero,
+        yape_numero_fmt=_formatear_numero_yape(yape_numero),
+        yape_nombre=yape_nombre,
+        yape_qr=yape_qr_url,
+        culqi_public_key=CULQI_PUBLIC_KEY,
+        culqi_habilitado=bool(CULQI_PUBLIC_KEY and CULQI_SECRET_KEY),
+        monto_adelanto=float(reserva.get("adelanto") or 0),
+        mostrar_modal_confirmacion=False,
+    )
+
+
+@app.route("/pago/reserva/manual", methods=["POST"])
+@login_required
+def pago_reserva_manual():
+    """Crea la cita al recibir el comprobante de Yape de una reserva."""
+    reserva = _reserva_en_sesion()
+    if not reserva:
+        flash("❌ Tu reserva ya no está disponible. Elige de nuevo la fecha y hora.", "danger")
+        return redirect(url_for("agendar"))
+
+    nro_operacion = (request.form.get("nro_operacion") or "").strip()
+    if not nro_operacion.isdigit() or not (4 <= len(nro_operacion) <= 20):
+        flash("❌ Ingresa un número de operación válido (solo dígitos).", "danger")
+        return redirect(url_for("pago_reserva"))
+
+    archivo = request.files.get("voucher")
+    if not archivo or archivo.filename == "":
+        flash("❌ Debes adjuntar el comprobante de Yape (JPG o PNG).", "danger")
+        return redirect(url_for("pago_reserva"))
+
+    ruta_rel, datos, mime, error = _guardar_voucher(None, archivo)
+    if error:
+        flash(f"❌ {error}", "danger")
+        return redirect(url_for("pago_reserva"))
+
+    cita_id, error = _crear_cita_desde_reserva(
+        reserva,
+        estado_pago="pendiente_verificacion",
+        voucher={
+            "nro_operacion": nro_operacion,
+            "ruta_rel": ruta_rel,
+            "datos": datos,
+            "mime": mime,
+        },
+    )
+    if not cita_id:
+        flash(f"❌ {error}", "danger")
+        return redirect(url_for("pago_reserva"))
+
+    session.pop("reserva", None)
+    _log_auditoria("subir_comprobante", detalle=f"cita #{cita_id}")
+    _notificar_admin_nueva_cita(cita_id, con_comprobante=True)
+
+    flash(
+        "✅ Comprobante recibido. Tu pago quedará confirmado tras la validación.",
+        "success",
+    )
+    return redirect(url_for("pago", cita_id=cita_id, enviado=1))
+
+
+@app.route("/pago/reserva/pagar-despues", methods=["POST"])
+@login_required
+def pago_reserva_pagar_despues():
+    """Registra la cita sin pago: queda en estado 'Pendiente de Pago'."""
+    reserva = _reserva_en_sesion()
+    if not reserva:
+        flash("❌ Tu reserva ya no está disponible. Elige de nuevo la fecha y hora.", "danger")
+        return redirect(url_for("agendar"))
+
+    cita_id, error = _crear_cita_desde_reserva(reserva, estado_pago="pendiente")
+    if not cita_id:
+        flash(f"❌ {error}", "danger")
+        return redirect(url_for("pago_reserva"))
+
+    session.pop("reserva", None)
+    _log_auditoria("agendar_cita", detalle=f"cita #{cita_id} (pago después)")
+    _notificar_admin_nueva_cita(cita_id)
+
+    flash(
+        "✅ Cita registrada como Pendiente de Pago. Puedes realizar el adelanto "
+        "cuando quieras desde Mis citas.",
+        "success",
+    )
+    return redirect(url_for("mis_citas"))
+
+
+@app.route("/pago/reserva/culqi", methods=["POST"])
+@login_required
+def pago_reserva_culqi():
+    """Crea la cita y cobra el adelanto con Culqi (Checkout v4)."""
+    if not (CULQI_PUBLIC_KEY and CULQI_SECRET_KEY):
+        return jsonify(ok=False, mensaje="El pago en línea no está disponible."), 503
+
+    reserva = _reserva_en_sesion()
+    if not reserva:
+        return jsonify(
+            ok=False,
+            mensaje="Tu reserva ya no está disponible. Elige de nuevo la fecha y hora.",
+        ), 400
+
+    token = (request.form.get("token") or "").strip()
+    if not token:
+        datos_json = request.get_json(silent=True) or {}
+        token = (datos_json.get("token") or "").strip()
+    if not token:
+        return jsonify(ok=False, mensaje="No se recibió el token de pago."), 400
+
+    monto = float(reserva.get("adelanto") or 0)
+    if monto <= 0:
+        return jsonify(ok=False, mensaje="Esta cita no requiere adelanto."), 400
+
+    cita_id, error = _crear_cita_desde_reserva(reserva, estado_pago="pendiente")
+    if not cita_id:
+        return jsonify(
+            ok=False, mensaje=error or "No se pudo registrar la cita."
+        ), 409
+    session.pop("reserva", None)
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT correo FROM usuarios WHERE id = %s", (reserva["paciente_id"],))
+    fila = cursor.fetchone()
+    conn.close()
+    correo = (fila or {}).get("correo") or "paciente@clinicaseledent.com"
+
+    payload = {
+        "amount": int(round(monto * 100)),
+        "currency_code": CULQI_MONEDA,
+        "email": correo,
+        "source_id": token,
+        "description": f"Adelanto cita #{cita_id} - Clinica Sele Dent",
+        "metadata": {"cita_id": str(cita_id)},
+    }
+    try:
+        resp = requests.post(
+            f"{CULQI_API_URL}/charges",
+            json=payload,
+            headers=_culqi_headers(),
+            timeout=25,
+        )
+        data = resp.json()
+    except (requests.RequestException, ValueError) as e:
+        logger.error(f"Culqi: error creando cargo para la cita {cita_id}: {e}")
+        return jsonify(
+            ok=False,
+            mensaje="No se pudo conectar con la pasarela.",
+            cita_id=cita_id,
+        ), 502
+
+    if _culqi_charge_exitoso(data):
+        _registrar_pago_culqi(
+            cita_id,
+            monto=monto,
+            transaccion_id=data.get("id") or "",
+            payload=json.dumps(data),
+        )
+        _notificar_admin_nueva_cita(cita_id)
+        return jsonify(
+            ok=True,
+            confirmado=True,
+            monto=monto,
+            cita_id=cita_id,
+            mensaje="Pago aprobado. Tu cita quedó confirmada.",
+        )
+
+    # La cita ya existe como "Pendiente de Pago": se devuelve su id para que
+    # el paciente pueda reintentar el pago desde su pantalla de pago.
+    return jsonify(
+        ok=False,
+        mensaje=_culqi_mensaje_error(data),
+        codigo=data.get("type") if isinstance(data, dict) else None,
+        cita_id=cita_id,
+    ), 402
 
 
 @app.route("/comprobante/<int:cita_id>")

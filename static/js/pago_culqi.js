@@ -79,6 +79,13 @@
         } else {
           setCargando(false);
           setMensaje(data.mensaje || 'No se pudo procesar el pago.', 'error');
+          // Si la cita ya quedó registrada (pago desde la reserva), el paciente
+          // puede reintentar el pago desde su pantalla de pago.
+          if (data.cita_id && cfg.retryUrlPrefix) {
+            setTimeout(function () {
+              window.location.href = cfg.retryUrlPrefix + data.cita_id;
+            }, 2800);
+          }
         }
       })
       .catch(function () {
