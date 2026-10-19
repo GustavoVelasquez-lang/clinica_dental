@@ -4097,9 +4097,9 @@ def admin_facturacion():
 
 # Datos institucionales que se imprimen en el comprobante.
 CLINICA_NOMBRE = "Clínica Dental SELEDENT"
-CLINICA_RUC = "20601234567"
-CLINICA_DIRECCION = "Av. Real 123, Huancayo — Junín, Perú"
-CLINICA_TELEFONO = "+51 999 999 999"
+CLINICA_RUC = "10406302119"
+CLINICA_DIRECCION = "Jr. Antonio Lobato N°351 - El Tambo, Huancayo"
+CLINICA_TELEFONO = "+51 946 536 766"
 
 _MESES_ES = (
     "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
