@@ -94,4 +94,70 @@
       }
     });
   }
+
+  // ── Modal de advertencia antes de "Pagar después" ──────────────────────
+  // El botón #btnPagarDespues envía el formulario de reserva; aquí se
+  // intercepta para avisar que, sin pago, la cita NO queda asegurada.
+  const btnPagarDespues = document.getElementById('btnPagarDespues');
+  const overlay = document.getElementById('modalPagarDespues');
+
+  if (btnPagarDespues && overlay) {
+    const btnSeguir = document.getElementById('btnSeguirPago');
+    const btnSalir = document.getElementById('btnConfirmarSalir');
+    let confirmado = false;
+    let ultimoFoco = null;
+
+    const abrirModal = function () {
+      ultimoFoco = document.activeElement;
+      overlay.hidden = false;
+      document.body.style.overflow = 'hidden';
+      if (btnSeguir) btnSeguir.focus();
+    };
+
+    const cerrarModal = function () {
+      overlay.hidden = true;
+      document.body.style.overflow = '';
+      if (ultimoFoco && typeof ultimoFoco.focus === 'function') {
+        ultimoFoco.focus();
+      }
+    };
+
+    // Intercepta el envío: sin confirmación, abre el aviso.
+    btnPagarDespues.addEventListener('click', function (e) {
+      if (confirmado) return;
+      e.preventDefault();
+      abrirModal();
+    });
+
+    // Secundario: vuelve a la pasarela sin perder datos.
+    if (btnSeguir) {
+      btnSeguir.addEventListener('click', function () {
+        cerrarModal();
+      });
+    }
+
+    // Primario: guarda la reserva como pendiente (envía el formulario).
+    if (btnSalir) {
+      btnSalir.addEventListener('click', function () {
+        confirmado = true;
+        cerrarModal();
+        const form = btnPagarDespues.form || btnPagarDespues.closest('form');
+        if (form) {
+          if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit(btnPagarDespues);
+          } else {
+            form.submit();
+          }
+        }
+      });
+    }
+
+    // Cerrar con Escape y clic en el fondo (equivale a "volver al pago").
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !overlay.hidden) cerrarModal();
+    });
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) cerrarModal();
+    });
+  }
 })();

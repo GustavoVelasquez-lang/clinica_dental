@@ -2,7 +2,7 @@
 {% block title %}Pago - Clinica Dental{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/pago.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pago.css') }}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -327,6 +327,32 @@
   </div>
 </div>
 
+{% if reserva %}
+<!-- ── MODAL: advertencia antes de "Pagar después" ── -->
+<div class="pago-exit-overlay" id="modalPagarDespues" hidden
+     role="dialog" aria-modal="true" aria-labelledby="pagoExitTitulo"
+     aria-describedby="pagoExitTexto">
+  <div class="pago-exit-card" role="document">
+    <div class="pago-exit-icon" aria-hidden="true">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+    <h3 class="pago-exit-title" id="pagoExitTitulo">¿Estás seguro de salir sin pagar?</h3>
+    <p class="pago-exit-text" id="pagoExitTexto">
+      Tu cita no será reservada ni asegurada aún si no realizas el pago.
+      El horario podría ser tomado por otro paciente.
+    </p>
+    <div class="pago-exit-actions">
+      <button type="button" class="pago-exit-btn pago-exit-btn--sec" id="btnSeguirPago">
+        <i class="fa-solid fa-arrow-left"></i> Continuar / Volver al pago
+      </button>
+      <button type="button" class="pago-exit-btn pago-exit-btn--pri" id="btnConfirmarSalir">
+        <i class="fa-solid fa-check"></i> Realizar pago / Entendido
+      </button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block extra_js %}
@@ -350,7 +376,7 @@
 </script>
 <script src="https://checkout.culqi.com/js/v4"></script>
 <script src="{{ url_for('static', filename='js/pago_culqi.js') }}"></script>
-<script src="{{ url_for('static', filename='js/pago.js') }}"></script>
+<script src="{{ url_for('static', filename='js/pago.js') }}?v=2"></script>
 {% if mostrar_modal_confirmacion %}
 <script>
   document.addEventListener('DOMContentLoaded', function () {

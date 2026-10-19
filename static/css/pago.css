@@ -233,9 +233,90 @@
 }
 .pago-nota-despues a { color:var(--teal-dark);font-weight:600; }
 
+/* ── Overlay: advertencia antes de "Pagar después" ── */
+.pago-exit-overlay {
+  position:fixed;inset:0;z-index:2000;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  background:rgba(9,20,33,0.62);
+  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+  animation:pagoExitFade 0.22s ease;
+}
+.pago-exit-overlay[hidden] { display:none; }
+
+.pago-exit-card {
+  position:relative;
+  width:100%;max-width:420px;
+  background:#fff;border-radius:20px;
+  padding:36px 30px 28px;
+  text-align:center;
+  box-shadow:0 24px 60px rgba(9,20,33,0.35);
+  animation:pagoExitPop 0.28s cubic-bezier(0.18,0.89,0.32,1.28);
+}
+
+.pago-exit-icon {
+  width:64px;height:64px;margin:0 auto 18px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+  background:#fef3e2;color:#d97706;
+  font-size:26px;
+  border:1px solid rgba(217,119,6,0.25);
+}
+
+.pago-exit-title {
+  font-family:var(--font-d);
+  font-size:21px;font-weight:700;color:var(--dark);
+  margin:0 0 12px;line-height:1.25;
+}
+
+.pago-exit-text {
+  font-size:14px;color:var(--mid);line-height:1.6;
+  margin:0 0 26px;
+}
+
+.pago-exit-actions {
+  display:flex;flex-direction:column;gap:10px;
+}
+
+.pago-exit-btn {
+  width:100%;padding:14px 18px;
+  border-radius:50px;border:1.5px solid transparent;
+  font-size:15px;font-weight:600;font-family:var(--font-b);
+  cursor:pointer;transition:all 0.2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+
+.pago-exit-btn--sec {
+  background:white;color:var(--teal-dark);
+  border-color:var(--teal);
+}
+.pago-exit-btn--sec:hover {
+  background:var(--teal-xl);border-color:var(--teal-dark);
+}
+
+.pago-exit-btn--pri {
+  background:var(--teal-dark);color:#fff;
+  box-shadow:0 4px 18px rgba(47,111,208,0.28);
+}
+.pago-exit-btn--pri:hover {
+  background:var(--teal);transform:translateY(-1px);
+  box-shadow:0 8px 24px rgba(47,111,208,0.35);
+}
+
+@keyframes pagoExitFade {
+  from { opacity:0; }
+  to   { opacity:1; }
+}
+@keyframes pagoExitPop {
+  from { opacity:0;transform:translateY(14px) scale(0.96); }
+  to   { opacity:1;transform:translateY(0) scale(1); }
+}
+
 @media (max-width:768px) {
   .page-agendar { flex-direction:column; }
   .panel-left { width:100%;padding:32px 24px; }
   .panel-right { padding:28px 20px; }
   .pl-info { display:none; }
+  .pago-exit-card { padding:30px 22px 24px; }
+  .pago-exit-title { font-size:19px; }
 }
