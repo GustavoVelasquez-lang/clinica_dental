@@ -223,6 +223,46 @@ def _monto_form(valor):
     return monto if monto >= 0 else None
 
 
+# Métodos de cobro presencial admitidos en caja (valor del formulario →
+# `citas.metodo_pago` y `pagos.gateway`).
+METODOS_COBRO_CAJA = {
+    "efectivo": "efectivo",
+    "pos": "pos_tarjeta",
+    "yape": "yape_presencial",
+}
+METODOS_COBRO_CAJA_ETIQUETA = {
+    "efectivo": "Efectivo",
+    "pos_tarjeta": "POS / Tarjeta",
+    "yape_presencial": "Yape presencial",
+}
+
+# Total cobrado de una cita (alias `c`): suma de pagos válidos; si aún no hay
+# filas en `pagos` (rutas antiguas de confirmación), se toma el adelanto solo
+# cuando el estado de pago ya estaba confirmado.
+SQL_PAGADO_TOTAL = """
+    GREATEST(
+        COALESCE((
+            SELECT SUM(p.monto) FROM pagos p
+            WHERE p.id_cita = c.id AND p.estado = 'valido'
+        ), 0),
+        CASE WHEN c.estado_pago IN ('pagado', 'pagado_total')
+             THEN COALESCE(c.adelanto, 0) ELSE 0 END
+    )
+"""
+
+# Monto total de la cita (alias `c`): el guardado en la cita o, si no existe,
+# el precio de sus tratamientos.
+SQL_MONTOS_CITA = f"""
+    COALESCE(
+        c.monto_total,
+        (SELECT SUM(ct.precio_aplicado)
+           FROM cita_tratamiento ct WHERE ct.id_cita = c.id),
+        0
+    ) AS monto_total,
+    {SQL_PAGADO_TOTAL} AS pagado_total
+"""
+
+
 def _datos_notificacion_admin(cursor, cita_id):
     """Datos (paciente, tratamiento, doctor, fecha, hora, adelanto) de una cita.
 
@@ -430,6 +470,13 @@ def _crear_cita_desde_reserva(reserva, estado_pago="pendiente", voucher=None):
                 INSERT INTO cita_tratamiento (id_cita, id_tratamiento, precio_aplicado)
                 VALUES (%s, %s, (SELECT precio_base FROM tratamientos WHERE id_tratamiento = %s))
             """, (cita_id, int(tratamiento_id), int(tratamiento_id)))
+            # El precio del tratamiento pasa a ser el total a cobrar de la cita.
+            cursor.execute("""
+                UPDATE citas SET monto_total = (
+                    SELECT precio_base FROM tratamientos WHERE id_tratamiento = %s
+                )
+                WHERE id = %s
+            """, (int(tratamiento_id), cita_id))
 
         if voucher:
             cursor.execute("""
@@ -2835,6 +2882,16 @@ def agendar_doctor():
                 """,
                 (cita_id, int(tratamiento_id), int(tratamiento_id)),
             )
+            # El precio del tratamiento pasa a ser el total a cobrar de la cita.
+            cursor.execute(
+                """
+                UPDATE citas SET monto_total = (
+                    SELECT precio_base FROM tratamientos WHERE id_tratamiento = %s
+                )
+                WHERE id = %s
+                """,
+                (int(tratamiento_id), cita_id),
+            )
 
         conn.commit()
         conn.close()
@@ -3202,6 +3259,7 @@ def admin_citas():
             c.fecha, c.hora, c.estado, c.estado_pago, c.comprobante,
             c.tipo_atencion, c.adelanto, c.nro_operacion, c.voucher_url, c.metodo_pago,
             c.created_at,
+            {SQL_MONTOS_CITA},
             (
                 SELECT t.nombre
                 FROM cita_tratamiento ct
@@ -3235,12 +3293,20 @@ def admin_citas():
     conn.close()
 
     for c in citas:
-        # Fecha en que el paciente AGENDÓ la cita (registro), no la de atención.
+        # Fecha en que el paciente AGENDÓ la cita (registro), no la de la atención.
         creada = c.get("created_at")
         c["agendada"] = creada.date() if creada else c["fecha"]
         # La cita se atiende hoy (para el KPI y el resaltado de la fila).
         c["es_hoy"] = (c["fecha"] == hoy)
         c["por_verificar"] = (c["estado_pago"] == "pendiente_verificacion")
+        # Resumen de cobro: total a cobrar, lo ya cobrado y el saldo en caja.
+        c["monto_total"] = float(c.get("monto_total") or 0)
+        c["monto_cobrado"] = float(c.get("pagado_total") or 0)
+        c["monto_saldo"] = round(max(c["monto_total"] - c["monto_cobrado"], 0.0), 2)
+        c["pago_completo"] = (
+            c["estado_pago"] == "pagado_total"
+            or (c["monto_total"] > 0 and c["monto_cobrado"] >= c["monto_total"])
+        )
 
     # Agrupar por la fecha en que se agendó la cita. Ya vienen ordenadas de la
     # más reciente a la más antigua (ORDER BY created_at DESC).
@@ -3406,6 +3472,141 @@ def confirmar_pago(id):
         logger.error(f"Error al enviar confirmacion de pago: {e}")
 
     flash(f"✅ Pago de S/ {adelanto:.2f} confirmado y cita confirmada", "success")
+    return redirect(url_for("admin_citas"))
+
+
+@app.route("/admin/citas/<int:cita_id>/registrar-pago-caja", methods=["POST"])
+@admin_required
+def registrar_pago_caja(cita_id):
+    """Registra un cobro presencial en caja (parcial o pago completo).
+
+    - Permite corregir/definir `citas.monto_total` desde el formulario.
+    - Inserta el movimiento en `pagos` (tipo 'adelanto' o 'completo').
+    - Cuando el saldo llega a 0, la cita pasa a estado_pago='pagado_total'.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(f"""
+        SELECT c.id, c.estado, c.estado_pago, c.adelanto, c.monto_total,
+               {SQL_PAGADO_TOTAL} AS pagado_total
+        FROM citas c
+        WHERE c.id = %s
+    """, (cita_id,))
+    cita = cursor.fetchone()
+
+    if not cita:
+        conn.close()
+        flash("❌ Cita no encontrada", "danger")
+        return redirect(url_for("admin_citas"))
+
+    accion = (request.form.get("accion") or "parcial").strip().lower()
+    metodo = METODOS_COBRO_CAJA.get(
+        (request.form.get("metodo") or "efectivo").strip().lower(), "efectivo"
+    )
+    monto_total_form = _monto_form(request.form.get("monto_total"))
+    monto_form = _monto_form(request.form.get("monto"))
+
+    # Total de la cita: el corregido desde el formulario o el ya registrado
+    # (con respaldo en el precio de sus tratamientos).
+    if monto_total_form is not None:
+        total = monto_total_form
+    else:
+        total = float(cita["monto_total"] or 0)
+        if total <= 0:
+            cursor.execute(
+                """
+                SELECT COALESCE(SUM(ct.precio_aplicado), 0) AS precio
+                FROM cita_tratamiento ct WHERE ct.id_cita = %s
+                """,
+                (cita_id,),
+            )
+            total = float(cursor.fetchone()["precio"] or 0)
+
+    cobrado = float(cita["pagado_total"] or 0)
+    saldo = round(max(total - cobrado, 0.0), 2)
+
+    if accion == "completo":
+        # Se cobra exactamente el saldo pendiente (o el monto ingresado si
+        # aún no hay total definido para la cita).
+        monto = saldo if saldo > 0 else float(monto_form or 0)
+        if monto <= 0:
+            conn.close()
+            flash("⚠️ Esta cita ya está pagada en su totalidad.", "warning")
+            return redirect(url_for("admin_citas"))
+    else:
+        monto = float(monto_form or 0)
+        if monto <= 0:
+            conn.close()
+            flash("❌ Ingresa un monto mayor a 0.", "danger")
+            return redirect(url_for("admin_citas"))
+
+    # Sin total definido, el cobro registrado pasa a ser el total de la cita.
+    if total <= 0:
+        total = cobrado + monto
+        saldo = 0.0
+
+    saldo_nuevo = round(max(total - (cobrado + monto), 0.0), 2)
+    pago_completo = saldo_nuevo <= 0
+
+    cursor.execute(
+        "UPDATE citas SET monto_total = %s WHERE id = %s", (total, cita_id)
+    )
+    cursor.execute(
+        """
+        INSERT INTO pagos (id_cita, monto, tipo, gateway, payload, estado)
+        VALUES (%s, %s, %s, %s, %s, 'valido')
+        """,
+        (
+            cita_id,
+            monto,
+            "completo" if pago_completo else "adelanto",
+            metodo,
+            json.dumps({
+                "origen": "caja",
+                "accion": accion,
+                "metodo": metodo,
+            }),
+        ),
+    )
+
+    if pago_completo:
+        nuevo_estado_pago = "pagado_total"
+    elif cita["estado_pago"] in (
+        None, "pendiente", "pendiente_verificacion", "rechazado"
+    ):
+        nuevo_estado_pago = "pagado"
+    else:
+        nuevo_estado_pago = cita["estado_pago"]
+
+    cursor.execute(
+        """
+        UPDATE citas
+        SET metodo_pago = %s,
+            estado = CASE WHEN estado = 'pendiente' THEN 'confirmada' ELSE estado END,
+            estado_pago = %s
+        WHERE id = %s
+        """,
+        (metodo, nuevo_estado_pago, cita_id),
+    )
+    conn.commit()
+    conn.close()
+
+    etiqueta = METODOS_COBRO_CAJA_ETIQUETA.get(metodo, metodo)
+    _log_auditoria(
+        "cobro_caja",
+        detalle=f"cita #{cita_id} · S/ {monto:.2f} · {etiqueta}"
+        + (" · pago completo" if pago_completo else f" · saldo S/ {saldo_nuevo:.2f}"),
+    )
+
+    if pago_completo:
+        flash(f"✅ Pago completo registrado (S/ {monto:.2f} · {etiqueta}).", "success")
+    else:
+        flash(
+            f"✅ Cobro de S/ {monto:.2f} registrado ({etiqueta}). "
+            f"Saldo pendiente: S/ {saldo_nuevo:.2f}.",
+            "success",
+        )
     return redirect(url_for("admin_citas"))
 
 
@@ -4482,6 +4683,22 @@ def _asegurar_esquema_perfil():
         cursor.execute(
             "ALTER TABLE citas ADD COLUMN IF NOT EXISTS adelanto NUMERIC(10,2) DEFAULT 0"
         )
+        # --- Cobro en caja: total del tratamiento y saldo restante ----------
+        cursor.execute(
+            "ALTER TABLE citas ADD COLUMN IF NOT EXISTS monto_total NUMERIC(10,2)"
+        )
+        # Completa el total de las citas antiguas con el precio de su
+        # tratamiento (solo donde aún no esté definido).
+        cursor.execute("""
+            UPDATE citas c
+            SET monto_total = sub.total
+            FROM (
+                SELECT ct.id_cita, SUM(ct.precio_aplicado) AS total
+                FROM cita_tratamiento ct
+                GROUP BY ct.id_cita
+            ) sub
+            WHERE sub.id_cita = c.id AND c.monto_total IS NULL
+        """)
         # --- Yape manual: datos del voucher y estado de verificación ---------
         cursor.execute(
             "ALTER TABLE citas ADD COLUMN IF NOT EXISTS nro_operacion VARCHAR(50)"
@@ -4532,7 +4749,8 @@ def _asegurar_esquema_perfil():
                     ALTER TABLE citas ADD CONSTRAINT citas_estado_pago_check
                         CHECK (estado_pago IN (
                             'pendiente', 'adelanto', 'pagado',
-                            'rechazado', 'pendiente_verificacion'
+                            'rechazado', 'pendiente_verificacion',
+                            'pagado_total'
                         ));
                 END $$;
             """)

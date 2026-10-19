@@ -180,14 +180,20 @@
                   <span class="pill pill-red">{{ cita.estado }}</span>
                 {% endif %}
 
-                {% if cita.estado_pago == 'pagado' %}
-                  <span class="pill pill-teal"><i class="fa-solid fa-circle-check me-1"></i>Pago confirmado</span>
+                {% if cita.pago_completo %}
+                  <span class="pill pill-teal"><i class="fa-solid fa-circle-check me-1"></i>Pago completo</span>
+                {% elif cita.estado_pago == 'pagado' %}
+                  <span class="pill pill-teal"><i class="fa-solid fa-money-check me-1"></i>Adelanto pagado</span>
                 {% elif cita.estado_pago == 'pendiente_verificacion' %}
                   <span class="pill pill-verif"><i class="fa-solid fa-triangle-exclamation me-1"></i>Pago por verificar</span>
                 {% elif cita.voucher_url or cita.comprobante %}
                   <span class="pill pill-amber">Adelanto enviado</span>
                 {% else %}
                   <span class="pill pill-gray">Sin pago</span>
+                {% endif %}
+
+                {% if cita.monto_saldo > 0 and cita.monto_cobrado > 0 %}
+                  <span class="pill pill-amber">Saldo S/ {{ '%.2f'|format(cita.monto_saldo) }}</span>
                 {% endif %}
               </div>
             </td>
@@ -214,7 +220,24 @@
             <td class="ctc-col-center">
               <div class="ctc-acciones">
                 <a href="{{ url_for('editar_cita', id=cita.id) }}" class="btn-a btn-ghost"><i class="fa-solid fa-pen me-1"></i>Editar</a>
-                {% if (cita.voucher_url or cita.comprobante) and cita.estado_pago != 'pagado' %}
+                {% if cita.estado not in ['cancelada', 'cancelado'] %}
+                  {% if not cita.pago_completo %}
+                  <button type="button" class="btn-a btn-blue btn-cobrar"
+                          data-bs-toggle="modal" data-bs-target="#modalCobro"
+                          data-cita="#{{ cita.id }}"
+                          data-paciente="{{ cita.paciente }}"
+                          data-tratamiento="{{ cita.tratamiento or cita.tipo_atencion or '—' }}"
+                          data-total-num="{{ '%.2f'|format(cita.monto_total) }}"
+                          data-adelanto="S/ {{ '%.2f'|format(cita.adelanto or 0) }}"
+                          data-cobrado-num="{{ '%.2f'|format(cita.monto_cobrado) }}"
+                          data-saldo-num="{{ '%.2f'|format(cita.monto_saldo) }}"
+                          data-metodo="{{ cita.metodo_pago or '' }}"
+                          data-action="{{ url_for('registrar_pago_caja', cita_id=cita.id) }}">
+                    <i class="fa-solid fa-cash-register me-1"></i>Cobrar
+                  </button>
+                  {% endif %}
+                {% endif %}
+                {% if (cita.voucher_url or cita.comprobante) and cita.estado_pago not in ['pagado', 'pagado_total'] %}
                   <a href="{{ url_for('confirmar_pago', id=cita.id) }}"
                      onclick="return confirm('¿Confirmar el adelanto de S/ {{ '%.2f'|format(cita.adelanto or 0) }} y confirmar la cita?')"
                      class="btn-a btn-gold"><i class="fa-solid fa-circle-check me-1"></i>Confirmar pago</a>
@@ -320,8 +343,81 @@
     </div>
   </div>
 </div>
+
+<!-- ══ MODAL · COBRO EN CAJA (parcial o pago completo) ══ -->
+<div class="modal fade" id="modalCobro" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-cash-register me-2"></i>Registrar cobro en caja</h5>
+        <button type="button" class="ctc-modal-x" id="cobroCerrarX" data-bs-dismiss="modal" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form method="POST" id="formCobro">
+        <div class="modal-body">
+          <div class="mv-datos">
+            <p><strong>Cita:</strong> <span id="cobroCita">—</span></p>
+            <p><strong>Paciente:</strong> <span id="cobroPaciente">—</span></p>
+            <p><strong>Tratamiento:</strong> <span id="cobroTratamiento">—</span></p>
+          </div>
+
+          <div class="ctc-cobro-resumen">
+            <div>
+              <span>Monto total del tratamiento</span>
+              <strong id="cobroTotal">S/ 0.00</strong>
+            </div>
+            <div>
+              <span>Adelantado (Yape / Culqi)</span>
+              <strong id="cobroAdelanto">S/ 0.00</strong>
+            </div>
+            <div>
+              <span>Total cobrado</span>
+              <strong id="cobroCobrado">S/ 0.00</strong>
+            </div>
+            <div class="ctc-cobro-saldo">
+              <span>Saldo pendiente en caja</span>
+              <strong id="cobroSaldo">S/ 0.00</strong>
+            </div>
+          </div>
+
+          <div class="ctc-cobro-campo">
+            <label for="cobroMontoTotal">Monto total del tratamiento (S/)</label>
+            <input type="number" name="monto_total" id="cobroMontoTotal"
+                   class="ctc-input" step="0.01" min="0" inputmode="decimal"
+                   placeholder="Precio del tratamiento">
+          </div>
+
+          <div class="ctc-cobro-campo">
+            <label for="cobroMonto">Monto cobrado en caja (S/)</label>
+            <input type="number" name="monto" id="cobroMonto"
+                   class="ctc-input" step="0.01" min="0.01" required inputmode="decimal">
+          </div>
+
+          <div class="ctc-cobro-campo">
+            <label for="cobroMetodo">Método de pago presencial</label>
+            <select name="metodo" id="cobroMetodo" class="ctc-input" required>
+              <option value="efectivo">Efectivo</option>
+              <option value="pos">POS / Tarjeta</option>
+              <option value="yape">Yape presencial</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" name="accion" value="completo" id="cobroCompleto" class="btn-a btn-teal">
+            <i class="fa-solid fa-circle-check me-1"></i>Marcar como pago completo
+          </button>
+          <button type="submit" name="accion" value="parcial" class="btn-a btn-blue">
+            <i class="fa-solid fa-cash-register me-1"></i>Registrar cobro en caja
+          </button>
+          <button type="button" class="btn-a btn-ghost" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block admin_js %}
-<script src="{{ url_for('static', filename='js/admin_citas.js') }}?v=5"></script>
+<script src="{{ url_for('static', filename='js/admin_citas.js') }}?v=6"></script>
 {% endblock %}

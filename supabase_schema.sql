@@ -113,6 +113,10 @@ CREATE TABLE IF NOT EXISTS citas (
 
     adelanto NUMERIC(10,2) DEFAULT 0.00,
 
+    -- NUEVO: total a cobrar de la cita (precio del tratamiento). El saldo
+    -- restante se calcula: monto_total - SUM(pagos válidos de la cita).
+    monto_total NUMERIC(10,2),
+
     estado_pago VARCHAR(30) DEFAULT 'pendiente'
         CHECK (
             estado_pago IN (
@@ -120,7 +124,8 @@ CREATE TABLE IF NOT EXISTS citas (
                 'adelanto',
                 'pagado',
                 'rechazado',
-                'pendiente_verificacion'
+                'pendiente_verificacion',
+                'pagado_total'
             )
         ),
 
@@ -166,6 +171,9 @@ ALTER TABLE citas ADD COLUMN IF NOT EXISTS metodo_pago VARCHAR(30);
 ALTER TABLE citas ADD COLUMN IF NOT EXISTS nro_operacion VARCHAR(50);
 ALTER TABLE citas ADD COLUMN IF NOT EXISTS voucher_url TEXT;
 
+-- NUEVO: total a cobrar de la cita (cobro del saldo en caja)
+ALTER TABLE citas ADD COLUMN IF NOT EXISTS monto_total NUMERIC(10,2);
+
 -- 'pendiente_verificacion' (22 chars) excede VARCHAR(20): ampliar la columna.
 ALTER TABLE citas ALTER COLUMN estado_pago TYPE VARCHAR(30);
 
@@ -183,7 +191,8 @@ BEGIN
     ALTER TABLE citas ADD CONSTRAINT citas_estado_pago_check
         CHECK (estado_pago IN (
             'pendiente', 'adelanto', 'pagado',
-            'rechazado', 'pendiente_verificacion'
+            'rechazado', 'pendiente_verificacion',
+            'pagado_total'
         ));
 END $$;
 

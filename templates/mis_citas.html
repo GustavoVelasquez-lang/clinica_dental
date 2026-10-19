@@ -36,7 +36,9 @@
       {% else %}
         <span class="mc-badge mc-badge--neutra">{{ c.estado }}</span>
       {% endif %}
-      {% if c.estado_pago == 'pendiente_verificacion' %}
+      {% if c.estado_pago == 'pagado_total' %}
+        <span class="mc-badge mc-badge--confirmada"><i class="fa-solid fa-circle-check"></i> Pago completo</span>
+      {% elif c.estado_pago == 'pendiente_verificacion' %}
         <span class="mc-badge mc-badge--pendiente"><i class="fa-regular fa-clock"></i> Pendiente de Verificación</span>
       {% endif %}
     </div>
@@ -105,7 +107,7 @@
       <i class="fa-brands fa-whatsapp"></i> Ayuda de recepción
     </a>
 
-    {% if c.estado == 'pendiente' and c.estado_pago != 'pagado' and not c.comprobante %}
+    {% if c.estado == 'pendiente' and c.estado_pago not in ['pagado', 'pagado_total'] and not c.comprobante %}
     <a href="{{ url_for('pago', cita_id=c.id) }}" class="mc-act mc-act--pay">
       <i class="fa-solid fa-money-bill-wave"></i> Realizar adelanto
     </a>
