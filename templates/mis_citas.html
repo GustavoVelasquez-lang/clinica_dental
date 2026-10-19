@@ -48,7 +48,7 @@
     <div class="mc-dato">
       <span class="mc-dato__icon"><i class="fa-solid fa-user"></i></span>
       <span class="mc-dato__label">Paciente</span>
-      <span class="mc-dato__valor">{{ c.familiar }}</span>
+      <span class="mc-dato__valor">{{ c.familiar }}{% if c.parentesco %} ({{ c.parentesco }}){% endif %}</span>
     </div>
     {% endif %}
     <div class="mc-dato">
@@ -152,6 +152,16 @@
         <span class="mc-tab-count">{{ canceladas|length }}</span>
       </button>
     </li>
+    {% if not es_doctor %}
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-familiares" data-bs-toggle="tab"
+              data-bs-target="#panel-familiares" type="button" role="tab"
+              aria-controls="panel-familiares" aria-selected="false">
+        <i class="fa-solid fa-people-roof"></i> Citas de familiares
+        <span class="mc-tab-count">{{ familiares|length }}</span>
+      </button>
+    </li>
+    {% endif %}
   </ul>
 
   <div class="tab-content mc-tab-content">
@@ -194,6 +204,21 @@
         </div>
       {% endif %}
     </div>
+
+    {% if not es_doctor %}
+    <div class="tab-pane fade" id="panel-familiares" role="tabpanel" aria-labelledby="tab-familiares">
+      {% if familiares %}
+        <div class="mc-lista">{% for c in familiares %}{{ cita_card(c) }}{% endfor %}</div>
+      {% else %}
+        <div class="mc-empty">
+          <div class="mc-empty__icon"><i class="fa-solid fa-people-roof"></i></div>
+          <h3 class="mc-empty__title">No tienes citas de familiares</h3>
+          <p class="mc-empty__sub">Agrega a tus familiares a cargo y agenda sus citas desde el menú "Familiares".</p>
+          <a href="{{ url_for('familiares') }}" class="mc-btn-new"><i class="fa-solid fa-user-plus"></i> Agregar familiar</a>
+        </div>
+      {% endif %}
+    </div>
+    {% endif %}
   </div>
 
 </div>

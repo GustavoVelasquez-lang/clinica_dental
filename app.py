@@ -2121,7 +2121,9 @@ def mis_citas():
                    NULLIF(TRIM(CONCAT_WS(' ', o.nombre, o.apepaterno, o.apematerno)), ''),
                    'Por asignar'
                ) AS odontologo,
-               NULLIF(TRIM(CONCAT_WS(' ', d.nombres, d.apellidos)), '') AS familiar
+               NULLIF(TRIM(CONCAT_WS(' ', d.nombres, d.apellidos)), '') AS familiar,
+               c.dependiente_id,
+               d.parentesco
         FROM citas c
         JOIN especialidades e ON c.especialidad_id = e.id
         LEFT JOIN usuarios o ON c.odontologo_id = o.id
@@ -2133,9 +2135,13 @@ def mis_citas():
     citas = _formatear_citas(cursor.fetchall(), wa_numero)
     conn.close()
 
-    proximas = [c for c in citas if c["estado"] in ESTADOS_ACTIVA]
-    historial = [c for c in citas if c["estado"] in ESTADOS_ATENDIDA]
-    canceladas = [c for c in citas if c["estado"] in ESTADOS_CANCELADA]
+    # Citas del titular vs citas agendadas para sus familiares a cargo.
+    propias = [c for c in citas if not c.get("dependiente_id")]
+    familiares_citas = [c for c in citas if c.get("dependiente_id")]
+
+    proximas = [c for c in propias if c["estado"] in ESTADOS_ACTIVA]
+    historial = [c for c in propias if c["estado"] in ESTADOS_ATENDIDA]
+    canceladas = [c for c in propias if c["estado"] in ESTADOS_CANCELADA]
 
     manana = (date.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 
@@ -2145,6 +2151,7 @@ def mis_citas():
         proximas=proximas,
         historial=historial,
         canceladas=canceladas,
+        familiares=familiares_citas,
         horas=HORAS_SISTEMA,
         fecha_min=manana,
         wa_numero=wa_numero,
