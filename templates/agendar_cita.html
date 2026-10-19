@@ -2,7 +2,7 @@
 {% block title %}Agendar Cita — Clínica Sele Dent{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/agendar_cita.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/agendar_cita.css') }}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -194,7 +194,11 @@
             id="fecha"
             class="field-input"
             required
+            disabled
           >
+          <p class="field-hint" id="fechaHint" hidden>
+            Selecciona un tratamiento para poder elegir la fecha.
+          </p>
         </div>
 
         <!-- ── 3. HORA (oculto, se llena con los botones) ── -->
@@ -219,7 +223,7 @@
         <span class="horarios-label">Horarios disponibles</span>
         <div id="horariosContainer">
           <div class="aviso-centro">
-            🗓️ Selecciona especialidad y fecha para ver horarios
+            🗓️ Selecciona un tratamiento y una fecha para ver horarios
           </div>
         </div>
         <div id="disponibilidadBadge"></div>
@@ -306,5 +310,5 @@
 <script id="tiposData" type="application/json">
 {{ tipos_atencion|tojson }}
 </script>
-<script src="{{ url_for('static', filename='js/agendar_cita.js') }}"></script>
+<script src="{{ url_for('static', filename='js/agendar_cita.js') }}?v=2"></script>
 {% endblock %}

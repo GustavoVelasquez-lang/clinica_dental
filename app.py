@@ -146,6 +146,73 @@ def _resolver_adelanto(cursor, especialidad_id, tratamiento_id=None):
     return 0.0
 
 
+def _doctores_activos_especialidad(cursor, especialidad_id):
+    """Ids de los doctores activos habilitados para una especialidad.
+
+    Misma regla que el listado de doctores de la pantalla de reserva
+    (`/api/doctores-por-especialidad`).
+    """
+    if not str(especialidad_id or "").strip().isdigit():
+        return []
+    cursor.execute("""
+        SELECT DISTINCT oe.odontologo_id
+        FROM odontologo_especialidad oe
+        JOIN usuarios u ON u.id = oe.odontologo_id
+        JOIN roles r    ON r.id = u.id_rol
+        WHERE oe.especialidad_id = %s
+          AND COALESCE(oe.estado, 'activo') = 'activo'
+          AND u.estado = 'ACTIVO'
+          AND r.nombre IN ('odontologo', 'dentista')
+    """, (int(especialidad_id),))
+    return [f["odontologo_id"] for f in cursor.fetchall()]
+
+
+def _horas_ocupadas(cursor, fecha, especialidad_id, doctor_id=None):
+    """Horas ocupadas ('HH:MM:SS') de una fecha según la asignación de doctor.
+
+    - Caso A (`doctor_id` concreto): solo se tachan las horas en las que ese
+      doctor ya tiene una cita.
+    - Caso B (asignación automática): una hora está ocupada ÚNICAMENTE si
+      TODOS los doctores activos de la especialidad tienen cita a esa hora.
+      Si al menos un doctor capacitado queda libre, la hora está habilitada.
+    """
+    if str(doctor_id or "").strip().isdigit():
+        cursor.execute("""
+            SELECT hora FROM citas
+            WHERE fecha = %s AND odontologo_id = %s
+              AND COALESCE(estado, '') <> 'cancelada'
+        """, (fecha, int(doctor_id)))
+        return {str(f["hora"]) for f in cursor.fetchall()}
+
+    doctores = _doctores_activos_especialidad(cursor, especialidad_id)
+    if doctores:
+        cursor.execute("""
+            SELECT odontologo_id, hora FROM citas
+            WHERE fecha = %s AND odontologo_id = ANY(%s)
+              AND COALESCE(estado, '') <> 'cancelada'
+        """, (fecha, doctores))
+        por_hora = {}
+        for fila in cursor.fetchall():
+            por_hora.setdefault(str(fila["hora"]), set()).add(
+                fila["odontologo_id"]
+            )
+        # Solo cuenta como ocupada si ningún doctor de la especialidad libre.
+        return {
+            hora for hora, ids in por_hora.items() if len(ids) >= len(doctores)
+        }
+
+    # La especialidad no tiene doctores registrados: se mantiene la regla
+    # histórica de una sola cita por hora.
+    if not str(especialidad_id or "").strip().isdigit():
+        return set()
+    cursor.execute("""
+        SELECT hora FROM citas
+        WHERE fecha = %s AND especialidad_id = %s
+          AND COALESCE(estado, '') <> 'cancelada'
+    """, (fecha, int(especialidad_id)))
+    return {str(f["hora"]) for f in cursor.fetchall()}
+
+
 def _adelanto_efectivo(cursor, cita):
     """Adelanto efectivo de una cita ya creada (float).
 
@@ -724,17 +791,6 @@ def agendar():
                     flash("❌ El familiar seleccionado no es válido.", "danger")
                     return redirect(url_for("agendar"))
 
-        cursor.execute("""
-            SELECT id FROM citas
-            WHERE especialidad_id = %s AND fecha = %s AND hora = %s
-        """, (especialidad_id, fecha, hora))
-
-        ocupado = cursor.fetchone()
-
-        if ocupado:
-            flash("❌ Esa hora ya está ocupada", "danger")
-            return redirect(url_for("agendar"))
-
         # Verificar que el odontólogo elegido esté habilitado para la especialidad.
         if odontologo_id:
             cursor.execute("""
@@ -744,6 +800,17 @@ def agendar():
             """, (odontologo_id, especialidad_id))
             if not cursor.fetchone():
                 odontologo_id = None
+
+        # Disponibilidad: con doctor concreto solo cuenta ese doctor; con
+        # asignación automática, la hora está ocupada solo si todos los
+        # doctores de la especialidad ya tienen cita ese día a esa hora.
+        ocupadas = _horas_ocupadas(
+            cursor, fecha, especialidad_id, odontologo_id
+        )
+
+        if str(hora) in ocupadas:
+            flash("❌ Esa hora ya está ocupada", "danger")
+            return redirect(url_for("agendar"))
 
                          
         adelanto = _resolver_adelanto(cursor, especialidad_id, tratamiento_id)
@@ -3093,20 +3160,30 @@ def api_citas():
 @app.route("/horarios_disponibles", methods=["POST"])
 @login_required
 def horarios_disponibles():
+    """Horas libres de una fecha según la asignación de doctor.
 
-    data = request.get_json()
-    fecha = data["fecha"]
-    especialidad_id = data["especialidad"]
+    - `doctor` enviado: solo se tachan las horas en las que ese doctor ya
+      tiene una cita (cualquier especialidad).
+    - Sin `doctor` (asignación automática): una hora se tacha únicamente si
+      TODOS los doctores activos de la especialidad tienen cita a esa hora.
+    """
+    data = request.get_json(silent=True) or {}
+
+    fecha = (data.get("fecha") or "").strip()
+    especialidad_id = (data.get("especialidad") or "").strip()
+    doctor_id = (
+        data.get("doctor")
+        or data.get("odontologo_id")
+        or ""
+    ).strip()
+
+    if not fecha or not especialidad_id.isdigit():
+        return jsonify([])
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT hora FROM citas
-        WHERE fecha = %s AND especialidad_id = %s
-    """, (fecha, especialidad_id))
-
-    ocupadas = [str(c["hora"]) for c in cursor.fetchall()]
+    ocupadas = _horas_ocupadas(cursor, fecha, especialidad_id, doctor_id)
 
     conn.close()
 

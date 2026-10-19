@@ -208,6 +208,18 @@ html, body {
 .field-input.error { border-color: var(--red); box-shadow: 0 0 0 3px rgba(224,82,82,0.1); }
 .field-input.success { border-color: var(--green); box-shadow: 0 0 0 3px rgba(34,197,94,0.1); }
 .field-input[readonly] { cursor: default; background: #f8f6f2; }
+.field-input:disabled {
+  cursor: not-allowed;
+  background: #f4f6f5;
+  color: #9aa3a1;
+  border-color: #e8eae9;
+}
+.field-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+}
 
 /* select flecha custom */
 .select-wrap { position: relative; }

@@ -15,6 +15,7 @@ const tratError  = document.getElementById('tratamientoError');
 const docSelect  = document.getElementById('odontologo');
 const grupoDoc   = document.getElementById('grupoDoctor');
 const fechaInput = document.getElementById('fecha');
+const fechaHint  = document.getElementById('fechaHint');
 const horaHidden = document.getElementById('hora_selected');
 const horaDisp   = document.getElementById('hora_display');
 const container  = document.getElementById('horariosContainer');
@@ -68,6 +69,45 @@ function htmlOpcionVaciaTratamiento() {
   return '<option value="">' + texto + '</option>';
 }
 
+// ── Disponibilidad de la FECHA ──────────────────────────────────────────────
+// El selector de fecha arranca deshabilitado y solo se habilita cuando:
+//  - el tipo de atención sí muestra el selector de tratamiento y ya se eligió
+//    uno, o
+//  - el tipo no usa tratamiento (especialidad fija: evaluación general y
+//    urgencia), en cuyo caso no existe el campo y la fecha queda disponible.
+function tipoUsaSelectorTratamiento() {
+  const key = tipoSelect.value;
+  if (!key) return false;
+  const espFija = TIPOS_ESP[key];
+  return espFija === null || espFija === undefined;
+}
+
+function sincronizarFechaDisponible() {
+  const requiereTratamiento = tipoUsaSelectorTratamiento();
+  const habilitada =
+    !!tratSelect.value || (!requiereTratamiento && !!tipoSelect.value);
+
+  const estadoAnterior = fechaInput.disabled;
+  const fechaAnterior = fechaInput.value;
+
+  fechaInput.disabled = !habilitada;
+  if (fechaHint) fechaHint.hidden = habilitada;
+
+  // Al perder la disponibilidad se limpia la fecha: con ella se resetea la
+  // grilla de horarios (la recarga decide qué mensaje mostrar).
+  if (!habilitada && fechaAnterior) {
+    fechaInput.value = '';
+    resetHora();
+    actualizarResumen();
+  }
+
+  // true => cambió el estado de la fecha: quien lo llame debe recargar la grilla.
+  return (
+    estadoAnterior !== fechaInput.disabled ||
+    (!!fechaAnterior && !fechaInput.value)
+  );
+}
+
 // Aplica el tipo de atención al formulario (compartido entre el evento
 // 'change' y la carga inicial desde la URL).
 // `preservarEspSelect`: no limpia la especialidad ya preseleccionada
@@ -96,6 +136,9 @@ function aplicarTipo(key, opciones) {
 
   // El tratamiento pasa a ser obligatorio/según el tipo elegido.
   sincronizarTratamiento();
+
+  // La fecha solo se habilita si corresponde al tipo elegido.
+  sincronizarFechaDisponible();
 }
 
 tipoSelect.addEventListener('change', () => {
@@ -134,8 +177,15 @@ espSelect.addEventListener('change',  cargarDoctores);
 tratSelect.addEventListener('change', cargarDoctores);
 tratSelect.addEventListener('change', function () {
   ocultarErrorTratamiento();
+  // Cambiar/limpiar el tratamiento habilita o no la fecha, la limpia si hace
+  // falta y vuelve a consultar la disponibilidad de horarios.
+  sincronizarFechaDisponible();
   validarFormulario();
+  actualizarResumen();
+  cargarHorarios();
 });
+// Recarga dinámica al elegir otro doctor (libera o tacha horas al instante).
+docSelect.addEventListener('change', cargarHorarios);
 fechaInput.addEventListener('change', cargarHorarios);
 
 // ── Cargar tratamientos según la especialidad elegida ──
@@ -156,6 +206,8 @@ async function cargarTratamientos(preseleccion) {
     tratSelect.innerHTML = htmlOpcionVaciaTratamiento();
     sincronizarTratamiento();
     validarFormulario();
+    // Sin tratamiento disponible se vuelve a deshabilitar la fecha.
+    if (sincronizarFechaDisponible()) cargarHorarios();
     return;
   }
 
@@ -192,6 +244,9 @@ async function cargarTratamientos(preseleccion) {
   } catch (e) {
     grupoTrat.style.display = 'none';
   }
+  // La lista cambió: si el tratamiento elegido ya no existe, se deshabilita
+  // la fecha y se recargan los horarios.
+  if (sincronizarFechaDisponible()) cargarHorarios();
   validarFormulario();
 }
 
@@ -203,12 +258,16 @@ async function cargarDoctores() {
   if (!docSelect || !grupoDoc) return;
 
   const esp = espSelect.value;
+  // Si al recargar la lista cambia el doctor elegido, hay que volver a
+  // consultar los horarios (el nuevo doctor ocupa/libera horas distintas).
+  const doctorAnterior = docSelect.value;
 
   // Sin especialidad seleccionada: ocultar y resetear.
   if (!esp) {
     grupoDoc.style.display = 'none';
     docSelect.innerHTML =
       '<option value="">' + OPCION_CUALQUIER_DOCTOR + '</option>';
+    if (docSelect.value !== doctorAnterior) cargarHorarios();
     return;
   }
 
@@ -234,19 +293,29 @@ async function cargarDoctores() {
   } catch (e) {
     grupoDoc.style.display = 'none';
   }
+
+  if (docSelect.value !== doctorAnterior) cargarHorarios();
 }
 
+// Número de petición: si llega una respuesta vieja (cambió el doctor, la
+// fecha o el tratamiento) se descarta para no pintar una grilla obsoleta.
+let horariosPeticion = 0;
+
 async function cargarHorarios() {
+  const peticion = ++horariosPeticion;
   const esp   = espSelect.value;
   const fecha = fechaInput.value;
+  const faltaTratamiento = tipoUsaSelectorTratamiento() && !tratSelect.value;
 
   // Actualizar step visual
   if (esp) { document.getElementById('step1').classList.add('active'); }
   if (esp && fecha) { document.getElementById('step2').classList.add('active'); }
 
-  if (!tipoSelect.value || !espSelect.value || !fecha) {
+  if (!tipoSelect.value || !espSelect.value || !fecha || faltaTratamiento) {
     container.innerHTML = `<div class="aviso-centro">
-      🗓️ Selecciona el tipo de atención y fecha para ver horarios</div>`;
+      ${faltaTratamiento
+        ? '🗓️ Selecciona un tratamiento y una fecha para ver horarios'
+        : '🗓️ Selecciona el tipo de atención y fecha para ver horarios'}</div>`;
     resetHora();
     return;
   }
@@ -261,9 +330,15 @@ async function cargarHorarios() {
     const res  = await fetch('/horarios_disponibles', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fecha, especialidad: esp })
+      body: JSON.stringify({
+        fecha,
+        especialidad: esp,
+        doctor: docSelect ? (docSelect.value || '') : ''
+      })
     });
     const disponibles = await res.json();
+
+    if (peticion !== horariosPeticion) return;  // respuesta obsoleta
 
     const todasLasHoras = [
       { val: '09:00:00', label: '09:00 am' },
@@ -273,6 +348,11 @@ async function cargarHorarios() {
       { val: '15:00:00', label: '03:00 pm' },
       { val: '16:00:00', label: '04:00 pm' },
     ];
+
+    // La hora elegida dejó de estar libre (cambio de doctor/fecha): se limpia.
+    if (horaHidden.value && !disponibles.includes(horaHidden.value)) {
+      resetHora();
+    }
 
     if (disponibles.length === 0) {
       container.innerHTML = `<div class="sin-horarios">
@@ -314,6 +394,7 @@ async function cargarHorarios() {
     }
 
   } catch(e) {
+    if (peticion !== horariosPeticion) return;
     container.innerHTML = `<p class="error-text">Error al cargar horarios. Intenta de nuevo.</p>`;
   }
 }
@@ -477,6 +558,8 @@ const TRAT_INICIAL = (formCita.dataset.tratamiento || '').trim();
     // No limpiar la especialidad que el backend ya resolvió desde el tratamiento.
     aplicarTipo(TIPO_INICIAL, { preservarEspSelect: true });
   }
+
+  sincronizarFechaDisponible();
 
   if (!espSelect.value && !TIPO_INICIAL) return;
 
