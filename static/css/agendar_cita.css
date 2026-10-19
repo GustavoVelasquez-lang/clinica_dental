@@ -131,6 +131,16 @@ html, body {
   overflow-y: auto;
 }
 
+/* ── Sin barras de desplazamiento visibles (el scroll sigue con rueda/pad) ── */
+.panel-left, .panel-right {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.panel-left::-webkit-scrollbar,
+.panel-right::-webkit-scrollbar {
+  display: none;
+}
+
 .form-header { margin-bottom: 32px; }
 .form-header h2 {
   font-family: var(--font-d);
