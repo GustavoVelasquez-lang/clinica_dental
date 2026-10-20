@@ -160,4 +160,26 @@
       if (e.target === overlay) cerrarModal();
     });
   }
+
+  // ── Modal "Comprobante recibido": la X cierra y va a Mis citas ──
+  const btnCloseComprobante = document.getElementById('btnCloseModalComprobante');
+  if (btnCloseComprobante) {
+    btnCloseComprobante.addEventListener('click', function () {
+      const modalEl = document.getElementById('modalConfirmacion');
+      const destino = btnCloseComprobante.dataset.redirect || '/mis_citas';
+      const cerrar = function () {
+        if (modalEl && window.bootstrap && bootstrap.Modal) {
+          const inst = bootstrap.Modal.getInstance(modalEl)
+            || bootstrap.Modal.getOrCreateInstance(modalEl);
+          modalEl.addEventListener('hidden.bs.modal', function () {
+            window.location.href = destino;
+          }, { once: true });
+          inst.hide();
+        } else {
+          window.location.href = destino;
+        }
+      };
+      cerrar();
+    });
+  }
 })();

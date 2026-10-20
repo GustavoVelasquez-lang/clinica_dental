@@ -330,6 +330,7 @@
 <div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content pago-modal-ok">
+      <button type="button" class="btn-close-custom position-absolute top-0 end-0 m-3" aria-label="Close" id="btnCloseModalComprobante" data-redirect="{{ url_for('mis_citas') }}"><i class="fa-solid fa-xmark"></i></button>
       <div class="modal-body">
         <div class="pago-modal-icono"><i class="fa-solid fa-circle-check"></i></div>
         <h3>¡Comprobante recibido!</h3>
@@ -423,7 +424,7 @@
 </script>
 <script src="https://checkout.culqi.com/js/v4"></script>
 <script src="{{ url_for('static', filename='js/pago_culqi.js') }}"></script>
-<script src="{{ url_for('static', filename='js/pago.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='js/pago.js') }}?v=3"></script>
 {% if mostrar_modal_confirmacion %}
 <script>
   document.addEventListener('DOMContentLoaded', function () {
