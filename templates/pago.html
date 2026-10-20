@@ -2,7 +2,7 @@
 {% block title %}Pago - Clinica Dental{% endblock %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/pago.css') }}?v=2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pago.css') }}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -40,21 +40,21 @@
 
     <div class="pl-info">
       <div class="pl-info-card">
-        <div class="pl-info-icon">📅</div>
+        <div class="pl-info-icon"><i class="fa-solid fa-calendar-days"></i></div>
         <div class="pl-info-text">
           <strong>Lunes a Sabado</strong>
           <span>10:00 am — 5:00 pm</span>
         </div>
       </div>
       <div class="pl-info-card">
-        <div class="pl-info-icon">📍</div>
+        <div class="pl-info-icon"><i class="fa-solid fa-location-dot"></i></div>
         <div class="pl-info-text">
           <strong>El Tambo, Huancayo</strong>
           <span>Junin, Peru</span>
         </div>
       </div>
       <div class="pl-info-card">
-        <div class="pl-info-icon">📞</div>
+        <div class="pl-info-icon"><i class="fa-solid fa-phone"></i></div>
         <div class="pl-info-text">
           <strong>+51 {{ yape_numero }}</strong>
           <span>WhatsApp disponible</span>
@@ -88,18 +88,36 @@
     </div>
 
     <div class="pago-resumen">
+      <div class="pago-resumen-tag">
+        <i class="fa-solid fa-circle-check"></i> Resumen de tu cita
+      </div>
       <div class="pago-resumen-grid">
-        <div>
-          <p class="pago-etiqueta">Especialidad</p>
-          <p class="pago-dato-teal">{{ resumen_esp }}</p>
+        <div class="pago-resumen-item">
+          <div class="pago-resumen-icon">
+            <i class="fa-solid fa-tooth"></i>
+          </div>
+          <div>
+            <p class="pago-etiqueta">Especialidad</p>
+            <p class="pago-dato-teal">{{ resumen_esp }}</p>
+          </div>
         </div>
-        <div>
-          <p class="pago-etiqueta">Fecha</p>
-          <p class="pago-dato-dark">{{ resumen_fecha }}</p>
+        <div class="pago-resumen-item">
+          <div class="pago-resumen-icon">
+            <i class="fa-solid fa-calendar-day"></i>
+          </div>
+          <div>
+            <p class="pago-etiqueta">Fecha</p>
+            <p class="pago-dato-dark">{{ resumen_fecha }}</p>
+          </div>
         </div>
-        <div>
-          <p class="pago-etiqueta">Hora</p>
-          <p class="pago-dato-dark">{{ resumen_hora }}</p>
+        <div class="pago-resumen-item">
+          <div class="pago-resumen-icon">
+            <i class="fa-solid fa-clock"></i>
+          </div>
+          <div>
+            <p class="pago-etiqueta">Hora</p>
+            <p class="pago-dato-dark">{{ resumen_hora }}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -107,7 +125,7 @@
     {% if cita and cita.estado_pago == 'pagado' %}
 
       <div class="pago-ok">
-        <span class="pago-ok-icon">✅</span>
+        <span class="pago-ok-icon"><i class="fa-solid fa-circle-check"></i></span>
         <div>
           <strong>Tu cita ya esta pagada y confirmada.</strong>
           <p>Te esperamos en la fecha y hora indicadas.</p>
@@ -117,7 +135,7 @@
     {% elif cita and cita.estado_pago == 'pendiente_verificacion' %}
 
       <div class="pago-ok pago-ok--warn">
-        <span class="pago-ok-icon">⏳</span>
+        <span class="pago-ok-icon"><i class="fa-solid fa-hourglass-half"></i></span>
         <div>
           <strong>Comprobante en revisión.</strong>
           <p>Recibimos tu pago por Yape. Confirmaremos tu cita tras validar el voucher.</p>
@@ -142,7 +160,7 @@
         {% if cita.voucher_url or cita.comprobante %}
         <p style="margin:12px 0 0;">
           <a href="{{ url_for('ver_comprobante', cita_id=cita.id) }}"
-             target="_blank" rel="noopener">👁️ Ver comprobante enviado</a>
+             target="_blank" rel="noopener"><i class="fa-solid fa-eye me-1"></i> Ver comprobante enviado</a>
         </p>
         {% endif %}
       </div>
@@ -150,7 +168,7 @@
     {% elif monto_adelanto <= 0 %}
 
       <div class="pago-ok pago-ok--info">
-        <span class="pago-ok-icon">ℹ️</span>
+        <span class="pago-ok-icon"><i class="fa-solid fa-circle-info"></i></span>
         <div>
           <strong>Esta cita no requiere adelanto.</strong>
           <p>Puedes reservar sin pago previo.</p>
@@ -187,24 +205,38 @@
       {% endif %}
 
       <div class="pago-qr-wrap">
-        <h3 class="pago-qr-titulo">Yape directo — S/ {{ '%.2f'|format(monto_adelanto) }}</h3>
+        <div class="pago-qr-head">
+          <span class="pago-yape-badge">
+            <i class="fa-solid fa-qrcode me-2"></i>Yape
+          </span>
+          <h3 class="pago-qr-titulo">Paga S/ {{ '%.2f'|format(monto_adelanto) }} por Yape</h3>
+        </div>
+
         <div class="pago-yape-datos">
-          <span class="pago-yape-label">Número Yape:</span>
+          <span class="pago-yape-label">
+            <i class="fa-solid fa-mobile-screen-button me-1"></i>Número Yape
+          </span>
           <span class="pago-yape-valor">
-            <span id="yapeNumeroTexto">+51 {{ yape_numero_fmt }}</span>
+            <span id="yapeNumeroTexto" class="pago-yape-numero">+51 {{ yape_numero_fmt }}</span>
             <button type="button" class="btn-copiar" id="btnCopiarNumero"
                     data-numero="{{ yape_numero }}" title="Copiar número">
-              <i class="fa-regular fa-copy"></i> Copiar número
+              <i class="fa-solid fa-copy me-1"></i> Copiar número
             </button>
           </span>
-          <span class="pago-yape-label">Titular:</span>
+          <span class="pago-yape-label">
+            <i class="fa-solid fa-user me-1"></i>Titular
+          </span>
           <span class="pago-yape-valor">{{ yape_nombre }}</span>
         </div>
+
         <div class="pago-qr-caja">
           <img src="{{ url_for('static', filename='img/qr_yape.jpg') }}" alt="QR Yape" class="pago-qr-img">
+          <p class="pago-qr-scan"><i class="fa-solid fa-camera me-1"></i>Escanea el QR desde tu app Yape</p>
         </div>
+
         <p class="pago-aviso">
-          ⚠️ Abona <strong>S/ {{ '%.2f'|format(monto_adelanto) }}</strong> por Yape y registra el
+          <i class="fa-solid fa-triangle-exclamation me-1"></i>
+          Abona <strong>S/ {{ '%.2f'|format(monto_adelanto) }}</strong> por Yape y registra el
           número de operación con tu comprobante
         </p>
       </div>
@@ -219,11 +251,14 @@
           </div>
           <button type="button" class="ayuda-operacion"
                   data-bs-toggle="modal" data-bs-target="#modalGuiaOperacion">
-            ❓ ¿Dónde encuentro el número de operación?
+            <i class="fa-solid fa-circle-info me-1"></i> ¿Dónde encuentro el número de operación?
           </button>
-          <input type="text" id="nro_operacion" name="nro_operacion"
-                 class="pago-input" inputmode="numeric" pattern="[0-9]*"
-                 maxlength="20" placeholder="Ej. 12345678" required>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-receipt input-icon" aria-hidden="true"></i>
+            <input type="text" id="nro_operacion" name="nro_operacion"
+                   class="pago-input pago-input--icon" inputmode="numeric" pattern="[0-9]*"
+                   maxlength="20" placeholder="Ej. 12345678" required>
+          </div>
         </div>
 
         <div class="field-group">
@@ -234,22 +269,23 @@
 
           <div class="dropzone" id="dropZone">
             <div id="dropContent">
-              <div class="drop-icon">📤</div>
-              <p class="drop-text">Arrastra tu captura aqui</p>
-              <p class="drop-sub">o haz clic para seleccionar una imagen (JPG/PNG)</p>
+              <i class="fa-solid fa-cloud-arrow-up fa-3x drop-ico" aria-hidden="true"></i>
+              <p class="drop-text">Arrastra y suelta tu captura aquí</p>
+              <p class="drop-sub">o <span class="drop-link">haz clic para seleccionar</span> una imagen (JPG/PNG)</p>
             </div>
             <div id="filePreview" style="display:none;">
               <img id="previewImg" src="" class="preview-img">
               <p id="fileName" class="archivo-nombre"></p>
+              <p class="archivo-cambiar"><i class="fa-solid fa-arrows-rotate me-1"></i>Haz clic para cambiar la imagen</p>
             </div>
             <input type="file" name="voucher" id="voucher" accept="image/png,image/jpeg,image/jpg" style="display:none;" required>
           </div>
         </div>
 
         <div class="pago-alerta-aviso">
-          <span class="pago-alerta-icono">⏰</span>
+          <span class="pago-alerta-icono"><i class="fa-solid fa-triangle-exclamation"></i></span>
           <p>
-            ⚠️ <strong>Importante:</strong>
+            <strong>Importante:</strong>
             {% if modo_reserva %}
             Tu reserva se registra recién al enviar el comprobante. En ese momento
             quedará en estado <strong>'Pendiente de Verificación'</strong> hasta que
@@ -262,21 +298,27 @@
           </p>
         </div>
 
-        <button type="submit" class="btn-agendar">
-          <i class="fa-solid fa-check-circle"></i>
+        <button type="submit" class="btn-agendar btn-pago-principal">
+          <i class="fa-solid fa-paper-plane me-2"></i>
           Enviar pago — S/ {{ '%.2f'|format(monto_adelanto) }}
         </button>
 
         {% if modo_reserva %}
         <button type="submit" id="btnPagarDespues" class="btn-agendar btn-outline-secondary btn-pagar-despues"
                 formaction="{{ url_for('pago_reserva_pagar_despues') }}" formnovalidate>
-          <i class="fa-regular fa-clock"></i> Pagar después
+          <i class="fa-solid fa-clock-rotate-left me-2"></i> Pagar después
         </button>
         <p class="pago-nota-despues">
           Tu cita quedará registrada como <strong>Pendiente de Pago</strong> y podrás
           realizar el adelanto cuando quieras desde <a href="{{ url_for('mis_citas') }}">Mis citas</a>.
         </p>
         {% endif %}
+
+        <div class="pago-seguridad">
+          <i class="fa-solid fa-lock text-warning me-2"></i>
+          <span>Tus datos y comprobantes se transmiten de forma cifrada. Un miembro de
+          <strong>recepción</strong> validará manualmente tu pago de forma segura.</span>
+        </div>
       </form>
 
     {% endif %}
@@ -289,7 +331,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content pago-modal-ok">
       <div class="modal-body">
-        <div class="pago-modal-icono">✅</div>
+        <div class="pago-modal-icono"><i class="fa-solid fa-circle-check"></i></div>
         <h3>¡Comprobante recibido!</h3>
         <p>
           Tu cita está en estado <strong>Pendiente de Verificación</strong>. En breve
@@ -306,7 +348,7 @@
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content pago-modal-guia">
       <div class="modal-header">
-        <h5 class="modal-title">❓ ¿Dónde encuentro el número de operación?</h5>
+        <h5 class="modal-title"><i class="fa-solid fa-circle-info me-2"></i> ¿Dónde encuentro el número de operación?</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">

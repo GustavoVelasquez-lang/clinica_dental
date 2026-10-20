@@ -85,41 +85,98 @@
   color:var(--muted);text-decoration:none;margin-bottom:12px;
 }
 .pago-resumen {
-  background:var(--teal-xl);border-radius:12px;padding:16px;
-  margin-bottom:20px;border:1px solid rgba(47,111,208,0.15);
+  position:relative;
+  background:linear-gradient(150deg,rgba(47,111,208,0.10) 0%,rgba(255,255,255,0.85) 100%);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  border-radius:18px;padding:18px 20px;
+  margin-bottom:22px;
+  border:1px solid rgba(47,111,208,0.18);
+  box-shadow:0 12px 34px rgba(18,40,63,0.08),inset 0 1px 0 rgba(255,255,255,0.6);
 }
-.pago-resumen-grid { display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap; }
-.pago-etiqueta { margin:0 0 4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em; }
-.pago-dato-teal { margin:0;font-weight:600;color:var(--teal);font-size:15px; }
-.pago-dato-dark { margin:0;font-weight:600;color:var(--dark);font-size:15px; }
-.pago-qr-wrap { text-align:center;margin-bottom:24px; }
-.pago-qr-titulo { font-size:18px;margin:0 0 12px;color:var(--dark); }
-.pago-qr-caja { background:white;border:2px dashed var(--border);border-radius:16px;padding:24px;display:inline-block; }
-.pago-qr-img { width:200px;max-width:100%;height:auto;object-fit:contain;display:block;margin:0 auto;border-radius:8px; }
-.pago-num { margin:12px 0 4px;font-size:15px;color:var(--mid); }
-.pago-titular { margin:0;font-size:15px;color:var(--mid); }.btn-copiar {
+.pago-resumen-tag {
   display:inline-flex;align-items:center;gap:6px;
-  margin-left:8px;padding:5px 12px;vertical-align:middle;
-  background:var(--teal-xl);color:var(--teal-dark);
-  border:1px solid rgba(47,111,208,0.25);border-radius:50px;
-  font-size:12px;font-weight:600;font-family:var(--font-b);
+  font-size:11px;font-weight:700;letter-spacing:0.06em;
+  text-transform:uppercase;color:var(--teal-dark);
+  margin-bottom:14px;
+}
+.pago-resumen-tag i { color:var(--teal);font-size:12px; }
+.pago-resumen-grid { display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap; }
+.pago-resumen-item { display:flex;align-items:center;gap:10px;flex:1;min-width:150px; }
+.pago-resumen-icon {
+  width:40px;height:40px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:12px;
+  background:linear-gradient(135deg,var(--teal-dark) 0%,var(--teal) 100%);
+  color:#fff;font-size:16px;
+  box-shadow:0 6px 16px rgba(47,111,208,0.28);
+}
+.pago-etiqueta { margin:0 0 2px;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:600; }
+.pago-dato-teal { margin:0;font-weight:700;color:var(--teal);font-size:15px; }
+.pago-dato-dark { margin:0;font-weight:700;color:var(--dark);font-size:15px; }
+
+/* ── Bloque Yape / QR ── */
+.pago-qr-wrap {
+  text-align:center;margin-bottom:24px;
+  background:#fff;border-radius:16px;padding:24px 20px;
+  border:1px solid rgba(47,111,208,0.12);
+  box-shadow:0 14px 40px rgba(18,40,63,0.08);
+}
+.pago-qr-head { margin-bottom:16px; }
+.pago-yape-badge {
+  display:inline-flex;align-items:center;
+  background:#730099;color:#fff;
+  font-size:13px;font-weight:700;letter-spacing:0.03em;
+  padding:6px 16px;border-radius:50px;
+  margin-bottom:12px;
+  box-shadow:0 6px 16px rgba(115,0,153,0.32);
+}
+.pago-qr-titulo { font-size:18px;margin:0;color:var(--dark);font-weight:700; }
+.pago-yape-datos {
+  display:grid;grid-template-columns:auto 1fr;align-items:center;
+  column-gap:12px;row-gap:12px;
+  max-width:400px;margin:0 auto 18px;text-align:left;
+}
+.pago-yape-label { font-size:13px;font-weight:700;color:var(--dark);white-space:nowrap; }
+.pago-yape-label i { color:#730099; }
+.pago-yape-valor { font-size:15px;color:var(--mid);display:flex;align-items:center;flex-wrap:wrap;gap:8px; }
+.pago-yape-numero {
+  font-weight:700;color:var(--dark);font-size:16px;letter-spacing:0.02em;
+  background:#f5ecf9;border:1px solid rgba(115,0,153,0.2);
+  padding:5px 12px;border-radius:10px;
+}
+.pago-qr-caja {
+  background:white;border:2px dashed rgba(47,111,208,0.35);
+  border-radius:16px;padding:20px;display:inline-block;
+}
+.pago-qr-img { width:200px;max-width:100%;height:auto;object-fit:contain;display:block;margin:0 auto;border-radius:8px; }
+.pago-qr-scan { margin:12px 0 0;font-size:12px;color:var(--muted);font-weight:500; }
+.pago-qr-scan i { color:var(--teal); }
+
+.btn-copiar {
+  display:inline-flex;align-items:center;gap:6px;
+  margin-left:8px;padding:6px 14px;vertical-align:middle;
+  background:#f5ecf9;color:#730099;
+  border:1px solid rgba(115,0,153,0.25);border-radius:50px;
+  font-size:12px;font-weight:700;font-family:var(--font-b);
   cursor:pointer;transition:all 0.2s;
 }
-.btn-copiar:hover { background:var(--teal);color:#fff;border-color:var(--teal); }
+.btn-copiar:hover { background:#730099;color:#fff;border-color:#730099;transform:translateY(-1px); }
 .btn-copiar.copiado { background:#e7f7ee;color:#177245;border-color:rgba(23,114,69,0.3); }
 .pago-aviso {
-  margin-top:12px;font-size:13px;color:var(--muted);
+  margin-top:16px;font-size:13px;color:#7c4a03;
   background:#fef3e2;border:1px solid rgba(217,119,6,0.2);
-  border-radius:8px;padding:8px 12px;display:inline-block;
+  border-radius:10px;padding:10px 14px;display:inline-block;
 }
+.pago-aviso i { color:#d97706; }
 .campo-hint { font-size:10px;color:var(--muted);font-weight:500; }
 .ayuda-operacion {
   display:inline-flex;align-items:center;gap:4px;
   margin:-2px 0 10px;padding:0;background:none;border:none;
   color:var(--teal-dark);font-size:12.5px;font-weight:600;
   font-family:var(--font-b);cursor:pointer;
-  text-decoration:underline;text-underline-offset:2px;transition:color 0.2s;
+  transition:color 0.2s;
 }
+.ayuda-operacion i { color:var(--teal); }
 .ayuda-operacion:hover { color:var(--teal); }
 .pago-modal-guia { border:none;border-radius:16px;overflow:hidden; }
 .pago-modal-guia .modal-title { font-size:16px;font-weight:700;color:var(--dark); }
@@ -130,15 +187,26 @@
 }
 .guia-texto { font-size:14px;color:var(--mid);line-height:1.6;margin:0;text-align:center; }
 .dropzone {
-  border:2px dashed var(--teal);border-radius:12px;padding:32px 24px;
-  text-align:center;background:var(--teal-xl);cursor:pointer;transition:all 0.2s;
+  border:2px dashed #3b82f6;border-radius:16px;padding:34px 24px;
+  text-align:center;background:linear-gradient(180deg,rgba(59,130,246,0.05) 0%,rgba(59,130,246,0.02) 100%);
+  cursor:pointer;transition:all 0.22s ease;
 }
-.dropzone--activo { background:rgba(47,111,208,0.12);border-color:var(--teal-dark); }
-.drop-icon { font-size:48px;color:var(--teal);margin-bottom:8px; }
-.drop-text { margin:0 0 4px;font-weight:600;color:var(--teal-dark);font-size:15px; }
+.dropzone:hover {
+  background:rgba(59,130,246,0.10);border-color:var(--teal-dark);
+  transform:translateY(-2px);box-shadow:0 12px 30px rgba(59,130,246,0.16);
+}
+.dropzone--activo {
+  background:rgba(59,130,246,0.14);border-color:var(--teal-dark);
+  border-style:solid;box-shadow:0 0 0 4px rgba(59,130,246,0.12);
+}
+.drop-ico { color:#3b82f6;margin-bottom:12px;display:block;transition:transform 0.25s ease; }
+.dropzone:hover .drop-ico { transform:translateY(-4px) scale(1.06); }
+.drop-text { margin:0 0 4px;font-weight:700;color:var(--teal-dark);font-size:15px; }
 .drop-sub { margin:0;font-size:13px;color:var(--muted); }
-.preview-img { max-height:160px;border-radius:8px;margin-bottom:8px;box-shadow:0 2px 12px rgba(0,0,0,0.1); }
-.archivo-nombre { margin:0;font-size:14px;font-weight:600;color:var(--teal); }
+.drop-link { color:#3b82f6;font-weight:700;text-decoration:underline;text-underline-offset:2px; }
+.preview-img { max-height:170px;border-radius:12px;margin-bottom:10px;box-shadow:0 6px 20px rgba(0,0,0,0.12); }
+.archivo-nombre { margin:0;font-size:14px;font-weight:700;color:var(--teal);word-break:break-all; }
+.archivo-cambiar { margin:8px 0 0;font-size:11.5px;color:var(--muted); }
 
 .pago-online {
   background:white;border:1px solid rgba(47,111,208,0.18);
@@ -178,20 +246,49 @@
 }
 .pago-ok--info { background:var(--teal-xl);border-color:rgba(47,111,208,0.2); }
 .pago-ok--warn { background:#fef3e2;border-color:rgba(217,119,6,0.25); }
-.pago-ok-icon { font-size:28px;line-height:1; }
+.pago-ok-icon { font-size:26px;line-height:1;flex-shrink:0;color:#177245; }
+.pago-ok--info .pago-ok-icon { color:var(--teal); }
+.pago-ok--warn .pago-ok-icon { color:#d97706; }
 .pago-ok strong { display:block;color:var(--dark);font-size:15px;margin-bottom:2px; }
 .pago-ok p { margin:0;font-size:13px;color:var(--muted); }
 
+.input-icon-wrap { position:relative; }
+.input-icon-wrap .input-icon {
+  position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  color:var(--muted);font-size:15px;pointer-events:none;
+}
 .pago-input {
-  width:100%;padding:14px 16px;
+  width:100%;padding:15px 16px;
   border:1.5px solid var(--border);border-radius:12px;
   font-size:15px;font-family:var(--font-b);color:var(--dark);
   background:white;transition:border-color 0.2s,box-shadow 0.2s;
 }
+.pago-input--icon { padding-left:44px; }
 .pago-input:focus {
   outline:none;border-color:var(--teal);
-  box-shadow:0 0 0 3px rgba(47,111,208,0.15);
+  box-shadow:0 0 0 4px rgba(47,111,208,0.14);
 }
+.pago-input:focus + .input-icon,
+.input-icon-wrap:focus-within .input-icon { color:var(--teal); }
+
+.btn-pago-principal {
+  background:linear-gradient(135deg,var(--teal-dark) 0%,#3b82f6 100%);
+  box-shadow:0 8px 26px rgba(59,130,246,0.32);
+}
+.btn-pago-principal:hover {
+  background:linear-gradient(135deg,#3b82f6 0%,var(--teal-dark) 100%);
+  box-shadow:0 12px 34px rgba(59,130,246,0.42);
+}
+
+.pago-seguridad {
+  display:flex;align-items:flex-start;gap:10px;
+  margin-top:18px;padding:14px 16px;
+  background:#fef9ec;border:1px solid rgba(217,119,6,0.22);
+  border-radius:12px;
+}
+.pago-seguridad i { font-size:16px;line-height:1.4;flex-shrink:0; }
+.pago-seguridad span { font-size:12.5px;color:#7c5a10;line-height:1.55; }
+.pago-seguridad strong { color:#7a4a03; }
 .pago-yape-datos {
   display:grid;grid-template-columns:auto 1fr;align-items:center;
   column-gap:12px;row-gap:10px;
@@ -208,24 +305,24 @@
 }
 .pago-alerta-aviso p { margin:0;font-size:13px;line-height:1.55;color:#7c4a03; }
 .pago-alerta-aviso strong { color:#7c4a03; }
-.pago-alerta-icono { font-size:20px;line-height:1; }
+.pago-alerta-icono { font-size:20px;line-height:1;color:#d97706;flex-shrink:0; }
 
 .pago-modal-ok { border:none;border-radius:18px;overflow:hidden; }
 .pago-modal-ok .modal-body { text-align:center;padding:32px 28px; }
-.pago-modal-icono { font-size:52px;margin-bottom:8px; }
+.pago-modal-icono { font-size:52px;margin-bottom:8px;color:#177245; }
 .pago-modal-ok h3 { font-size:22px;font-weight:700;color:var(--dark);margin:0 0 12px; }
 .pago-modal-ok p { font-size:15px;color:var(--mid);line-height:1.6;margin:0 0 22px; }
 .pago-modal-ok p strong { color:#b45309; }
 
 .btn-pagar-despues {
   margin-top:12px;
-  background:white;color:var(--teal-dark);
-  border:1.5px solid var(--teal);
+  background:white;color:var(--muted);
+  border:1.5px solid #cbd5e1;
   box-shadow:none;
 }
 .btn-pagar-despues:hover {
-  background:var(--teal-xl);color:var(--teal-dark);
-  border-color:var(--teal-dark);transform:none;box-shadow:none;
+  background:#f8fafc;color:var(--dark);
+  border-color:#94a3b8;transform:none;box-shadow:none;
 }
 .pago-nota-despues {
   margin:12px 0 0;font-size:12px;color:var(--muted);
@@ -317,6 +414,9 @@
   .panel-left { width:100%;padding:32px 24px; }
   .panel-right { padding:28px 20px; }
   .pl-info { display:none; }
+  .pago-resumen-item { min-width:100%; }
+  .pago-yape-datos { grid-template-columns:1fr; row-gap:6px; }
+  .pago-yape-label { margin-top:6px; }
   .pago-exit-card { padding:30px 22px 24px; }
   .pago-exit-title { font-size:19px; }
 }
