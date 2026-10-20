@@ -290,6 +290,42 @@ def _monto_form(valor):
     return monto if monto >= 0 else None
 
 
+def _monto_total_cita(cursor, cita):
+    """Monto total del tratamiento de una cita (dict con 'id').
+
+    Usa `citas.monto_total` y, si no está definido, la suma de los precios
+    aplicados de sus tratamientos (`cita_tratamiento.precio_aplicado`).
+    """
+    total = float(cita.get("monto_total") or 0)
+    if total > 0:
+        return total
+    cursor.execute(
+        "SELECT COALESCE(SUM(precio_aplicado), 0) AS total "
+        "FROM cita_tratamiento WHERE id_cita = %s",
+        (cita["id"],),
+    )
+    fila = cursor.fetchone()
+    return float((fila or {}).get("total") or 0)
+
+
+def _desglose_pago(total, adelanto):
+    """Calcula el desglose de pago de una cita/reserva.
+
+    Devuelve (monto_total, monto_adelanto, monto_restante) como floats >= 0.
+    `monto_restante` es el saldo a cancelar presencialmente en recepción.
+    Siempre el adelanto es >= total (no puede exceder el total) cuando hay
+    total definido.
+    """
+    total = float(total or 0)
+    adelanto = float(adelanto or 0)
+    if total > 0:
+        adelanto = min(adelanto, total)
+        restante = max(total - adelanto, 0)
+    else:
+        restante = 0
+    return round(total, 2), round(adelanto, 2), round(restante, 2)
+
+
 # Métodos de cobro presencial admitidos en caja (valor del formulario →
 # `citas.metodo_pago` y `pagos.gateway`).
 METODOS_COBRO_CAJA = {
@@ -497,7 +533,7 @@ def doctor_required(f):
     return decorated_function
 
 
-def _crear_cita_desde_reserva(reserva, estado_pago="pendiente", voucher=None):
+def _crear_cita_desde_reserva(reserva, estado_pago="pendiente", voucher=None, modalidad="adelanto"):
     """Registra la cita (y su tratamiento) a partir de la reserva en sesión.
 
     La reserva en sí vive en `session["reserva"]` y solo se materializa en la
@@ -511,8 +547,8 @@ def _crear_cita_desde_reserva(reserva, estado_pago="pendiente", voucher=None):
         cursor.execute("""
             INSERT INTO citas
             (paciente_id, odontologo_id, especialidad_id, fecha, hora, estado, estado_pago,
-             tipo_atencion, sede, prioridad, observaciones, adelanto, dependiente_id)
-            VALUES (%s, %s, %s, %s, %s, 'pendiente', %s, %s, %s, %s, %s, %s, %s)
+             tipo_atencion, sede, prioridad, observaciones, adelanto, dependiente_id, modalidad_pago)
+            VALUES (%s, %s, %s, %s, %s, 'pendiente', %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """, (
             reserva["paciente_id"],
@@ -527,6 +563,7 @@ def _crear_cita_desde_reserva(reserva, estado_pago="pendiente", voucher=None):
             reserva.get("observaciones"),
             float(reserva.get("adelanto") or 0),
             reserva.get("dependiente_id"),
+            modalidad,
         ))
         cita_id = cursor.fetchone()["id"]
 
@@ -741,21 +778,25 @@ def agendar():
             return redirect(url_for("agendar"))
 
         # El tratamiento elegido debe ser activo y pertenecer a la especialidad.
+        tratamiento_precio = 0.0
         if tratamiento_id and str(especialidad_id).isdigit():
             cursor.execute(
                 """
-                SELECT 1 FROM tratamientos
+                SELECT COALESCE(precio_base, 0) AS precio_base
+                FROM tratamientos
                 WHERE id_tratamiento = %s AND id_especialidad = %s
                   AND COALESCE(activo, TRUE) = TRUE
                 """,
                 (int(tratamiento_id), int(especialidad_id)),
             )
-            if not cursor.fetchone():
+            fila_tratamiento = cursor.fetchone()
+            if not fila_tratamiento:
                 flash(
                     "❌ El tratamiento seleccionado no corresponde a la especialidad",
                     "danger",
                 )
                 return redirect(url_for("agendar"))
+            tratamiento_precio = float(fila_tratamiento["precio_base"] or 0)
 
                            
         try:
@@ -839,6 +880,7 @@ def agendar():
             "prioridad": PRIORIDAD_PRIORITARIA if es_urgencia else PRIORIDAD_NORMAL,
             "observaciones": mensaje or None,
             "adelanto": float(adelanto or 0),
+            "monto_total": float(tratamiento_precio or 0),
             "dependiente_id": int(dependiente_id) if dependiente_id else None,
             "tratamiento_id": int(tratamiento_id) if tratamiento_id else None,
         }
@@ -1040,7 +1082,7 @@ def pago(cita_id):
     cursor.execute("""
         SELECT c.id, c.especialidad_id, c.fecha, c.hora, c.estado, c.comprobante, c.tipo_atencion,
                c.adelanto, c.estado_pago, c.nro_operacion, c.voucher_url, c.metodo_pago,
-               e.nombre AS especialidad
+               c.monto_total, e.nombre AS especialidad
         FROM citas c
         JOIN especialidades e ON c.especialidad_id = e.id
         WHERE c.id = %s AND c.paciente_id = %s
@@ -1059,6 +1101,9 @@ def pago(cita_id):
     if actualizado:
         conn.commit()
 
+    total_cita = _monto_total_cita(cursor, cita)
+    monto_total, monto_adelanto, monto_restante = _desglose_pago(total_cita, monto_adelanto)
+
     yape_numero, yape_nombre, yape_qr_url = _contexto_pago_yape()
 
     conn.close()
@@ -1072,7 +1117,9 @@ def pago(cita_id):
         yape_qr=yape_qr_url,
         culqi_public_key=CULQI_PUBLIC_KEY,
         culqi_habilitado=bool(CULQI_PUBLIC_KEY and CULQI_SECRET_KEY),
-        monto_adelanto=float(monto_adelanto or 0),
+        monto_adelanto=monto_adelanto,
+        monto_total=monto_total,
+        monto_restante=monto_restante,
         mostrar_modal_confirmacion=(request.args.get("enviado") == "1"),
     )
 
@@ -1155,6 +1202,10 @@ def pago_manual(cita_id):
         flash("❌ Debes adjuntar el comprobante de Yape (JPG o PNG).", "danger")
         return redirect(url_for("pago", cita_id=cita_id))
 
+    modalidad = (request.form.get("modalidad") or "adelanto").strip().lower()
+    if modalidad not in ("adelanto", "completo"):
+        modalidad = "adelanto"
+
     ruta_rel, datos, mime, error = _guardar_voucher(cita_id, archivo)
     if error:
         conn.close()
@@ -1169,11 +1220,12 @@ def pago_manual(cita_id):
             comprobante = %s,
             voucher_data = %s,
             voucher_mime = %s,
+            modalidad_pago = %s,
             estado_pago = 'pendiente_verificacion',
             estado = 'pendiente'
         WHERE id = %s
     """, (nro_operacion, ruta_rel, ruta_rel,
-          psycopg2.Binary(datos), mime, cita_id))
+          psycopg2.Binary(datos), mime, modalidad, cita_id))
 
     # Registrar la ejecución y el comprobante en el tratamiento de la cita.
     cursor.execute("""
@@ -1248,6 +1300,10 @@ def pago_reserva():
 
     yape_numero, yape_nombre, yape_qr_url = _contexto_pago_yape()
 
+    monto_total, monto_adelanto, monto_restante = _desglose_pago(
+        reserva.get("monto_total"), reserva.get("adelanto")
+    )
+
     return render_template(
         "pago.html",
         cita=None,
@@ -1258,7 +1314,9 @@ def pago_reserva():
         yape_qr=yape_qr_url,
         culqi_public_key=CULQI_PUBLIC_KEY,
         culqi_habilitado=bool(CULQI_PUBLIC_KEY and CULQI_SECRET_KEY),
-        monto_adelanto=float(reserva.get("adelanto") or 0),
+        monto_adelanto=monto_adelanto,
+        monto_total=monto_total,
+        monto_restante=monto_restante,
         mostrar_modal_confirmacion=False,
     )
 
@@ -1282,6 +1340,10 @@ def pago_reserva_manual():
         flash("❌ Debes adjuntar el comprobante de Yape (JPG o PNG).", "danger")
         return redirect(url_for("pago_reserva"))
 
+    modalidad = (request.form.get("modalidad") or "adelanto").strip().lower()
+    if modalidad not in ("adelanto", "completo"):
+        modalidad = "adelanto"
+
     ruta_rel, datos, mime, error = _guardar_voucher(None, archivo)
     if error:
         flash(f"❌ {error}", "danger")
@@ -1290,6 +1352,7 @@ def pago_reserva_manual():
     cita_id, error = _crear_cita_desde_reserva(
         reserva,
         estado_pago="pendiente_verificacion",
+        modalidad=modalidad,
         voucher={
             "nro_operacion": nro_operacion,
             "ruta_rel": ruta_rel,
@@ -1363,7 +1426,15 @@ def pago_reserva_culqi():
     if monto <= 0:
         return jsonify(ok=False, mensaje="Esta cita no requiere adelanto."), 400
 
-    cita_id, error = _crear_cita_desde_reserva(reserva, estado_pago="pendiente")
+    modalidad = (request.form.get("modalidad")
+                 or (request.get_json(silent=True) or {}).get("modalidad")
+                 or "adelanto").strip().lower()
+    if modalidad not in ("adelanto", "completo"):
+        modalidad = "adelanto"
+    if modalidad == "completo" and float(reserva.get("monto_total") or 0) > 0:
+        monto = float(reserva.get("monto_total"))
+
+    cita_id, error = _crear_cita_desde_reserva(reserva, estado_pago="pendiente", modalidad=modalidad)
     if not cita_id:
         return jsonify(
             ok=False, mensaje=error or "No se pudo registrar la cita."
@@ -1382,7 +1453,8 @@ def pago_reserva_culqi():
         "currency_code": CULQI_MONEDA,
         "email": correo,
         "source_id": token,
-        "description": f"Adelanto cita #{cita_id} - Clinica Sele Dent",
+        "description": (f"Pago total cita #{cita_id}" if modalidad == "completo"
+                        else f"Adelanto cita #{cita_id}") + " - Clinica Sele Dent",
         "metadata": {"cita_id": str(cita_id)},
     }
     try:
@@ -1407,6 +1479,7 @@ def pago_reserva_culqi():
             monto=monto,
             transaccion_id=data.get("id") or "",
             payload=json.dumps(data),
+            modalidad=modalidad,
         )
         _notificar_admin_nueva_cita(cita_id)
         return jsonify(
@@ -1515,7 +1588,7 @@ def _culqi_obtener_cargo(charge_id):
         return None
 
 
-def _registrar_pago_culqi(cita_id, *, monto, transaccion_id, payload):
+def _registrar_pago_culqi(cita_id, *, monto, transaccion_id, payload, modalidad="adelanto"):
     """Registra (idempotente) un pago aprobado de Culqi y confirma la cita.
 
     Devuelve un dict con los datos de la cita si se registró por primera vez,
@@ -1541,16 +1614,18 @@ def _registrar_pago_culqi(cita_id, *, monto, transaccion_id, payload):
         if not cita:
             return None
 
+        es_completo = (modalidad == "completo")
         cursor.execute("""
             INSERT INTO pagos (id_cita, monto, tipo, gateway, transaccion_id, payload, estado)
-            VALUES (%s, %s, 'adelanto', 'culqi', %s, %s, 'valido')
-        """, (cita["id"], monto, transaccion_id, payload))
+            VALUES (%s, %s, %s, 'culqi', %s, %s, 'valido')
+        """, (cita["id"], monto, "completo" if es_completo else "adelanto",
+              transaccion_id, payload))
 
         cursor.execute("""
             UPDATE citas
-            SET estado_pago = 'pagado', estado = 'confirmada'
+            SET estado_pago = %s, estado = 'confirmada', modalidad_pago = %s
             WHERE id = %s
-        """, (cita["id"],))
+        """, ("pagado_total" if es_completo else "pagado", modalidad, cita["id"]))
         conn.commit()
     except Exception as e:
         conn.rollback()
@@ -1601,7 +1676,8 @@ def pago_culqi(cita_id):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT c.id, c.especialidad_id, c.adelanto, c.estado_pago, c.paciente_id, u.correo
+        SELECT c.id, c.especialidad_id, c.adelanto, c.monto_total, c.estado_pago,
+               c.paciente_id, u.correo
         FROM citas c
         JOIN usuarios u ON c.paciente_id = u.id
         WHERE c.id = %s AND c.paciente_id = %s
@@ -1616,11 +1692,20 @@ def pago_culqi(cita_id):
     monto, actualizado = _sincronizar_adelanto_cita(cursor, cita)
     if actualizado:
         conn.commit()
+    total_cita = float(cita.get("monto_total") or 0)
     conn.close()
 
     monto = float(monto or 0)
     if monto <= 0:
         return jsonify(ok=False, mensaje="Esta cita no requiere adelanto."), 400
+
+    modalidad = (request.form.get("modalidad")
+                 or (request.get_json(silent=True) or {}).get("modalidad")
+                 or "adelanto").strip().lower()
+    if modalidad not in ("adelanto", "completo"):
+        modalidad = "adelanto"
+    if modalidad == "completo" and total_cita > 0:
+        monto = total_cita
 
     token = (request.form.get("token") or "").strip()
     if not token:
@@ -1634,7 +1719,8 @@ def pago_culqi(cita_id):
         "currency_code": CULQI_MONEDA,
         "email": cita["correo"] or "paciente@clinicaseledent.com",
         "source_id": token,
-        "description": f"Adelanto cita #{cita_id} - Clinica Sele Dent",
+        "description": (f"Pago total cita #{cita_id}" if modalidad == "completo"
+                        else f"Adelanto cita #{cita_id}") + " - Clinica Sele Dent",
         "metadata": {"cita_id": str(cita_id)},
     }
     try:
@@ -1656,6 +1742,7 @@ def pago_culqi(cita_id):
             monto=monto,
             transaccion_id=transaccion_id,
             payload=json.dumps(data),
+            modalidad=modalidad,
         )
         return jsonify(
             ok=True,
@@ -5299,6 +5386,11 @@ def _asegurar_esquema_perfil():
         cursor.execute(
             "ALTER TABLE citas ADD COLUMN IF NOT EXISTS metodo_pago VARCHAR(30)"
         )
+        # Modalidad elegida por el paciente en la pantalla de pago:
+        # 'adelanto' (solo reserva) o 'completo' (tratamiento completo).
+        cursor.execute(
+            "ALTER TABLE citas ADD COLUMN IF NOT EXISTS modalidad_pago VARCHAR(20)"
+        )
         # --- Familiares / dependientes a cargo del titular --------------------
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS dependientes (
@@ -5378,17 +5470,45 @@ def validar_pago(cita_id):
 
     with db_connection() as conn:
         cur = conn.cursor()
-        cur.execute("SELECT id, estado_pago FROM citas WHERE id = %s", (cita_id,))
+        cur.execute("""
+            SELECT id, estado_pago, modalidad_pago, adelanto, monto_total
+            FROM citas WHERE id = %s
+        """, (cita_id,))
         cita = cur.fetchone()
         if not cita:
             flash("Cita no encontrada", "danger")
             return redirect(url_for("admin_facturacion"))
 
         if accion == "aprobar":
-            cur.execute("UPDATE citas SET estado_pago = 'pagado', estado = 'confirmada' WHERE id = %s", (cita_id,))
+            total, adelanto, restante = _desglose_pago(
+                cita.get("monto_total"), cita.get("adelanto")
+            )
+            modalidad = (cita.get("modalidad_pago") or "adelanto").lower()
+            monto_pago = total if (modalidad == "completo" and total > 0) else adelanto
+            estado_nuevo = "pagado_total" if (modalidad == "completo" and total > 0) else "pagado"
+
+            # Registrar el pago validado en el historial de facturación.
+            if monto_pago and monto_pago > 0:
+                cur.execute("""
+                    INSERT INTO pagos (id_cita, monto, tipo, gateway, payload, estado)
+                    VALUES (%s, %s, %s, 'yape_manual', %s, 'valido')
+                """, (
+                    cita_id,
+                    monto_pago,
+                    "completo" if estado_nuevo == "pagado_total" else "adelanto",
+                    f"validacion voucher · modalidad={modalidad}",
+                ))
+
+            cur.execute(
+                "UPDATE citas SET estado_pago = %s, estado = 'confirmada' WHERE id = %s",
+                (estado_nuevo, cita_id),
+            )
             conn.commit()
-            _log_auditoria("aprobar_pago", detalle=f"cita #{cita_id}")
-            flash("Pago aprobado y cita confirmada", "success")
+            _log_auditoria("aprobar_pago", detalle=f"cita #{cita_id} ({estado_nuevo})")
+            if estado_nuevo == "pagado_total":
+                flash("Pago aprobado: tratamiento pagado en su totalidad", "success")
+            else:
+                flash("Pago aprobado y cita confirmada", "success")
         elif accion == "rechazar":
             cur.execute("UPDATE citas SET estado_pago = 'pendiente', comprobante = NULL WHERE id = %s", (cita_id,))
             conn.commit()

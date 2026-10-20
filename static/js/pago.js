@@ -95,6 +95,52 @@
     });
   }
 
+  // ── Selector de modalidad: adelanto vs. tratamiento completo ──
+  const modalidadBox = document.getElementById('pagoModalidad');
+  if (modalidadBox) {
+    const montoInput = document.getElementById('montoModalidad');
+    const btnTexto = document.getElementById('btnPagoTexto');
+    const montos = modalidadBox.querySelectorAll('input[name="modalidad"]');
+
+    const montosPorModalidad = {};
+    modalidadBox.querySelectorAll('.pago-modalidad-op').forEach(function (op) {
+      const input = op.querySelector('input[name="modalidad"]');
+      const montoEl = op.querySelector('.pago-modalidad-monto');
+      if (input && montoEl) {
+        montosPorModalidad[input.value] = montoEl.textContent.trim();
+      }
+    });
+
+    const aplicar = function (valor) {
+      const etiqueta = montosPorModalidad[valor] || '';
+      const numero = (etiqueta.replace('S/', '').trim());
+
+      document.querySelectorAll('.js-monto').forEach(function (el) {
+        el.textContent = numero;
+      });
+
+      if (btnTexto) {
+        btnTexto.textContent = (valor === 'completo')
+          ? 'Enviar pago completo — S/ ' + numero
+          : 'Enviar pago — S/ ' + numero;
+      }
+      if (montoInput) montoInput.value = numero;
+
+      // Expone el monto y la modalidad para la pasarela Culqi.
+      window.PAGO_MONTO_MODALIDAD = parseFloat(numero) || 0;
+      window.PAGO_MODALIDAD = valor;
+    };
+
+    montos.forEach(function (input) {
+      input.addEventListener('change', function () {
+        if (input.checked) aplicar(input.value);
+      });
+    });
+
+    const inicial = modalidadBox.querySelector('input[name="modalidad"]:checked');
+    if (inicial) aplicar(inicial.value);
+  }
+
   // ── Modal de advertencia antes de "Pagar después" ──────────────────────
   // El botón #btnPagarDespues envía el formulario de reserva; aquí se
   // intercepta para avisar que, sin pago, la cita NO queda asegurada.

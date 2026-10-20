@@ -34,6 +34,18 @@
       setMensaje('No se pudo cargar la pasarela de pago. Recarga la pagina.', 'error');
       return;
     }
+    // Refleja la modalidad elegida (adelanto o tratamiento completo) en el
+    // monto que cobrará la pasarela.
+    if (typeof window.PAGO_MONTO_MODALIDAD === 'number' && window.PAGO_MONTO_MODALIDAD > 0) {
+      Culqi.settings({
+        title: cfg.title,
+        currency: cfg.currency,
+        amount: Math.round(window.PAGO_MONTO_MODALIDAD * 100),
+        description: (window.PAGO_MODALIDAD === 'completo')
+          ? 'Pago total - ' + cfg.title
+          : cfg.description,
+      });
+    }
     Culqi.open();
   });
 
@@ -58,6 +70,9 @@
 
     const datos = new FormData();
     datos.append('token', token);
+    if (window.PAGO_MODALIDAD) {
+      datos.append('modalidad', window.PAGO_MODALIDAD);
+    }
 
     fetch(cfg.endpoint, {
       method: 'POST',

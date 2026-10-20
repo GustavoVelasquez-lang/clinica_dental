@@ -2,7 +2,7 @@
 {% block title %}Pago - Clinica Dental{% endblock %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/pago.css') }}?v=4">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pago.css') }}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -122,6 +122,44 @@
       </div>
     </div>
 
+    {% if monto_total > 0 %}
+    <div class="pago-desglose">
+      <div class="pago-desglose-tag">
+        <i class="fa-solid fa-file-invoice-dollar"></i> Desglose de pago
+      </div>
+      <ul class="pago-desglose-lista">
+        <li>
+          <span class="pago-desglose-k">Monto total del tratamiento</span>
+          <span class="pago-desglose-v">S/ {{ '%.2f'|format(monto_total) }}</span>
+        </li>
+        <li class="pago-desglose-li--adelanto">
+          <span class="pago-desglose-k">
+            <i class="fa-solid fa-hand-holding-dollar me-1"></i>Adelanto para reservar
+          </span>
+          <span class="pago-desglose-v pago-desglose-v--teal">S/ {{ '%.2f'|format(monto_adelanto) }}</span>
+        </li>
+        <li class="pago-desglose-li--saldo">
+          <span class="pago-desglose-k">
+            <i class="fa-solid fa-store me-1"></i>Saldo restante en clínica
+          </span>
+          <span class="pago-desglose-v pago-desglose-v--gold">S/ {{ '%.2f'|format(monto_restante) }}</span>
+        </li>
+      </ul>
+      {% if monto_restante > 0 %}
+      <p class="pago-desglose-nota">
+        Paga tu adelanto para reservar la cita. El saldo restante de
+        <strong>S/ {{ '%.2f'|format(monto_restante) }}</strong> lo cancelarás
+        presencialmente en recepción el día de tu atención.
+      </p>
+      {% else %}
+      <p class="pago-desglose-nota">
+        Con este pago cubres el <strong>total del tratamiento</strong>. No tendrás saldo
+        pendiente el día de tu atención.
+      </p>
+      {% endif %}
+    </div>
+    {% endif %}
+
     {% if cita and cita.estado_pago == 'pagado' %}
 
       <div class="pago-ok">
@@ -185,6 +223,33 @@
 
     {% else %}
 
+      {% if monto_total > monto_adelanto and monto_adelanto > 0 %}
+      <div class="pago-modalidad" id="pagoModalidad">
+        <p class="pago-modalidad-titulo">
+          <i class="fa-solid fa-sliders me-1"></i> ¿Cuánto deseas pagar ahora?
+        </p>
+        <label class="pago-modalidad-op" data-modalidad="adelanto">
+          <input type="radio" name="modalidad" value="adelanto" checked>
+          <span class="pago-modalidad-body">
+            <span class="pago-modalidad-nombre">Pagar solo Adelanto</span>
+            <span class="pago-modalidad-monto">S/ {{ '%.2f'|format(monto_adelanto) }}</span>
+            <span class="pago-modalidad-desc">Reserva tu cita y paga el saldo restante en recepción.</span>
+          </span>
+          <span class="pago-modalidad-check"><i class="fa-solid fa-circle-check"></i></span>
+        </label>
+        <label class="pago-modalidad-op" data-modalidad="completo">
+          <input type="radio" name="modalidad" value="completo">
+          <span class="pago-modalidad-body">
+            <span class="pago-modalidad-nombre">Pagar Tratamiento Completo</span>
+            <span class="pago-modalidad-monto">S/ {{ '%.2f'|format(monto_total) }}</span>
+            <span class="pago-modalidad-desc">Sin saldo pendiente el día de tu atención.</span>
+          </span>
+          <span class="pago-modalidad-check"><i class="fa-solid fa-circle-check"></i></span>
+        </label>
+        <input type="hidden" name="monto_modalidad" id="montoModalidad" value="{{ '%.2f'|format(monto_adelanto) }}">
+      </div>
+      {% endif %}
+
       {% if culqi_habilitado %}
       <div class="pago-online">
         <div class="pago-online-head">
@@ -193,7 +258,7 @@
         </div>
         <button type="button" id="btnCulqi" class="btn-agendar btn-culqi">
           <i class="fa-regular fa-credit-card"></i>
-          Pagar S/ {{ '%.2f'|format(monto_adelanto) }} con tarjeta o Yape
+          Pagar S/ <span class="js-monto">{{ '%.2f'|format(monto_adelanto) }}</span> con tarjeta o Yape
         </button>
         <div id="culqiMsg" class="culqi-msg" role="status" aria-live="polite"></div>
         <p class="pago-online-note">
@@ -209,7 +274,7 @@
           <span class="pago-yape-badge">
             <i class="fa-solid fa-qrcode me-2"></i>Yape
           </span>
-          <h3 class="pago-qr-titulo">Paga S/ {{ '%.2f'|format(monto_adelanto) }} por Yape</h3>
+          <h3 class="pago-qr-titulo">Paga S/ <span class="js-monto">{{ '%.2f'|format(monto_adelanto) }}</span> por Yape</h3>
         </div>
 
         <div class="pago-yape-datos">
@@ -236,7 +301,7 @@
 
         <p class="pago-aviso">
           <i class="fa-solid fa-triangle-exclamation me-1"></i>
-          Abona <strong>S/ {{ '%.2f'|format(monto_adelanto) }}</strong> por Yape y registra el
+          Abona <strong>S/ <span class="js-monto">{{ '%.2f'|format(monto_adelanto) }}</span></strong> por Yape y registra el
           número de operación con tu comprobante
         </p>
       </div>
@@ -300,7 +365,7 @@
 
         <button type="submit" class="btn-agendar btn-pago-principal">
           <i class="fa-solid fa-paper-plane me-2"></i>
-          Enviar pago — S/ {{ '%.2f'|format(monto_adelanto) }}
+          <span id="btnPagoTexto">Enviar pago — S/ {{ '%.2f'|format(monto_adelanto) }}</span>
         </button>
 
         {% if modo_reserva %}
@@ -423,8 +488,8 @@
   };
 </script>
 <script src="https://checkout.culqi.com/js/v4"></script>
-<script src="{{ url_for('static', filename='js/pago_culqi.js') }}"></script>
-<script src="{{ url_for('static', filename='js/pago.js') }}?v=3"></script>
+<script src="{{ url_for('static', filename='js/pago_culqi.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='js/pago.js') }}?v=4"></script>
 {% if mostrar_modal_confirmacion %}
 <script>
   document.addEventListener('DOMContentLoaded', function () {

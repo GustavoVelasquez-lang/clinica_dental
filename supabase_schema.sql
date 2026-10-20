@@ -134,6 +134,10 @@ CREATE TABLE IF NOT EXISTS citas (
     nro_operacion VARCHAR(50),
     voucher_url TEXT,
 
+    -- NUEVO: modalidad elegida por el paciente en la pantalla de pago
+    -- ('adelanto' = solo reserva; 'completo' = tratamiento completo)
+    modalidad_pago VARCHAR(20),
+
     observaciones TEXT,
 
     -- NUEVO: tipo de atención solicitada
@@ -173,6 +177,9 @@ ALTER TABLE citas ADD COLUMN IF NOT EXISTS voucher_url TEXT;
 
 -- NUEVO: total a cobrar de la cita (cobro del saldo en caja)
 ALTER TABLE citas ADD COLUMN IF NOT EXISTS monto_total NUMERIC(10,2);
+
+-- NUEVO: modalidad de pago elegida por el paciente en la pantalla de pago
+ALTER TABLE citas ADD COLUMN IF NOT EXISTS modalidad_pago VARCHAR(20);
 
 -- 'pendiente_verificacion' (22 chars) excede VARCHAR(20): ampliar la columna.
 ALTER TABLE citas ALTER COLUMN estado_pago TYPE VARCHAR(30);
