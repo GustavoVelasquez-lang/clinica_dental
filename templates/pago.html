@@ -2,7 +2,7 @@
 {% block title %}Pago - Clinica Dental{% endblock %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/pago.css') }}?v=3">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pago.css') }}?v=4">
 {% endblock %}
 
 {% block content %}
@@ -356,7 +356,12 @@
           src="{{ url_for('static', filename='img/prueba.yape.jpg') }}"
           alt="Ejemplo de comprobante Yape con el número de operación señalado"
           class="guia-img"
-          onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/guia_numero_operacion.png') }}';">
+          onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.hidden=false;">
+        <div class="guia-sin-imagen" hidden>
+          <i class="fa-solid fa-receipt"></i>
+          <p>Abre tu comprobante de Yape y busca en la parte inferior el código
+          de 8 dígitos rotulado como <strong>'Nro. de operación'</strong>.</p>
+        </div>
         <p class="guia-texto">
           Ubica el código de 8 dígitos rotulado como 'Nro. de operación' en la parte
           inferior de tu comprobante de Yape.

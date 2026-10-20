@@ -186,6 +186,14 @@
   margin:0 auto 16px;border-radius:10px;border:1px solid var(--border);
 }
 .guia-texto { font-size:14px;color:var(--mid);line-height:1.6;margin:0;text-align:center; }
+.guia-sin-imagen {
+  text-align:center;padding:22px 18px;margin:0 0 16px;
+  background:var(--teal-xl);border:1px dashed rgba(47,111,208,0.35);
+  border-radius:12px;
+}
+.guia-sin-imagen i { font-size:36px;color:var(--teal);display:block;margin-bottom:10px; }
+.guia-sin-imagen p { margin:0;font-size:13.5px;color:var(--mid);line-height:1.55; }
+.guia-sin-imagen strong { color:var(--teal-dark); }
 .dropzone {
   border:2px dashed #3b82f6;border-radius:16px;padding:34px 24px;
   text-align:center;background:linear-gradient(180deg,rgba(59,130,246,0.05) 0%,rgba(59,130,246,0.02) 100%);

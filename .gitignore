@@ -14,7 +14,10 @@ e.txt
 
 # Imagen QR de Yape (dato sensible del negocio; configurar por variable de entorno / hosting)
 static/img/QR.yape.jpeg
-static/img/prueba.yape.jpg
+
+# Guía "¿Dónde encuentro el número de operación?" (ejemplo de comprobante,
+# sí se versiona para que se muestre en todos los entornos)
+!static/img/prueba.yape.jpg
 
 # Varios (versión de feature/mejoras-sistema)
 *.db
