@@ -46,6 +46,13 @@
         </td>
         <td>
           <div class="flex" style="flex-wrap:wrap;gap:4px;">
+            <button type="button" class="btn-a btn-info btn-familiares"
+                    data-bs-toggle="modal" data-bs-target="#modalFamiliares"
+                    data-paciente-id="{{ p.id }}"
+                    data-paciente-nombre="{{ p.nombre }} {{ p.apepaterno or '' }} {{ p.apematerno or '' }}"
+                    title="Ver / Agregar Familiares">
+              <i class="fa-solid fa-people-roof me-1"></i>Familiares
+            </button>
             <a href="{{ url_for('admin_paciente_estado', id=p.id) }}"
                onclick="return confirm('¿Cambiar el estado de este paciente?')"
                class="btn-a {% if p.estado == 'ACTIVO' %}btn-red{% else %}btn-teal{% endif %}">
@@ -61,4 +68,83 @@
     </tbody>
   </table>
 </div>
+
+<!-- ══ MODAL · FAMILIARES DEL PACIENTE ══ -->
+<div class="modal fade" id="modalFamiliares" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-people-roof me-2"></i>Familiares del paciente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+        <p class="fam-modal-titular">
+          Titular: <strong id="famTitular">—</strong>
+        </p>
+
+        <!-- Lista de familiares -->
+        <div class="fam-lista-head">
+          <span>Familiares registrados</span>
+          <span class="pill pill-teal" id="famCount">0</span>
+        </div>
+        <div id="famLista" class="fam-lista">
+          <p class="fam-vacio">Cargando familiares…</p>
+        </div>
+
+        <hr class="fam-sep">
+
+        <!-- Alta rápida -->
+        <h6 class="fam-form-title"><i class="fa-solid fa-user-plus me-1"></i>Registrar nuevo familiar</h6>
+        <form id="formFamiliarAdmin" class="fam-form" autocomplete="off">
+          <input type="hidden" id="famPacienteId" value="">
+          <div class="fam-form-grid">
+            <div class="fam-field">
+              <label for="famNombres">Nombre y apellidos</label>
+              <input type="text" id="famNombres" name="nombres" class="ctc-input"
+                     placeholder="Nombres del familiar" maxlength="60" required>
+            </div>
+            <div class="fam-field">
+              <label for="famApePaterno">Apellido paterno</label>
+              <input type="text" id="famApePaterno" name="ape_paterno" class="ctc-input"
+                     placeholder="Apellido paterno" maxlength="60" required>
+            </div>
+            <div class="fam-field">
+              <label for="famApeMaterno">Apellido materno</label>
+              <input type="text" id="famApeMaterno" name="ape_materno" class="ctc-input"
+                     placeholder="Apellido materno (opcional)" maxlength="60">
+            </div>
+            <div class="fam-field">
+              <label for="famParentesco">Parentesco</label>
+              <select id="famParentesco" name="parentesco" class="ctc-input">
+                <option value="hijo">Hijo/a</option>
+                <option value="conyuge">Cónyuge</option>
+                <option value="padre">Padre/Madre</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+            <div class="fam-field">
+              <label for="famDni">N° de documento (DNI)</label>
+              <input type="text" id="famDni" name="dni" class="ctc-input"
+                     placeholder="8 dígitos (opcional)" maxlength="8" inputmode="numeric">
+            </div>
+            <div class="fam-field">
+              <label for="famFenacimiento">Fecha de nacimiento</label>
+              <input type="date" id="famFenacimiento" name="fenacimiento" class="ctc-input">
+            </div>
+          </div>
+          <div class="fam-form-actions">
+            <button type="submit" class="btn-a btn-teal">
+              <i class="fa-solid fa-plus me-1"></i>Agregar familiar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block admin_js %}
+<script src="{{ url_for('static', filename='js/admin_pacientes.js') }}?v=1"></script>
 {% endblock %}

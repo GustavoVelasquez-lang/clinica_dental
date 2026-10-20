@@ -5,7 +5,7 @@
 
 {% block extra_css %}
 {{ super() }}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_citas.css') }}?v=4">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_citas.css') }}?v=5">
 {% endblock %}
 
 {% block admin_content %}
@@ -145,9 +145,16 @@
 
             <td>
               <div class="ctc-pac">
-                <div class="ctc-avatar">{{ cita.paciente[0]|upper }}</div>
+                <div class="ctc-avatar">{{ (cita.familiar or cita.paciente)[0]|upper }}</div>
                 <div class="ctc-pac-info">
-                  <span class="ctc-pac-name">{{ cita.paciente }}</span>
+                  {% if cita.familiar %}
+                    <span class="ctc-pac-name">{{ cita.familiar }}</span>
+                    <span class="ctc-pac-familiar">
+                      <i class="fa-solid fa-people-roof me-1"></i>{{ cita.familiar_parentesco or 'Familiar' }} de {{ cita.paciente }}
+                    </span>
+                  {% else %}
+                    <span class="ctc-pac-name">{{ cita.paciente }}</span>
+                  {% endif %}
                   {% if cita.por_verificar %}<span class="ctc-verif-tag">POR VERIFICAR</span>{% endif %}
                 </div>
               </div>
@@ -204,6 +211,8 @@
                         data-bs-toggle="modal" data-bs-target="#modalVoucher"
                         data-cita="#{{ cita.id }}"
                         data-paciente="{{ cita.paciente }}"
+                        data-familiar="{{ cita.familiar or '' }}"
+                        data-familiar-parentesco="{{ cita.familiar_parentesco or '' }}"
                         data-especialidad="{{ cita.especialidad }}"
                         data-tratamiento="{{ cita.tratamiento or cita.tipo_atencion or '—' }}"
                         data-fecha="{{ cita.fecha }} {{ cita.hora }}"
@@ -326,6 +335,7 @@
         <div class="mv-datos">
           <p><strong>Cita:</strong> <span id="mvCita">—</span></p>
           <p><strong>Paciente:</strong> <span id="mvPaciente">—</span></p>
+          <p id="mvFamiliarWrap" hidden><strong>Familiar:</strong> <span id="mvFamiliar">—</span></p>
           <p><strong>Especialidad:</strong> <span id="mvEspecialidad">—</span></p>
           <p><strong>Tratamiento:</strong> <span id="mvTratamiento">—</span></p>
           <p><strong>Fecha:</strong> <span id="mvFecha">—</span></p>
@@ -419,5 +429,5 @@
 {% endblock %}
 
 {% block admin_js %}
-<script src="{{ url_for('static', filename='js/admin_citas.js') }}?v=6"></script>
+<script src="{{ url_for('static', filename='js/admin_citas.js') }}?v=7"></script>
 {% endblock %}

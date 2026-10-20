@@ -802,6 +802,8 @@
   .btn-a.btn-ghost:hover { background: #e2e2e2; }
   .btn-a.btn-solid { color: #fff; background: var(--teal); }
   .btn-a.btn-solid:hover { background: var(--teal-d); }
+  .btn-a.btn-info { color: #0b7285; background: #e3f6fb; }
+  .btn-a.btn-info:hover { background: #0b7285; color: #fff; }
 
   .btn-a.btn-xl { font-size: 13px; padding: 9px 18px; }
 
@@ -933,6 +935,124 @@
   .sb-overlay.show { display: block; opacity: 1; }
 
   /* ════════════════════════════════════════
+     MODAL · FAMILIARES DEL PACIENTE
+  ════════════════════════════════════════ */
+  .fam-modal-titular {
+    font-size: 13px;
+    color: var(--mid);
+    margin-bottom: 14px;
+  }
+  .fam-modal-titular strong { color: var(--dark); }
+
+  .fam-lista-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .fam-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+
+  .fam-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border: 1px solid rgba(47,111,208,0.10);
+    border-radius: 12px;
+  }
+
+  .fam-avatar {
+    width: 36px; height: 36px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--teal-xl, #eaf2fd);
+    color: var(--teal);
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  .fam-item-info { flex: 1; min-width: 0; }
+
+  .fam-item-nombre {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--dark);
+  }
+
+  .fam-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    margin-top: 3px;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  .fam-item-citas { color: var(--teal); font-weight: 500; }
+
+  .fam-del { flex-shrink: 0; }
+
+  .fam-vacio {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    padding: 18px 0;
+    margin: 0;
+  }
+  .fam-vacio--error { color: #e05252; }
+
+  .fam-sep {
+    margin: 18px 0;
+    border: 0;
+    border-top: 1px solid rgba(0,0,0,0.07);
+  }
+
+  .fam-form-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 12px;
+  }
+
+  .fam-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .fam-field label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--mid);
+    margin-bottom: 4px;
+  }
+
+  .fam-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 14px;
+  }
+
+  /* ════════════════════════════════════════
      RESPONSIVE
   ════════════════════════════════════════ */
 
@@ -992,6 +1112,8 @@
     .frm-grid { flex-direction: column; align-items: stretch; }
     .frm-grid > .frm-col,
     .frm-grid > .frm-col-w { width: 100%; min-width: 0; }
+
+    .fam-form-grid { grid-template-columns: 1fr; }
 
     .legend-flex { flex-wrap: wrap; gap: 10px; }
   }

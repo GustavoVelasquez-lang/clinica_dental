@@ -233,6 +233,14 @@
   white-space: nowrap;
 }
 
+/* Cita agendada para un familiar: titular en segunda línea */
+.ctc-pac-familiar {
+  font-size: 10.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.ctc-pac-familiar i { color: var(--teal); }
+
 /* Etiqueta "POR VERIFICAR" junto al paciente */
 .ctc-verif-tag {
   align-self: flex-start;

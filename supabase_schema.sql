@@ -218,6 +218,8 @@ CREATE TABLE IF NOT EXISTS dependientes (
 
     parentesco VARCHAR(30),
 
+    observaciones TEXT,
+
     fecha_registro TIMESTAMP DEFAULT now()
 );
 

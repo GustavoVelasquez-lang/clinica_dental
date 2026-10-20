@@ -3329,6 +3329,8 @@ def admin_citas():
     cursor.execute(f"""
         SELECT c.id,
             TRIM(CONCAT_WS(' ', u.nombre, u.apepaterno, u.apematerno)) AS paciente,
+            NULLIF(TRIM(CONCAT_WS(' ', d.nombres, d.apellidos)), '') AS familiar,
+            d.parentesco AS familiar_parentesco,
             e.nombre AS especialidad,
             c.fecha, c.hora, c.estado, c.estado_pago, c.comprobante,
             c.tipo_atencion, c.adelanto, c.nro_operacion, c.voucher_url, c.metodo_pago,
@@ -3345,6 +3347,7 @@ def admin_citas():
         FROM citas c
         JOIN usuarios u ON c.paciente_id = u.id
         JOIN especialidades e ON c.especialidad_id = e.id
+        LEFT JOIN dependientes d ON c.dependiente_id = d.id
         {where}
         -- Orden por la fecha en que el paciente AGENDÓ la cita (no la de
         -- atención): lo más reciente primero, así lo agendado hoy queda arriba.
@@ -3851,6 +3854,131 @@ def admin_paciente_estado(id):
         flash(f"Estado del paciente actualizado a {nuevo}", "success")
     conn.close()
     return redirect(url_for("admin_pacientes"))
+
+
+@app.route("/admin/pacientes/<int:id>/familiares", methods=["GET"])
+@admin_required
+def admin_paciente_familiares(id):
+    """Lista (JSON) los familiares/dependientes a cargo de un paciente titular."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT d.id, d.nombres, d.apellidos, d.dni, d.fenacimiento,
+               d.parentesco, d.fecha_registro,
+               (SELECT COUNT(*) FROM citas c WHERE c.dependiente_id = d.id) AS citas
+        FROM dependientes d
+        WHERE d.titular_id = %s
+        ORDER BY d.fecha_registro DESC, d.id DESC
+        """,
+        (id,),
+    )
+    filas = cur.fetchall()
+    conn.close()
+
+    familiares = []
+    for f in filas:
+        fenac = f["fenacimiento"]
+        edad = None
+        if fenac:
+            hoy = date.today()
+            edad = hoy.year - fenac.year - (
+                (hoy.month, hoy.day) < (fenac.month, fenac.day)
+            )
+        familiares.append({
+            "id": f["id"],
+            "nombre_completo": f"{(f['nombres'] or '').strip()} "
+                               f"{(f['apellidos'] or '').strip()}".strip(),
+            "nombres": f["nombres"],
+            "apellidos": f["apellidos"],
+            "dni": f["dni"] or "",
+            "parentesco": f["parentesco"] or "",
+            "fenacimiento": fenac.isoformat() if fenac else "",
+            "edad": edad,
+            "citas": f["citas"],
+        })
+    return jsonify(ok=True, familiares=familiares)
+
+
+@app.route("/admin/pacientes/<int:id>/familiares", methods=["POST"])
+@admin_required
+def admin_paciente_familiar_agregar(id):
+    """Registra un familiar/dependiente vinculado a un paciente titular."""
+    datos = request.get_json(silent=True) or request.form
+
+    nombres = (datos.get("nombres") or "").strip()
+    ape_paterno = (datos.get("ape_paterno") or "").strip()
+    ape_materno = (datos.get("ape_materno") or "").strip()
+    apellidos = " ".join(p for p in (ape_paterno, ape_materno) if p)[:100]
+    dni = (datos.get("dni") or "").strip()
+    parentesco = (datos.get("parentesco") or "").strip()
+    observaciones = (datos.get("observaciones") or "").strip()
+
+    if not nombres or not ape_paterno:
+        return jsonify(ok=False, mensaje="Ingresa los nombres y el apellido paterno."), 400
+
+    if dni and not re.fullmatch(r"\d{8}", dni):
+        return jsonify(ok=False, mensaje="El DNI debe tener 8 dígitos."), 400
+
+    fecha_nac, error_fecha = _validar_fecha_familiar(datos.get("fenacimiento"))
+    if error_fecha:
+        # En el alta rápida del admin la fecha de nacimiento es opcional.
+        if (datos.get("fenacimiento") or "").strip():
+            return jsonify(ok=False, mensaje=error_fecha), 400
+        fecha_nac = None
+
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT 1 FROM usuarios WHERE id = %s AND id_rol = 2", (id,))
+        if not cur.fetchone():
+            conn.close()
+            return jsonify(ok=False, mensaje="El paciente titular no existe."), 404
+
+        cur.execute(
+            """
+            INSERT INTO dependientes
+                (titular_id, dni, nombres, apellidos, fenacimiento, parentesco)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id
+            """,
+            (id, dni or None, nombres, apellidos or None, fecha_nac,
+             parentesco or None),
+        )
+        familiar_id = cur.fetchone()["id"]
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        logger.error(f"Error al agregar familiar (admin): {e}")
+        return jsonify(ok=False, mensaje="No se pudo registrar el familiar."), 500
+    conn.close()
+
+    _log_auditoria("admin_agregar_familiar",
+                   detalle=f"titular #{id}: {nombres} {apellidos}")
+    return jsonify(ok=True, mensaje="Familiar registrado correctamente.",
+                   id=familiar_id), 201
+
+
+@app.route("/admin/pacientes/familiares/<int:familiar_id>", methods=["DELETE"])
+@admin_required
+def admin_paciente_familiar_eliminar(familiar_id):
+    """Elimina/desvincula un familiar de un paciente titular."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "DELETE FROM dependientes WHERE id = %s",
+        (familiar_id,),
+    )
+    eliminado = cur.rowcount
+    conn.commit()
+    conn.close()
+
+    if not eliminado:
+        return jsonify(ok=False, mensaje="No se encontró el familiar."), 404
+
+    _log_auditoria("admin_eliminar_familiar", detalle=f"familiar #{familiar_id}")
+    return jsonify(ok=True, mensaje="Familiar eliminado correctamente.")
 
 
 @app.route("/admin/tratamientos")
@@ -5181,9 +5309,17 @@ def _asegurar_esquema_perfil():
                 apellidos VARCHAR(100) NOT NULL,
                 fenacimiento DATE,
                 parentesco VARCHAR(30),
+                observaciones TEXT,
                 fecha_registro TIMESTAMP DEFAULT NOW()
             )
         """)
+        # Compatibilidad con instalaciones previas sin estas columnas.
+        cursor.execute(
+            "ALTER TABLE dependientes ADD COLUMN IF NOT EXISTS parentesco VARCHAR(30)"
+        )
+        cursor.execute(
+            "ALTER TABLE dependientes ADD COLUMN IF NOT EXISTS observaciones TEXT"
+        )
         cursor.execute(
             "ALTER TABLE citas ADD COLUMN IF NOT EXISTS dependiente_id INT "
             "REFERENCES dependientes(id) ON DELETE SET NULL"

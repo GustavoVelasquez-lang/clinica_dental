@@ -58,6 +58,15 @@ document.addEventListener('DOMContentLoaded', function () {
     set('mvMonto', boton.dataset.monto);
     set('mvOperacion', boton.dataset.operacion);
 
+    // Familiar para quien se agendó la cita (si aplica).
+    const famWrap = document.getElementById('mvFamiliarWrap');
+    const familiar = (boton.dataset.familiar || '').trim();
+    if (famWrap) famWrap.hidden = !familiar;
+    if (familiar) {
+      const parentesco = (boton.dataset.familiarParentesco || '').trim();
+      set('mvFamiliar', familiar + (parentesco ? ` (${parentesco})` : ''));
+    }
+
     const url = boton.dataset.voucher || '';
     const img = document.getElementById('mvVoucher');
     const descarga = document.getElementById('mvDescargar');
