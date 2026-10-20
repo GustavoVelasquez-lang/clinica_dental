@@ -66,14 +66,17 @@
         <p>Estos 7 días vs la semana pasada</p>
       </div>
     </div>
-    <div class="bar-chart" id="barChart"></div>
+    <div class="bar-chart-wrap">
+      <div class="bar-yaxis" id="barYAxis"></div>
+      <div class="bar-chart" id="barChart"></div>
+    </div>
     <div class="legend-flex">
       <div class="legend-item">
-        <span class="legend-swatch sw-teal"></span>
+        <span class="legend-swatch sw-actual"></span>
         Actual
       </div>
       <div class="legend-item">
-        <span class="legend-swatch sw-gold"></span>
+        <span class="legend-swatch sw-pasado"></span>
         Semana pasada
       </div>
     </div>
@@ -89,10 +92,10 @@
     <div class="donut-wrap">
       <svg viewBox="0 0 140 140">
         <circle cx="70" cy="70" r="54" fill="none" stroke="#f0eeea" stroke-width="18"/>
-        <circle id="d1" cx="70" cy="70" r="54" fill="none" stroke="#2f6fd0" stroke-width="18" stroke-dasharray="0 339" stroke-dashoffset="-85" stroke-linecap="round" class="donut-ring"/>
-        <circle id="d2" cx="70" cy="70" r="54" fill="none" stroke="#c9a84c" stroke-width="18" stroke-dasharray="0 339" stroke-dashoffset="-85" stroke-linecap="round" class="donut-ring"/>
-        <circle id="d3" cx="70" cy="70" r="54" fill="none" stroke="#3b7dd8" stroke-width="18" stroke-dasharray="0 339" stroke-dashoffset="-85" stroke-linecap="round" class="donut-ring"/>
-        <circle id="d4" cx="70" cy="70" r="54" fill="none" stroke="#e05252" stroke-width="18" stroke-dasharray="0 339" stroke-dashoffset="-85" stroke-linecap="round" class="donut-ring"/>
+        <circle id="d1" cx="70" cy="70" r="54" fill="none" stroke="#0d9488" stroke-width="18" stroke-dasharray="0 339" stroke-dashoffset="-85" stroke-linecap="round" class="donut-ring"/>
+        <circle id="d2" cx="70" cy="70" r="54" fill="none" stroke="#d97706" stroke-width="18" stroke-dasharray="0 339" stroke-dashoffset="-85" stroke-linecap="round" class="donut-ring"/>
+        <circle id="d3" cx="70" cy="70" r="54" fill="none" stroke="#2563eb" stroke-width="18" stroke-dasharray="0 339" stroke-dashoffset="-85" stroke-linecap="round" class="donut-ring"/>
+        <circle id="d4" cx="70" cy="70" r="54" fill="none" stroke="#ef4444" stroke-width="18" stroke-dasharray="0 339" stroke-dashoffset="-85" stroke-linecap="round" class="donut-ring"/>
       </svg>
       <div class="donut-center">
         <strong>{{ total_tratamientos }}</strong><span>Citas</span>
@@ -139,7 +142,7 @@
 
 {% block admin_js %}
 <script id="dashData" type="application/json">
-{{ {'labels': dias_labels, 'actual': citas_actual, 'pasado': citas_pasado, 'esp': esp_donut, 'ing': ingresos_lista}|tojson }}
+{{ {'labels': dias_labels, 'actual': citas_actual, 'pasado': citas_pasado, 'maxCitas': max_citas, 'escalaY': escala_y, 'esp': esp_donut, 'ing': ingresos_lista}|tojson }}
 </script>
-<script src="{{ url_for('static', filename='js/admin_dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/admin_dashboard.js') }}?v=2"></script>
 {% endblock %}

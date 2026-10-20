@@ -4,27 +4,70 @@ const DASH = JSON.parse(document.getElementById('dashData').textContent);
 const diasN = DASH.labels;
 const actual = DASH.actual;
 const pasado = DASH.pasado;
-const maxBar = Math.max(1, ...actual, ...pasado);
+const maxBar = Math.max(1, DASH.maxCitas || 0, ...actual, ...pasado);
+
+/* Eje Y numérico (0, 2, 4, 6...) sincronizado con la altura del área de barras */
+const CHAR_ALTO = 150;
+const yAxisEl = document.getElementById("barYAxis");
+(DASH.escalaY || []).slice().reverse().forEach((v) => {
+  const t = document.createElement("span");
+  t.className = "bar-yaxis-tick";
+  t.textContent = v;
+  yAxisEl.appendChild(t);
+});
+
+/* Tooltip HTML estilizado (fondo oscuro, esquinas redondeadas) */
 const barEl = document.getElementById("barChart");
+const tip = document.createElement("div");
+tip.className = "chart-tooltip";
+tip.setAttribute("role", "tooltip");
+barEl.parentElement.appendChild(tip);
+
+function mostrarTip(target, mes, valor, color) {
+  tip.innerHTML =
+    `<span class="chart-tooltip-dot" style="background:${color}"></span>` +
+    `<span class="chart-tooltip-label">${mes}</span>` +
+    `<span class="chart-tooltip-val">${valor} ${valor === 1 ? "cita" : "citas"}</span>`;
+  const r = target.getBoundingClientRect();
+  const host = barEl.parentElement.getBoundingClientRect();
+  tip.style.left = `${r.left - host.left + r.width / 2}px`;
+  tip.style.top = `${r.top - host.top}px`;
+  tip.classList.add("is-visible");
+}
+function ocultarTip() {
+  tip.classList.remove("is-visible");
+}
+
 diasN.forEach((d, i) => {
   const g = document.createElement("div");
   g.className = "bar-group";
-  const hA = Math.round((actual[i] / maxBar) * 140);
-  const hP = Math.round((pasado[i] / maxBar) * 140);
+  const hA = Math.round((actual[i] / maxBar) * CHAR_ALTO);
+  const hP = Math.round((pasado[i] / maxBar) * CHAR_ALTO);
   g.innerHTML = `<div class="bar-wrap">
-    <div class="bar citas bar-inicial" data-h="${hA}" title="Actual: ${actual[i]}"></div>
-    <div class="bar pacientes bar-inicial" data-h="${hP}" title="Semana pasada: ${pasado[i]}"></div>
+    <div class="bar citas bar-inicial" data-h="${hA}" aria-label="Actual ${d}: ${actual[i]} citas"></div>
+    <div class="bar pacientes bar-inicial" data-h="${hP}" aria-label="Semana pasada ${d}: ${pasado[i]} citas"></div>
   </div><span class="bar-label">${d}</span>`;
+
+  const bA = g.querySelector(".bar.citas");
+  const bP = g.querySelector(".bar.pacientes");
+  bA.addEventListener("mouseenter", () => mostrarTip(bA, "Actual", actual[i], "#2563eb"));
+  bA.addEventListener("mouseleave", ocultarTip);
+  bP.addEventListener("mouseenter", () => mostrarTip(bP, "Semana pasada", pasado[i], "#cbd5e1"));
+  bP.addEventListener("mouseleave", ocultarTip);
+  g.addEventListener("mouseleave", ocultarTip);
+
   barEl.appendChild(g);
 });
+
 
 /* donut */
 const esp = DASH.esp;
 const circ = 2 * Math.PI * 54;
 let off = 0;
 esp.forEach((e) => {
-  const len = (e.pct / 100) * circ;
   const el = document.getElementById(e.id);
+  el.setAttribute("stroke", e.color);
+  const len = (e.pct / 100) * circ;
   setTimeout(() => {
     el.setAttribute("stroke-dasharray", `${len} ${circ - len}`);
     el.setAttribute("stroke-dashoffset", -(off - circ * 0.25));

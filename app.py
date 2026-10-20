@@ -3688,6 +3688,32 @@ def registrar_pago_caja(cita_id):
                             
                                                       
 
+def _color_especialidad(nombre):
+    """Color institucional fijo por especialidad (gráfico y leyenda idénticos)."""
+    n = (nombre or "").strip().lower()
+    if "endodoncia" in n:
+        return "#d97706"
+    if "ortodoncia" in n:
+        return "#2563eb"
+    if "cirug" in n or "oral" in n:
+        return "#ef4444"
+    if "general" in n or "odontolog" in n:
+        return "#0d9488"
+    return "#7c3aed"
+
+
+def _escala_eje_y(valores):
+    """Devuelve (max, ticks) con un tope 'bonito' (2,4,6,8,10...) y 6 marcas."""
+    maximo = max([v for v in valores if v is not None] + [0])
+    if maximo <= 0:
+        return 2, [0, 1, 2]
+    tope = max(4, ((maximo + 1) // 2) * 2)
+    while tope % 5:
+        tope += 2
+    paso = tope // 5
+    return tope, [paso * i for i in range(6)]
+
+
 @app.route("/admin/dashboard")
 @admin_required
 def admin_dashboard():
@@ -3736,6 +3762,7 @@ def admin_dashboard():
 
     citas_actual = [por_fecha.get(lunes + timedelta(days=d), 0) for d in range(7)]
     citas_pasado = [por_fecha.get(lunes - timedelta(days=7) + timedelta(days=d), 0) for d in range(7)]
+    max_citas, escala_y = _escala_eje_y(citas_actual + citas_pasado)
 
                                               
     cur.execute("""
@@ -3746,14 +3773,13 @@ def admin_dashboard():
     """, (inicio_mes, hoy))
     top_esp = cur.fetchall()
     total_tratamientos = sum(r["n"] for r in top_esp)
-    colores = ["#0a7c6e", "#c9a84c", "#3b7dd8", "#e05252"]
     esp_donut = []
     for i, r in enumerate(top_esp):
         pct = round(r["n"] * 100 / total_tratamientos, 1) if total_tratamientos else 0
         esp_donut.append({
             "nombre": r["nombre"],
             "pct": pct,
-            "color": colores[i % 4],
+            "color": _color_especialidad(r["nombre"]),
             "id": f"d{i + 1}"
         })
 
@@ -3783,6 +3809,8 @@ def admin_dashboard():
                            dias_labels=["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
                            citas_actual=citas_actual,
                            citas_pasado=citas_pasado,
+                           max_citas=max_citas,
+                           escala_y=escala_y,
                            esp_donut=esp_donut,
                            total_tratamientos=total_tratamientos,
                            ingresos_lista=ingresos_lista)
