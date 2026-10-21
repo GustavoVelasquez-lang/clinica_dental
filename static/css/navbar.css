@@ -41,9 +41,9 @@
 }
 
 .logo {
-  height: 48px;
+  height: 50px;
   width: auto;
-  max-height: 48px;
+  max-height: 55px;
   object-fit: contain;
   display: block;
 }
@@ -179,10 +179,22 @@
 
 /* ============================================================
    Escritorio (>= 992px): una sola fila compacta y centrada.
+   El contenido no se estira a los bordes: el contenedor se limita
+   a 1140px y los enlaces quedan agrupados junto a los botones.
    ============================================================ */
 @media (min-width: 992px) {
+  .nav-inner {
+    max-width: 1140px;
+  }
+
   .nav-menu {
     flex-direction: row;
+    justify-content: flex-end;
+    gap: 1.5rem;
+  }
+
+  .nav-links {
+    gap: 1.5rem;
   }
 }
 
