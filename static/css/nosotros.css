@@ -20,11 +20,11 @@
   display: flex; align-items: center; justify-content: space-between; gap: 24px;
 }
 .navbar-nos .nav-menu {
-  display: flex; align-items: center; justify-content: flex-end;
+  display: flex; align-items: center; justify-content: space-between;
   gap: 1.5rem; flex: 1;
 }
 .navbar-nos .nav-logo img { height: 50px; max-height: 55px; width: auto; object-fit: contain; }
-.navbar-nos .nav-links { display: flex; list-style: none; gap: 1.5rem; margin: 0; padding: 0; }
+.navbar-nos .nav-links { display: flex; list-style: none; gap: 1.5rem; margin: 0 auto; padding: 0; }
 .navbar-nos .nav-links a {
   text-decoration: none; font-size: 14px; font-weight: 500;
   color: #2c4257; transition: color 0.2s; white-space: nowrap;
@@ -32,7 +32,7 @@
 .navbar-nos .nav-links a:hover,
 .navbar-nos .nav-links a.active,
 .navbar-nos .nav-links a.activacion { color: #2f6fd0; }
-.navbar-nos .nav-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.navbar-nos .nav-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; margin-left: auto; }
 .navbar-nos .nav-icon-btn {
   text-decoration: none; font-size: 13px; font-weight: 600;
   color: #2c4257; padding: 9px 18px; border-radius: 50px;
