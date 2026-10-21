@@ -1,6 +1,7 @@
 /* ============================================================
    Clinica Sele Dent - Barra de navegacion (compartida)
-   Usada por index, nosotros y especialidades.
+   Usada por index, nosotros, especialidades, tratamientos,
+   contacto, detalle, agendar, etc.
    Depende de las variables definidas en base.css
    ============================================================ */
 
@@ -9,11 +10,8 @@
   top: 0; left: 0; right: 0;
   z-index: 1000;
   height: 72px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 48px;
   background: rgba(248,246,242,0.92);
+  -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
   transition: box-shadow 0.3s;
@@ -23,14 +21,38 @@
   box-shadow: 0 4px 24px rgba(47,111,208,0.08);
 }
 
+/* Contenedor interno: agrupa y centra el contenido en monitores anchos. */
+.nav-inner {
+  max-width: 1280px;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
 .nav-logo {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .logo {
-  height: 90px;
+  height: 64px;
   object-fit: contain;
+}
+
+/* Agrupacion derecha: enlaces + seccion de usuario + botones. */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .nav-links {
@@ -38,6 +60,8 @@
   align-items: center;
   gap: 32px;
   list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .nav-links a {
@@ -45,6 +69,7 @@
   font-weight: 500;
   color: var(--mid);
   position: relative;
+  white-space: nowrap;
   transition: color 0.2s;
 }
 
@@ -79,50 +104,154 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 
+/* ── Boton "Mis citas" (pildora tenue) ── */
 .nav-icon-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
+  gap: 7px;
+  padding: 9px 18px;
   border-radius: 50px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--mid);
-  background: rgba(47,111,208,0.06);
-  border: 1px solid var(--border);
+  background: rgba(47,111,208,0.07);
+  border: 1px solid rgba(47,111,208,0.18);
+  white-space: nowrap;
   transition: all 0.2s;
 }
 
 .nav-icon-btn:hover {
-  background: rgba(47,111,208,0.12);
+  background: var(--teal-xl);
   color: var(--teal);
+  border-color: rgba(47,111,208,0.35);
+  transform: translateY(-1px);
 }
 
 .nav-icon-btn i { font-size: 13px; }
 
+/* ── Boton "Agendar cita" (primario, pildora) ── */
 .btn-agendar-nav {
-  padding: 9px 22px;
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 24px;
   border-radius: 50px;
   background: var(--teal);
-  color: white;
+  color: #fff;
   font-size: 13.5px;
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: 0.02em;
+  white-space: nowrap;
   transition: all 0.2s;
   box-shadow: 0 4px 16px rgba(47,111,208,0.25);
 }
 
 .btn-agendar-nav:hover {
   background: var(--teal-dark);
-  color: white;
+  color: #fff;
   box-shadow: 0 6px 24px rgba(47,111,208,0.35);
   transform: translateY(-1px);
 }
 
-/* ---------- Responsive ---------- */
-@media (max-width: 860px) {
-  .navbar-sd { padding: 0 24px; }
-  .nav-links  { display: none; }
+/* ── Boton hamburguesa: oculto en escritorio ── */
+.nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(47,111,208,0.06);
+  color: var(--mid);
+  font-size: 18px;
+  cursor: pointer;
+  margin-left: auto;
+  transition: background 0.2s, color 0.2s;
+}
+
+.nav-toggle:hover { background: var(--teal-xl); color: var(--teal); }
+
+/* ============================================================
+   Escritorio (>= 992px): una sola fila compacta y centrada.
+   ============================================================ */
+@media (min-width: 992px) {
+  .nav-menu {
+    flex-direction: row;
+  }
+}
+
+/* ============================================================
+   Movil / tablet (< 992px): menu desplegable (hamburguesa).
+   ============================================================ */
+@media (max-width: 991.98px) {
+  .nav-inner { padding: 0 20px; gap: 12px; }
+  .logo { height: 52px; }
+
+  .nav-toggle { display: inline-flex; }
+
+  .nav-menu {
+    position: fixed;
+    top: 72px;
+    left: 0; right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 12px 20px 22px;
+    background: rgba(248,246,242,0.98);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 12px 28px rgba(18,40,63,0.10);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 0.22s, transform 0.22s, visibility 0.22s;
+    max-height: calc(100vh - 72px);
+    overflow-y: auto;
+  }
+
+  .nav-menu.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .nav-links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
+  }
+
+  .nav-links li { width: 100%; }
+
+  .nav-links a {
+    display: block;
+    padding: 13px 4px;
+    width: 100%;
+    border-bottom: 1px solid var(--border);
+    font-size: 15px;
+  }
+
+  .nav-links a::after { display: none; }
+
+  .nav-right {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-top: 16px;
+    width: 100%;
+  }
+
+  .nav-icon-btn,
+  .btn-agendar-nav {
+    justify-content: center;
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 14px;
+  }
 }

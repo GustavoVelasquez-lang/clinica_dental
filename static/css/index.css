@@ -55,22 +55,6 @@
   .hero-search    { animation: fadeUp 0.7s ease 0.7s  both; }
   
   
-  .navbar-sd {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 1000;
-    height: 72px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 48px;
-    background: rgba(248,246,242,0.92);
-    backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border);
-    transition: box-shadow 0.3s;
-  }
-  
-  
   .hero-wrap {
     position: relative;
     margin-top: 72px;
