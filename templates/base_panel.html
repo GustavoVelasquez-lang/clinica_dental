@@ -3,7 +3,7 @@
 
 {% block extra_css %}
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/panel.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/panel.css') }}?v=2">
 {% block panel_css %}{% endblock %}
 {% endblock %}
 
@@ -14,7 +14,7 @@
   <!-- ══ SIDEBAR LATERAL ══ -->
   <aside class="sidebar" id="panelSidebar">
   <a class="sb-logo" href="{{ url_for('mis_citas') }}">
-    <img class="sb-logo-img" src="{{ url_for('static', filename='img/logo_panel.png') }}" alt="Clínica SELEDENT">
+    <img class="sb-logo-img" src="{{ url_for('static', filename='img/logo-seledent.png') }}" alt="Clínica SELEDENT">
   </a>
 
   <div class="sb-section">Menú</div>

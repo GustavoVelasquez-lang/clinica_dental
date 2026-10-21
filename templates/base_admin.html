@@ -2,7 +2,7 @@
 {% block title %}{% block admin_titulo %}Dashboard{% endblock %} — Sele Dent Admin{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=7">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=8">
 {% endblock %}
 
 {% block content %}
@@ -12,9 +12,7 @@
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sb-logo">
-    <div class="sb-logo-icon">
-      <svg viewBox="0 0 26 26" fill="none"><path d="M13 3C9 3 6 6 6 9.5C6 12 7 14 8 16C9 18 9.5 22 10.5 22C11.5 22 12 19 13 19C14 19 14.5 22 15.5 22C16.5 22 17 18 18 16C19 14 20 12 20 9.5C20 6 17 3 13 3Z" fill="white"/></svg>
-    </div>
+    <img class="sb-logo-img" src="{{ url_for('static', filename='img/logo-seledent.png') }}" alt="Clínica SELEDENT">
     <div class="sb-logo-text">
       <strong>Sele Dent</strong>
       <small>Panel Admin</small>

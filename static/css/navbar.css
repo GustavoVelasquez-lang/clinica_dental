@@ -41,8 +41,11 @@
 }
 
 .logo {
-  height: 64px;
+  height: 48px;
+  width: auto;
+  max-height: 48px;
   object-fit: contain;
+  display: block;
 }
 
 /* Agrupacion derecha: enlaces + seccion de usuario + botones. */
@@ -188,7 +191,7 @@
    ============================================================ */
 @media (max-width: 991.98px) {
   .nav-inner { padding: 0 20px; gap: 12px; }
-  .logo { height: 52px; }
+  .logo { height: 40px; max-height: 40px; }
 
   .nav-toggle { display: inline-flex; }
 

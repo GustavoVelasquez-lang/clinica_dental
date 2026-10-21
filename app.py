@@ -4509,8 +4509,9 @@ def facturacion_pdf(pago_id):
     # ── Encabezado institucional: logo + datos ──────────────────────────
     logo = None
     for ruta_logo in (
-        os.path.join(app.static_folder, "img", "logo.png"),
+        os.path.join(app.static_folder, "img", "logo_pdf.png"),
         os.path.join(app.static_folder, "img", "logo-seledent.png"),
+        os.path.join(app.static_folder, "img", "logo.png"),
         os.path.join(app.static_folder, "img", "logo.jpeg"),
     ):
         if os.path.exists(ruta_logo):

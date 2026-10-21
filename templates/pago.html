@@ -2,7 +2,7 @@
 {% block title %}Pago - Clinica Dental{% endblock %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/pago.css') }}?v=5">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pago.css') }}?v=6">
 {% endblock %}
 
 {% block content %}
@@ -20,12 +20,7 @@
 
   <div class="panel-left">
     <a href="/" class="pl-logo">
-      <div class="pl-logo-icon">
-        <svg viewBox="0 0 26 26" fill="none">
-          <path d="M13 3C9 3 6 6 6 9.5C6 12 7 14 8 16C9 18 9.5 22 10.5 22C11.5 22 12 19 13 19C14 19 14.5 22 15.5 22C16.5 22 17 18 18 16C19 14 20 12 20 9.5C20 6 17 3 13 3Z" fill="white"/>
-          <path d="M9 8C10.5 7 12 6.5 13 6.5C14 6.5 15.5 7 17 8" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" stroke-linecap="round"/>
-        </svg>
-      </div>
+      <img class="pl-logo-img" src="{{ url_for('static', filename='img/logo-seledent.png') }}" alt="Clínica SELEDENT">
       <div class="pl-logo-text">
         <strong>Clinica Sele Dent</strong>
         <small>Odontologia Integral</small>

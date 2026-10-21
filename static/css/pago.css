@@ -37,6 +37,12 @@
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
 .pl-logo-icon svg { width:22px;height:22px; }
+.pl-logo-img {
+  display:block;height:46px;width:auto;max-width:100%;
+  object-fit:contain;object-position:left center;
+  background:#ffffff;border-radius:10px;padding:6px 10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.2);flex-shrink:0;
+}
 .pl-logo-text strong { display:block;font-family:var(--font-d);font-size:15px;color:white;line-height:1.1; }
 .pl-logo-text small { font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.1em;text-transform:uppercase; }
 .pl-hero { position:relative;z-index:2; }
