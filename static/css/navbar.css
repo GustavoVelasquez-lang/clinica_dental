@@ -63,7 +63,7 @@
   align-items: center;
   gap: 32px;
   list-style: none;
-  margin: 0;
+  margin: 0 auto;
   padding: 0;
 }
 
@@ -182,26 +182,30 @@
    El contenido no se estira a los bordes: el contenedor se limita
    a 1140px. Los enlaces quedan centrados entre el logo y los botones.
    ============================================================ */
+/* ============================================================
+   Escritorio (>= 992px): todo agrupado y centrado.
+   ============================================================ */
 @media (min-width: 992px) {
   .nav-inner {
-    max-width: 1140px;
+    max-width: 1080px; /* Ancho máximo controlado para mantener todo compacto */
+    justify-content: space-between;
   }
 
   .nav-menu {
     flex-direction: row;
-    justify-content: space-between;
-    gap: 1.5rem;
+    justify-content: flex-end; /* Alinea todo el contenido hacia la derecha del logo */
+    flex: initial; /* Evita que ocupe todo el ancho sobrante de forma forzada */
+    gap: 2.5rem; /* Distancia uniforme entre los enlaces y la sección de botones */
   }
 
-  /* Los enlaces se centran en el espacio entre el logo y las acciones. */
   .nav-links {
-    gap: 1.5rem;
-    margin: 0 auto;
+    gap: 1.5rem; /* Espaciado entre Inicio, Especialidades, etc. */
+    margin: 0;   /* Quitamos el margin: 0 auto para evitar que se separen */
   }
 
-  /* Las acciones siempre pegadas al borde derecho. */
   .nav-right {
-    margin-left: auto;
+    margin-left: 0;
+    gap: 12px;
   }
 }
 
