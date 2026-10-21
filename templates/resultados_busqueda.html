@@ -8,6 +8,12 @@
 
     <h2 class="text-center mb-4">🔎 Resultados de búsqueda</h2>
 
+    {% if query %}
+      <p class="text-center text-muted mb-4">
+        {{ resultados|length }} resultado(s) para «{{ query }}»
+      </p>
+    {% endif %}
+
     {% if resultados %}
 
         <div class="row justify-content-center">
@@ -29,7 +35,8 @@
 
     {% else %}
 
-        <p class="text-center">❌ No se encontraron resultados</p>
+        <p class="text-center">❌ No se encontraron resultados para «{{ query }}»</p>
+        <p class="text-center"><a href="/especialidades">Ver todas las especialidades</a></p>
 
     {% endif %}
 

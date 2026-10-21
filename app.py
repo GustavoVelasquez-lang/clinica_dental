@@ -3278,25 +3278,82 @@ def horarios_disponibles():
 @app.route("/buscar")
 def buscar_especialidad():
 
-    query = request.args.get("q")
+    query = (request.args.get("q") or "").strip()
 
     conn = get_connection()
     cursor = conn.cursor()
-
     cursor.execute("""
-        SELECT * FROM especialidades
-        WHERE nombre LIKE %s OR descripcion LIKE %s
-    """, (f"%{query}%", f"%{query}%"))
-
-    resultados = cursor.fetchall()
+        SELECT id, nombre, descripcion FROM especialidades
+        WHERE estado = 'activo'
+        ORDER BY nombre
+    """)
+    filas = cursor.fetchall()
     conn.close()
 
-    if resultados:
-        return render_template("resultados_busqueda.html", resultados=resultados, query=query)
+    if not query:
+        resultados = filas
     else:
-        flash("❌ No se encontró la especialidad", "danger")
-        return redirect(url_for("inicio"))
-    
+        resultados = _filtrar_especialidades(filas, query)
+
+    return render_template("resultados_busqueda.html",
+                           resultados=resultados, query=query)
+
+
+def _normalizar_busqueda(texto):
+    """Minúsculas y sin tildes para comparar de forma tolerante."""
+    import unicodedata
+    texto = (texto or "").lower().strip()
+    return "".join(
+        c for c in unicodedata.normalize("NFD", texto)
+        if unicodedata.category(c) != "Mn"
+    )
+
+
+def _prefijo_comun(a, b):
+    """Longitud del prefijo comun entre dos cadenas."""
+    n = min(len(a), len(b))
+    i = 0
+    while i < n and a[i] == b[i]:
+        i += 1
+    return i
+
+
+def _filtrar_especialidades(filas, query):
+    """Coincidencia tolerante: subcadena, prefijo comun o raiz parecida.
+
+    Permite que «implante» encuentre «Implantología» y que las tildes no
+    afecten la búsqueda.
+    """
+    palabras = [p for p in _normalizar_busqueda(query).split() if p]
+    if not palabras:
+        return filas
+
+    resultados = []
+    for fila in filas:
+        nombre = _normalizar_busqueda(fila.get("nombre"))
+        desc = _normalizar_busqueda(fila.get("descripcion"))
+        heno = nombre + " " + desc
+        tokens = heno.split()
+
+        coincide = True
+        for palabra in palabras:
+            if palabra in heno:
+                continue
+            # raiz/typo: comparte casi todo el prefijo con alguna palabra
+            tiene_raiz = any(
+                _prefijo_comun(palabra, t) >= 4
+                and _prefijo_comun(palabra, t) >= min(len(palabra), len(t)) - 2
+                for t in tokens
+            )
+            if not tiene_raiz:
+                coincide = False
+                break
+
+        if coincide:
+            resultados.append(fila)
+
+    return resultados
+
 
 def admin_required(f):
     @wraps(f)

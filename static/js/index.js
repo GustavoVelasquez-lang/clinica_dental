@@ -18,41 +18,15 @@
   var btn   = document.getElementById("btnBuscar");
 
   if (input && btn) {
-    var RUTAS = {
-      "ortodoncia":  "ortodoncia",
-      "endodoncia":  "endodoncia",
-      "limpieza":    "odontologia general",
-      "general":     "odontologia general",
-      "cirugia":     "cirugia oral",
-      "extraccion":  "cirugia oral",
-      "implant":     "implantologia",
-      "periodoncia": "periodoncia",
-      "blanqueam":   "estetica dental",
-      "estetica":    "estetica dental"
-    };
-
-    function normalizar(s) {
-      return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    }
-
     function buscar() {
-      var texto = normalizar(input.value.trim());
+      var texto = input.value.trim();
 
       if (!texto) {
         input.focus();
         return;
       }
 
-      var encontrada = null;
-      Object.keys(RUTAS).forEach(function (clave) {
-        if (!encontrada && texto.indexOf(clave) !== -1) {
-          encontrada = RUTAS[clave];
-        }
-      });
-
-      window.location.href = encontrada
-        ? "/especialidades?buscar=" + encodeURIComponent(encontrada)
-        : "/especialidades";
+      window.location.href = "/buscar?q=" + encodeURIComponent(texto);
     }
 
     btn.addEventListener("click", buscar);
