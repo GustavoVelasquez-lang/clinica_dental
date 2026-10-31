@@ -17,6 +17,7 @@
     <img class="sb-logo-img" src="{{ url_for('static', filename='img/logo-seledent.png') }}" alt="Clínica SELEDENT">
   </a>
 
+  <div class="sb-spacer sb-spacer--top"></div>
   <div class="sb-section">Menú</div>
   <ul class="sb-nav">
     <li>
@@ -37,6 +38,7 @@
     </li>
     {% endif %}
   </ul>
+  <div class="sb-spacer sb-spacer--bottom"></div>
 
   <div class="sb-foot">
     <a href="{{ url_for('agendar_doctor') if es_doctor else url_for('agendar') }}"

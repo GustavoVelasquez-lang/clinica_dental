@@ -38,6 +38,19 @@ body {
   top: 0;
 }
 
+.sb-spacer {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.sb-spacer--top {
+  flex-grow: 1;
+}
+
+.sb-spacer--bottom {
+  flex-grow: 1;
+}
+
 .sb-logo {
   display: flex;
   align-items: center;
