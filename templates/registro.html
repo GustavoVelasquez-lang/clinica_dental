@@ -1,5 +1,5 @@
-{% extends "base.html" %}
-{% block title %}Crear cuenta — Clinica SELEDENT{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}Crear cuenta â€” Clinica SELEDENT{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/registro.css') }}">
@@ -88,14 +88,14 @@
           <div class="col-md-6">
             <div class="field-group">
               <label for="nombre" class="form-label fw-semibold">Nombres</label>
-              <input type="text" id="nombre" name="nombre" required
+              <input type="text" id="nombre" name="nombre" readonly required
                      class="form-control">
             </div>
           </div>
           <div class="col-md-6">
             <div class="field-group">
               <label for="apePaterno" class="form-label fw-semibold">Apellido Paterno</label>
-              <input type="text" id="apePaterno" name="apePaterno" required
+              <input type="text" id="apePaterno" name="apePaterno" readonly required
                      class="form-control">
             </div>
           </div>
@@ -103,7 +103,7 @@
 
         <div class="field-group">
           <label for="apeMaterno" class="form-label fw-semibold">Apellido Materno</label>
-          <input type="text" id="apeMaterno" name="apeMaterno" required
+          <input type="text" id="apeMaterno" name="apeMaterno" readonly required
                      class="form-control">
         </div>
 
@@ -178,6 +178,8 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/login.js') }}"></script>
-<script src="{{ url_for('static', filename='js/dni_lookup.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dni_lookup_registro.js') }}"></script>
 <script src="{{ url_for('static', filename='js/registro.js') }}"></script>
 {% endblock %}
+
+

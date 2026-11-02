@@ -39,7 +39,7 @@ Abre el navegador en: http://localhost:5000
 ### Panel del administrador
 
 Entra con el usuario admin y se redirige a `/admin/dashboard`.
-Desde el menu lateral: citas, pacientes, facturacion, inventario, reportes y
+Desde el menu lateral: citas, pacientes, facturacion, reportes y
 **KPIs** (un KPI único por objetivo, con su fórmula matemática).
 
 ## Configuracion (el proyecto YA trae su BD conectada)

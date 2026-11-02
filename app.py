@@ -1888,12 +1888,22 @@ def registro():
 
 
 def _perfil_esta_completo(usuario_id):
-    """Devuelve True si el usuario ya registró su DNI y teléfono."""
+    """True solo si el usuario tiene DNI y teléfono guardados de verdad.
+
+    No basta con el flag `perfil_completo`: cuentas antiguas o creadas con
+    Google pueden tener el flag en TRUE pero DNI/teléfono en NULL.
+    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT COALESCE(perfil_completo, TRUE) AS completo FROM usuarios WHERE id = %s",
+            """
+            SELECT (
+                numero_documento IS NOT NULL AND btrim(numero_documento) <> ''
+                AND telefono IS NOT NULL AND btrim(telefono) <> ''
+            ) AS completo
+            FROM usuarios WHERE id = %s
+            """,
             (usuario_id,),
         )
         fila = cursor.fetchone()
@@ -4782,89 +4792,6 @@ def admin_personal():
     return render_template("admin_personal.html", personal=personal)
 
 
-@app.route("/admin/inventario", methods=["GET", "POST"])
-@admin_required
-def admin_inventario():
-    conn = get_connection()
-    cur = conn.cursor()
-
-    if request.method == "POST":
-        accion = request.form.get("accion")
-
-        if accion == "agregar":
-            nombre = request.form.get("nombre", "").strip()
-            if nombre:
-                try:
-                    cur.execute("""
-                        INSERT INTO inventario (nombre, categoria, cantidad, stock_minimo, precio_compra, proveedor)
-                        VALUES (%s, %s, %s, %s, %s, %s)
-                    """, (
-                        nombre,
-                        request.form.get("categoria", "").strip() or None,
-                        request.form.get("cantidad") or 0,
-                        request.form.get("stock_minimo") or 0,
-                        request.form.get("precio_compra") or None,
-                        request.form.get("proveedor", "").strip() or None,
-                    ))
-                    conn.commit()
-                    flash("Producto agregado al inventario", "success")
-                except Exception as e:
-                    conn.rollback()
-                    flash(f"Error al agregar producto: {e}", "danger")
-            else:
-                flash("El nombre del producto es obligatorio", "danger")
-
-        elif accion == "actualizar":
-            try:
-                cur.execute("""
-                    UPDATE inventario SET cantidad = %s, stock_minimo = %s
-                    WHERE id = %s
-                """, (request.form.get("cantidad") or 0,
-                      request.form.get("stock_minimo") or 0,
-                      request.form.get("id")))
-                conn.commit()
-                flash("Stock actualizado", "success")
-            except Exception as e:
-                conn.rollback()
-                flash(f"Error al actualizar stock: {e}", "danger")
-
-        conn.close()
-        return redirect(url_for("admin_inventario"))
-
-    cur.execute("SELECT * FROM inventario ORDER BY nombre")
-    inventario = cur.fetchall()
-
-    cur.execute("SELECT COALESCE(SUM(cantidad),0) AS total FROM inventario")
-    total_items = cur.fetchone()["total"]
-    cur.execute("SELECT COALESCE(SUM(cantidad * precio_compra),0) AS total FROM inventario WHERE precio_compra IS NOT NULL")
-    valor_stock = float(cur.fetchone()["total"])
-    cur.execute("SELECT COUNT(*) AS n FROM inventario WHERE cantidad <= stock_minimo")
-    stock_bajo = cur.fetchone()["n"]
-
-    conn.close()
-    return render_template("admin_inventario.html",
-                           inventario=inventario,
-                           total_items=total_items,
-                           valor_stock=valor_stock,
-                           stock_bajo=stock_bajo)
-
-
-@app.route("/admin/inventario/eliminar/<int:id>")
-@admin_required
-def eliminar_inventario(id):
-    conn = get_connection()
-    cur = conn.cursor()
-    try:
-        cur.execute("DELETE FROM inventario WHERE id = %s", (id,))
-        conn.commit()
-        flash("Producto eliminado", "success")
-    except Exception as e:
-        conn.rollback()
-        flash(f"Error al eliminar producto: {e}", "danger")
-    conn.close()
-    return redirect(url_for("admin_inventario"))
-
-
 @app.route("/admin/reportes")
 @admin_required
 def admin_reportes():
@@ -5376,7 +5303,19 @@ def _asegurar_esquema_perfil():
         cursor.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS telefono VARCHAR(30)")
         cursor.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS direccion VARCHAR(255)")
         cursor.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS perfil_completo BOOLEAN DEFAULT TRUE")
-        cursor.execute("UPDATE usuarios SET perfil_completo = TRUE WHERE perfil_completo IS NULL")
+        cursor.execute("ALTER TABLE usuarios ALTER COLUMN perfil_completo SET DEFAULT FALSE")
+        cursor.execute("""
+            UPDATE usuarios
+               SET perfil_completo = (
+                   numero_documento IS NOT NULL AND btrim(numero_documento) <> ''
+                   AND telefono IS NOT NULL AND btrim(telefono) <> ''
+               )
+             WHERE perfil_completo IS NULL
+                OR perfil_completo <> (
+                   numero_documento IS NOT NULL AND btrim(numero_documento) <> ''
+                   AND telefono IS NOT NULL AND btrim(telefono) <> ''
+               )
+        """)
         cursor.execute(
             "ALTER TABLE citas ADD COLUMN IF NOT EXISTS sede VARCHAR(150) "
             "DEFAULT 'Sede Principal - El Tambo, Huancayo'"

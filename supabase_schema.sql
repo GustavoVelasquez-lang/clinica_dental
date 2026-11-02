@@ -514,32 +514,6 @@ CREATE TABLE IF NOT EXISTS odontologo_especialidad (
 
 
 -- ============================================================
--- 15. INVENTARIO
--- ============================================================
-
-CREATE TABLE IF NOT EXISTS inventario (
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-
-    nombre VARCHAR(150) NOT NULL,
-
-    categoria VARCHAR(50),
-
-    cantidad INT DEFAULT 0
-        CHECK (cantidad >= 0),
-
-    stock_minimo INT DEFAULT 0
-        CHECK (stock_minimo >= 0),
-
-    precio_compra NUMERIC(10,2)
-        CHECK (precio_compra >= 0),
-
-    proveedor VARCHAR(100),
-
-    fecha_actualizacion TIMESTAMP DEFAULT now()
-);
-
-
--- ============================================================
 -- 16. TABLA DE METAS DE KPIs
 -- ============================================================
 
@@ -782,9 +756,6 @@ ON usuarios(id_rol);
 CREATE INDEX IF NOT EXISTS idx_usuarios_fecha_registro
 ON usuarios(fecha_registro);
 
-CREATE INDEX IF NOT EXISTS idx_inventario_stock
-ON inventario(cantidad, stock_minimo);
-
 
 -- ============================================================
 -- 21. VISTA KPI: CITAS
@@ -895,31 +866,6 @@ SELECT
     ) AS pagos_completos
 
 FROM pagos;
-
-
--- ============================================================
--- 24. VISTA KPI: INVENTARIO
--- ============================================================
-
-CREATE OR REPLACE VIEW vista_kpi_inventario AS
-SELECT
-
-    COUNT(*) AS total_productos,
-
-    COUNT(*) FILTER (
-        WHERE cantidad <= stock_minimo
-    ) AS productos_stock_bajo,
-
-    COUNT(*) FILTER (
-        WHERE cantidad = 0
-    ) AS productos_sin_stock,
-
-    COALESCE(
-        SUM(cantidad * precio_compra),
-        0
-    ) AS valor_inventario
-
-FROM inventario;
 
 
 -- ============================================================
@@ -1067,36 +1013,6 @@ ORDER BY ingresos DESC;
 
 
 -- ============================================================
--- 29. VISTA: INVENTARIO CON STOCK BAJO
--- ============================================================
-
-CREATE OR REPLACE VIEW vista_stock_bajo AS
-SELECT
-
-    id,
-
-    nombre,
-
-    categoria,
-
-    cantidad,
-
-    stock_minimo,
-
-    proveedor,
-
-    precio_compra,
-
-    fecha_actualizacion
-
-FROM inventario
-
-WHERE cantidad <= stock_minimo
-
-ORDER BY cantidad ASC;
-
-
--- ============================================================
 -- 30. VISTA PRINCIPAL DEL DASHBOARD
 -- ============================================================
 
@@ -1229,28 +1145,7 @@ SELECT
         JOIN citas c
             ON ct.id_cita = c.id
         WHERE c.estado = 'atendida'
-    ) AS tratamientos_realizados,
-
-
-    -- INVENTARIO
-    (
-        SELECT COUNT(*)
-        FROM inventario
-    ) AS total_productos,
-
-
-    (
-        SELECT COUNT(*)
-        FROM inventario
-        WHERE cantidad <= stock_minimo
-    ) AS productos_stock_bajo,
-
-
-    (
-        SELECT COUNT(*)
-        FROM inventario
-        WHERE cantidad = 0
-    ) AS productos_sin_stock;
+    ) AS tratamientos_realizados;
 
 
 -- ============================================================
@@ -1447,11 +1342,9 @@ SELECT
 -- KPIs DE PACIENTES:       SELECT * FROM vista_kpi_pacientes;
 -- KPIs DE INGRESOS:        SELECT * FROM vista_kpi_ingresos;
 -- KPIs DE TRATAMIENTOS:    SELECT * FROM vista_kpi_tratamientos;
--- KPIs DE INVENTARIO:      SELECT * FROM vista_kpi_inventario;
 -- TRATAMIENTOS MÁS SOLICITADOS: SELECT * FROM vista_tratamientos_mas_solicitados;
 -- CITAS POR ODONTÓLOGO:    SELECT * FROM vista_citas_odontologo;
 -- INGRESOS POR ESPECIALIDAD: SELECT * FROM vista_ingresos_especialidad;
--- PRODUCTOS CON STOCK BAJO: SELECT * FROM vista_stock_bajo;
 -- EVOLUCIÓN MENSUAL DE CITAS:  SELECT * FROM vista_kpi_citas_mensual;
 -- EVOLUCIÓN MENSUAL DE INGRESOS: SELECT * FROM vista_kpi_ingresos_mensual;
 -- EVOLUCIÓN MENSUAL DE PACIENTES: SELECT * FROM vista_kpi_pacientes_mensual;
