@@ -1,0 +1,59 @@
+{# ============================================================
+   Paginador reutilizable para las tablas del panel admin.
+   Uso:
+     {% from "_paginacion.html" import paginador %}
+     {{ paginador('admin_pacientes', page, total_paginas, rango_paginas,
+                  total, rango_inicio, rango_fin, 'paciente') }}
+
+   Para dos tablas en la misma página usar `param` + `extra`:
+     {{ paginador('admin_facturacion', page, ..., param='page',
+                  extra={'apage': apage}) }}
+   ============================================================ #}
+{% macro paginador(endpoint, page, total_paginas, rango_paginas, total,
+                   rango_inicio, rango_fin, etiqueta='registro',
+                   param='page', extra={}) %}
+{% if total > 0 %}
+<div class="ap-paginacion">
+  <span class="ap-paginacion-info">
+    Mostrando <strong>{{ rango_inicio }}–{{ rango_fin }}</strong> de
+    <strong>{{ total }}</strong> {{ etiqueta }}{{ '' if total == 1 else 's' }}
+  </span>
+  <div class="ap-paginacion-nav">
+    {% if page > 1 %}
+      {% set qs = extra.copy() %}{% set _ = qs.update({param: page - 1}) %}
+      <a class="ap-pag-btn" aria-label="Página anterior"
+         href="{{ url_for(endpoint, **qs) }}">
+        <i class="fa-solid fa-chevron-left"></i>
+      </a>
+    {% else %}
+      <span class="ap-pag-btn ap-pag-btn--disabled" aria-hidden="true">
+        <i class="fa-solid fa-chevron-left"></i>
+      </span>
+    {% endif %}
+
+    {% for p in rango_paginas %}
+      {% if p is none %}
+        <span class="ap-pag-ellipsis">…</span>
+      {% elif p == page %}
+        <span class="ap-pag-btn ap-pag-btn--active" aria-current="page">{{ p }}</span>
+      {% else %}
+        {% set qs = extra.copy() %}{% set _ = qs.update({param: p}) %}
+        <a class="ap-pag-btn" href="{{ url_for(endpoint, **qs) }}">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if page < total_paginas %}
+      {% set qs = extra.copy() %}{% set _ = qs.update({param: page + 1}) %}
+      <a class="ap-pag-btn" aria-label="Página siguiente"
+         href="{{ url_for(endpoint, **qs) }}">
+        <i class="fa-solid fa-chevron-right"></i>
+      </a>
+    {% else %}
+      <span class="ap-pag-btn ap-pag-btn--disabled" aria-hidden="true">
+        <i class="fa-solid fa-chevron-right"></i>
+      </span>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endmacro %}

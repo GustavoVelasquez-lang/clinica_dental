@@ -1,4 +1,5 @@
 {% extends "base_admin.html" %}
+{% from "_paginacion.html" import paginador %}
 {% block title %}Personal — Sele Dent Admin{% endblock %}
 
 {% block topbar_titulo %}Personal Odontológico{% endblock %}
@@ -62,5 +63,8 @@
       {% endfor %}
     </tbody>
   </table>
+
+  {{ paginador('admin_personal', page, total_paginas, rango_paginas,
+               total, rango_inicio, rango_fin, 'odontólogo') }}
 </div>
 {% endblock %}

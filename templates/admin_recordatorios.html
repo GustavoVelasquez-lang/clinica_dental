@@ -1,4 +1,5 @@
 {% extends "base_admin.html" %}
+{% from "_paginacion.html" import paginador %}
 {% block title %}Recordatorios — Sele Dent Admin{% endblock %}
 
 {% block topbar_titulo %}Recordatorios{% endblock %}
@@ -48,6 +49,9 @@
       {% endfor %}
     </tbody>
   </table>
+
+  {{ paginador('admin_recordatorios', page, total_paginas, rango_paginas,
+               total, rango_inicio, rango_fin, 'recordatorio') }}
 </div>
 
 {% endblock %}

@@ -1,4 +1,5 @@
 {% extends "base_admin.html" %}
+{% from "_paginacion.html" import paginador %}
 {% block title %}Pacientes — Sele Dent Admin{% endblock %}
 
 {% block topbar_titulo %}Gestión de Pacientes{% endblock %}
@@ -8,7 +9,7 @@
   <div class="chart-header">
     <div>
       <h3>Pacientes registrados</h3>
-      <p>{{ pacientes|length }} paciente(s) en el sistema</p>
+      <p>{{ total }} paciente(s) en el sistema</p>
     </div>
   </div>
 
@@ -67,6 +68,9 @@
       {% endfor %}
     </tbody>
   </table>
+
+  {{ paginador('admin_pacientes', page, total_paginas, rango_paginas,
+               total, rango_inicio, rango_fin, 'paciente') }}
 </div>
 
 <!-- ══ MODAL · FAMILIARES DEL PACIENTE ══ -->

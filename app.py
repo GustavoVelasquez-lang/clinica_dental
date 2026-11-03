@@ -3583,9 +3583,24 @@ def admin_enviar_recordatorios():
 @app.route("/admin/recordatorios")
 @admin_required
 def admin_recordatorios():
+    per_page = 15
+    page = max(request.args.get("page", 1, type=int), 1)
 
     conn = get_connection()
     cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM recordatorios r
+        JOIN citas c ON r.cita_id = c.id
+        JOIN usuarios u ON c.paciente_id = u.id
+        JOIN especialidades e ON c.especialidad_id = e.id
+    """)
+    total = cursor.fetchone()["total"]
+
+    total_paginas = max(ceil(total / per_page), 1)
+    page = min(page, total_paginas)
+    offset = (page - 1) * per_page
 
     cursor.execute("""
         SELECT r.id, r.dias_antes, r.enviado,
@@ -3596,12 +3611,20 @@ def admin_recordatorios():
         JOIN usuarios u ON c.paciente_id = u.id
         JOIN especialidades e ON c.especialidad_id = e.id
         ORDER BY r.enviado DESC
-    """)
+        LIMIT %s OFFSET %s
+    """, (per_page, offset))
 
     recordatorios = cursor.fetchall()
     conn.close()
 
-    return render_template("admin_recordatorios.html", recordatorios=recordatorios)
+    return render_template(
+        "admin_recordatorios.html",
+        recordatorios=recordatorios,
+        page=page, total_paginas=total_paginas, total=total,
+        rango_inicio=offset + 1 if total else 0,
+        rango_fin=min(offset + per_page, total),
+        rango_paginas=_rango_paginas(page, total_paginas),
+    )
 
 @app.route("/admin/eliminar/<int:id>")
 @admin_required
@@ -3976,8 +3999,19 @@ def admin_dashboard():
 @app.route("/admin/pacientes")
 @admin_required
 def admin_pacientes():
+    per_page = 12
+    page = max(request.args.get("page", 1, type=int), 1)
+
     conn = get_connection()
     cur = conn.cursor()
+
+    cur.execute("SELECT COUNT(*) AS total FROM usuarios WHERE id_rol = 2")
+    total = cur.fetchone()["total"]
+
+    total_paginas = max(ceil(total / per_page), 1)
+    page = min(page, total_paginas)
+    offset = (page - 1) * per_page
+
     cur.execute("""
         SELECT u.id, u.tipo_documento, u.numero_documento, u.nombre,
                u.apepaterno, u.apematerno, u.correo, u.estado, u.fecha_registro,
@@ -3988,10 +4022,18 @@ def admin_pacientes():
         WHERE u.id_rol = 2
         GROUP BY u.id
         ORDER BY u.fecha_registro DESC
-    """)
+        LIMIT %s OFFSET %s
+    """, (per_page, offset))
     pacientes = cur.fetchall()
     conn.close()
-    return render_template("admin_pacientes.html", pacientes=pacientes, active="pacientes")
+    return render_template(
+        "admin_pacientes.html",
+        pacientes=pacientes, active="pacientes",
+        page=page, total_paginas=total_paginas, total=total,
+        rango_inicio=offset + 1 if total else 0,
+        rango_fin=min(offset + per_page, total),
+        rango_paginas=_rango_paginas(page, total_paginas),
+    )
 
 
 @app.route("/admin/paciente/<int:id>/estado")
@@ -4366,12 +4408,39 @@ def eliminar_tratamiento(id):
 @app.route("/admin/facturacion")
 @admin_required
 def admin_facturacion():
+    def _int_arg(nombre, defecto):
+        try:
+            return int(request.args.get(nombre, defecto))
+        except (TypeError, ValueError):
+            return defecto
+
+    per_page = 10
+    page = max(_int_arg("page", 1), 1)     # Pagos registrados
+    apage = max(_int_arg("apage", 1), 1)   # Adelantos / comprobantes
+
     conn = get_connection()
     cur = conn.cursor()
+
+    # ── Pagos registrados (totales globales + página actual) ──
+    cur.execute("""
+        SELECT COUNT(*) AS n, COALESCE(SUM(p.monto), 0) AS total
+        FROM pagos p
+        JOIN citas c ON p.id_cita = c.id
+        JOIN usuarios u ON c.paciente_id = u.id
+        JOIN especialidades e ON c.especialidad_id = e.id
+    """)
+    fila = cur.fetchone()
+    total_pagos = fila["n"]
+    total_pagado = float(fila["total"])
+
+    total_paginas_pagos = max(ceil(total_pagos / per_page), 1)
+    page = min(page, total_paginas_pagos)
+    offset_pagos = (page - 1) * per_page
 
     cur.execute("""
         SELECT p.id, p.tipo, p.monto, p.fecha, u.nombre AS paciente,
                e.nombre AS especialidad, c.fecha AS fecha_cita,
+               c.tipo_atencion,
                COALESCE(mp.nombre, p.gateway, 'Yape') AS metodo
         FROM pagos p
         JOIN citas c ON p.id_cita = c.id
@@ -4380,29 +4449,64 @@ def admin_facturacion():
         LEFT JOIN comprobantes_pago cp ON cp.id_pago = p.id
         LEFT JOIN metodos_pago mp ON mp.id_metodo_pago = cp.id_metodo_pago
         ORDER BY p.fecha DESC
-    """)
+        LIMIT %s OFFSET %s
+    """, (per_page, offset_pagos))
     pagos_lista = cur.fetchall()
-    total_pagado = sum(float(r["monto"]) for r in pagos_lista)
 
-    cur.execute("""
+    # ── Adelantos / comprobantes por confirmar ──
+    filtro_adelantos = """
+        WHERE c.adelanto > 0 OR c.comprobante IS NOT NULL OR c.voucher_url IS NOT NULL
+    """
+    cur.execute(f"""
+        SELECT COUNT(*) AS n, COALESCE(SUM(c.adelanto), 0) AS total
+        FROM citas c
+        JOIN usuarios u ON c.paciente_id = u.id
+        JOIN especialidades e ON c.especialidad_id = e.id
+        {filtro_adelantos}
+    """)
+    fila = cur.fetchone()
+    total_adelantos_count = fila["n"]
+    total_adelantos = float(fila["total"])
+
+    total_paginas_adelantos = max(ceil(total_adelantos_count / per_page), 1)
+    apage = min(apage, total_paginas_adelantos)
+    offset_adelantos = (apage - 1) * per_page
+
+    cur.execute(f"""
         SELECT c.id, u.nombre AS paciente, e.nombre AS especialidad,
                c.fecha, c.hora, c.adelanto, c.estado_pago, c.comprobante,
                c.tipo_atencion, c.nro_operacion, c.voucher_url, c.metodo_pago
         FROM citas c
         JOIN usuarios u ON c.paciente_id = u.id
         JOIN especialidades e ON c.especialidad_id = e.id
-        WHERE c.adelanto > 0 OR c.comprobante IS NOT NULL OR c.voucher_url IS NOT NULL
+        {filtro_adelantos}
         ORDER BY c.fecha DESC
-    """)
+        LIMIT %s OFFSET %s
+    """, (per_page, offset_adelantos))
     adelantos = cur.fetchall()
-    total_adelantos = sum(float(r["adelanto"]) for r in adelantos)
 
     conn.close()
-    return render_template("admin_facturacion.html",
-                           pagos_lista=pagos_lista,
-                           total_pagado=total_pagado,
-                           adelantos=adelantos,
-                           total_adelantos=total_adelantos)
+    return render_template(
+        "admin_facturacion.html",
+        # Pagos registrados
+        pagos_lista=pagos_lista,
+        total_pagado=total_pagado,
+        total_pagos=total_pagos,
+        page=page,
+        total_paginas_pagos=total_paginas_pagos,
+        rango_inicio_pagos=offset_pagos + 1 if total_pagos else 0,
+        rango_fin_pagos=min(offset_pagos + per_page, total_pagos),
+        rango_paginas_pagos=_rango_paginas(page, total_paginas_pagos),
+        # Adelantos / comprobantes
+        adelantos=adelantos,
+        total_adelantos=total_adelantos,
+        total_adelantos_count=total_adelantos_count,
+        apage=apage,
+        total_paginas_adelantos=total_paginas_adelantos,
+        rango_inicio_adelantos=offset_adelantos + 1 if total_adelantos_count else 0,
+        rango_fin_adelantos=min(offset_adelantos + per_page, total_adelantos_count),
+        rango_paginas_adelantos=_rango_paginas(apage, total_paginas_adelantos),
+    )
 
 
 # Datos institucionales que se imprimen en el comprobante.
@@ -4769,9 +4873,28 @@ def facturacion_pdf(pago_id):
 @app.route("/admin/personal")
 @admin_required
 def admin_personal():
+    per_page = 10
+    page = max(request.args.get("page", 1, type=int), 1)
+
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("""
+
+    filtro_personal = """
+        WHERE u.id IN (
+            SELECT DISTINCT odontologo_id FROM citas WHERE odontologo_id IS NOT NULL
+            UNION SELECT DISTINCT odontologo_id FROM horarios WHERE odontologo_id IS NOT NULL
+            UNION SELECT DISTINCT odontologo_id FROM odontologo_especialidad WHERE odontologo_id IS NOT NULL
+        )
+    """
+
+    cur.execute(f"SELECT COUNT(*) AS total FROM usuarios u {filtro_personal}")
+    total = cur.fetchone()["total"]
+
+    total_paginas = max(ceil(total / per_page), 1)
+    page = min(page, total_paginas)
+    offset = (page - 1) * per_page
+
+    cur.execute(f"""
         SELECT DISTINCT u.id, u.nombre, u.apepaterno, u.apematerno, u.correo,
                u.tipo_documento, u.numero_documento, u.estado,
                ARRAY(
@@ -4780,16 +4903,20 @@ def admin_personal():
                    WHERE oe.odontologo_id = u.id
                ) AS especialidades
         FROM usuarios u
-        WHERE u.id IN (
-            SELECT DISTINCT odontologo_id FROM citas WHERE odontologo_id IS NOT NULL
-            UNION SELECT DISTINCT odontologo_id FROM horarios WHERE odontologo_id IS NOT NULL
-            UNION SELECT DISTINCT odontologo_id FROM odontologo_especialidad WHERE odontologo_id IS NOT NULL
-        )
+        {filtro_personal}
         ORDER BY u.nombre
-    """)
+        LIMIT %s OFFSET %s
+    """, (per_page, offset))
     personal = cur.fetchall()
     conn.close()
-    return render_template("admin_personal.html", personal=personal)
+    return render_template(
+        "admin_personal.html",
+        personal=personal,
+        page=page, total_paginas=total_paginas, total=total,
+        rango_inicio=offset + 1 if total else 0,
+        rango_fin=min(offset + per_page, total),
+        rango_paginas=_rango_paginas(page, total_paginas),
+    )
 
 
 @app.route("/admin/reportes")

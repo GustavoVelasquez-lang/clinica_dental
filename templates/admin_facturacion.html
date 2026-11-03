@@ -1,4 +1,5 @@
 {% extends "base_admin.html" %}
+{% from "_paginacion.html" import paginador %}
 {% block title %}Facturación — Sele Dent Admin{% endblock %}
 
 {% block topbar_titulo %}Facturación{% endblock %}
@@ -17,7 +18,7 @@
   </div>
   <div class="kpi-card c-blue">
     <div class="kpi-header"><div class="kpi-icon"><i class="fa-solid fa-folder-open"></i></div></div>
-    <div class="kpi-num">{{ pagos_lista|length }}</div>
+    <div class="kpi-num">{{ total_pagos }}</div>
     <div class="kpi-label">Pagos registrados</div>
   </div>
 </div>
@@ -63,6 +64,10 @@
       {% endfor %}
     </tbody>
   </table>
+
+  {{ paginador('admin_facturacion', page, total_paginas_pagos, rango_paginas_pagos,
+               total_pagos, rango_inicio_pagos, rango_fin_pagos, 'pago',
+               param='page', extra={'apage': apage}) }}
 </div>
 
 <div class="chart-card">
@@ -114,5 +119,9 @@
       {% endfor %}
     </tbody>
   </table>
+
+  {{ paginador('admin_facturacion', apage, total_paginas_adelantos, rango_paginas_adelantos,
+               total_adelantos_count, rango_inicio_adelantos, rango_fin_adelantos, 'adelanto',
+               param='apage', extra={'page': page}) }}
 </div>
 {% endblock %}
