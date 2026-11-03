@@ -1,13 +1,13 @@
 {% extends "base_admin.html" %}
-{% block title %}Nuevo Odontologo — Sele Dent Admin{% endblock %}
+{% block title %}Nuevo Odontólogo — Sele Dent Admin{% endblock %}
 
-{% block topbar_titulo %}Registrar Odontologo{% endblock %}
+{% block topbar_titulo %}Registrar Odontólogo{% endblock %}
 
 {% block admin_content %}
 <div class="chart-card card-max">
   <div class="chart-header">
     <div>
-      <h3>Nuevo odontologo</h3>
+      <h3>Nuevo odontólogo</h3>
       <p>Registra un profesional y asocia sus especialidades</p>
     </div>
   </div>
@@ -42,12 +42,12 @@
         </label>
         {% endfor %}
       </div>
-      <p style="font-size:11px;color:var(--muted);margin-top:4px;">La contrasena por defecto sera el DNI del odontologo.</p>
+      <p style="font-size:11px;color:var(--muted);margin-top:4px;">La contraseña por defecto será el DNI del odontólogo.</p>
     </div>
 
     <div class="flex" style="justify-content:flex-end;">
       <a href="{{ url_for('admin_personal') }}" class="btn-a btn-ghost btn-xl">Volver</a>
-      <button type="submit" class="btn-a btn-solid btn-xl">Registrar odontologo</button>
+      <button type="submit" class="btn-a btn-solid btn-xl">Registrar odontólogo</button>
     </div>
   </form>
 </div>

@@ -1,4 +1,4 @@
-﻿// DNI lookup for registration - autofill and lock name fields
+// DNI lookup for registration - autofill and lock name fields
 (function(){
   var dniInput = document.getElementById('dni');
   var btn = document.getElementById('btnConsultarDni');

@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% block title %}Auditoria — Sele Dent Admin{% endblock %}
+{% block title %}Auditoría — Sele Dent Admin{% endblock %}
 
-{% block topbar_titulo %}Log de Auditoria{% endblock %}
+{% block topbar_titulo %}Log de Auditoría{% endblock %}
 
 {% block admin_content %}
 <div class="chart-card">
@@ -17,7 +17,7 @@
       <tr>
         <th>Fecha</th>
         <th>Usuario</th>
-        <th>Accion</th>
+        <th>Acción</th>
         <th>Detalle</th>
         <th>IP</th>
       </tr>
@@ -32,7 +32,7 @@
         <td class="tb-muted">{{ r.ip or '-' }}</td>
       </tr>
       {% else %}
-      <tr><td colspan="5" class="empty">No hay registros de auditoria.</td></tr>
+      <tr><td colspan="5" class="empty">No hay registros de auditoría.</td></tr>
       {% endfor %}
     </tbody>
   </table>
@@ -42,7 +42,7 @@
     {% if page > 1 %}
       <a href="?page={{ page-1 }}" class="btn-a btn-teal">Anterior</a>
     {% endif %}
-    <span style="padding:8px 16px;color:var(--muted);font-size:13px;">Pagina {{ page }} de {{ total_pages }}</span>
+    <span style="padding:8px 16px;color:var(--muted);font-size:13px;">Página {{ page }} de {{ total_pages }}</span>
     {% if page < total_pages %}
       <a href="?page={{ page+1 }}" class="btn-a btn-teal">Siguiente</a>
     {% endif %}

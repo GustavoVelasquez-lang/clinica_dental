@@ -1,17 +1,17 @@
 {% extends "base_admin.html" %}
 {% block title %}Horarios — Sele Dent Admin{% endblock %}
 
-{% block topbar_titulo %}Gestion de Horarios{% endblock %}
+{% block topbar_titulo %}Gestión de Horarios{% endblock %}
 
 {% block admin_content %}
 
 <div class="chart-card" style="margin-bottom:28px;">
   <div class="chart-header">
-    <div><h3>Nuevo horario</h3><p>Asigna un bloque horario a un odontologo</p></div>
+    <div><h3>Nuevo horario</h3><p>Asigna un bloque horario a un odontólogo</p></div>
   </div>
   <form method="POST" class="frm-grid">
     <div class="frm-col" style="min-width:200px;">
-      <label class="lab">Odontologo *</label>
+      <label class="lab">Odontólogo *</label>
       <select name="odontologo_id" required class="sel">
         <option value="">Seleccionar...</option>
         {% for o in odontologos %}
@@ -20,14 +20,14 @@
       </select>
     </div>
     <div class="frm-col" style="min-width:140px;">
-      <label class="lab">Dia *</label>
+      <label class="lab">Día *</label>
       <select name="dia_semana" required class="sel">
         <option value="1">Lunes</option>
         <option value="2">Martes</option>
-        <option value="3">Miercoles</option>
+        <option value="3">Miércoles</option>
         <option value="4">Jueves</option>
         <option value="5">Viernes</option>
-        <option value="6">Sabado</option>
+        <option value="6">Sábado</option>
         <option value="0">Domingo</option>
       </select>
     </div>
@@ -47,20 +47,20 @@
 
 <div class="chart-card">
   <div class="chart-header">
-    <div><h3>Horarios registrados</h3><p>Disponibilidad de los odontologos</p></div>
+    <div><h3>Horarios registrados</h3><p>Disponibilidad de los odontólogos</p></div>
   </div>
   <table class="tb">
     <thead>
       <tr>
-        <th>Odontologo</th>
-        <th>Dia</th>
+        <th>Odontólogo</th>
+        <th>Día</th>
         <th>Desde</th>
         <th>Hasta</th>
         <th>Acciones</th>
       </tr>
     </thead>
     <tbody>
-      {% set dias = {0:'Domingo',1:'Lunes',2:'Martes',3:'Miercoles',4:'Jueves',5:'Viernes',6:'Sabado'} %}
+      {% set dias = {0:'Domingo',1:'Lunes',2:'Martes',3:'Miércoles',4:'Jueves',5:'Viernes',6:'Sábado'} %}
       {% for h in horarios %}
       <tr>
         <td class="tb-strong">{{ h.odontologo_nombre }}</td>
