@@ -1348,3 +1348,31 @@ SELECT
 -- EVOLUCIÓN MENSUAL DE CITAS:  SELECT * FROM vista_kpi_citas_mensual;
 -- EVOLUCIÓN MENSUAL DE INGRESOS: SELECT * FROM vista_kpi_ingresos_mensual;
 -- EVOLUCIÓN MENSUAL DE PACIENTES: SELECT * FROM vista_kpi_pacientes_mensual;
+
+-- ============================================================
+-- 36. CITAS ELIMINADAS (soft delete desde el panel admin)
+-- ============================================================
+-- Cuando el administrador presiona el tacho rojo en Admin → Citas, la
+-- cita se copia aquí y luego se elimina de `citas`. El filtro "Eliminadas"
+-- lee de esta tabla. Se crea también de forma automática al arrancar la app.
+
+CREATE TABLE IF NOT EXISTS citas_eliminadas (
+    id SERIAL PRIMARY KEY,
+    cita_id INT NOT NULL,
+    paciente VARCHAR(200),
+    correo VARCHAR(150),
+    especialidad VARCHAR(120),
+    tratamiento VARCHAR(200),
+    tipo_atencion VARCHAR(80),
+    fecha DATE,
+    hora TIME,
+    monto_total NUMERIC(10,2),
+    adelanto NUMERIC(10,2),
+    estado VARCHAR(30),
+    estado_pago VARCHAR(40),
+    eliminada_por INT,
+    eliminada_en TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_citas_eliminadas_fecha
+    ON citas_eliminadas(eliminada_en DESC);

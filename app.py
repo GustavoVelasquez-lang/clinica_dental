@@ -3414,6 +3414,71 @@ def _rango_paginas(actual, total, margen=1):
     return resultado
 
 
+def _render_citas_eliminadas(page, per_page, q, hoy):
+    """Listado de citas eliminadas (soft delete) con búsqueda y paginación."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    condiciones = []
+    params = []
+    if q:
+        like = f"%{q}%"
+        condiciones.append("""(
+            paciente ILIKE %s OR especialidad ILIKE %s
+            OR tratamiento ILIKE %s OR tipo_atencion ILIKE %s
+            OR CAST(cita_id AS TEXT) ILIKE %s
+        )""")
+        params.extend([like] * 5)
+    where = ("WHERE " + " AND ".join(condiciones)) if condiciones else ""
+
+    cursor.execute(f"SELECT COUNT(*) AS total FROM citas_eliminadas {where}", params)
+    total = cursor.fetchone()["total"]
+
+    total_paginas = max(ceil(total / per_page), 1)
+    page = min(max(page, 1), total_paginas)
+    offset = (page - 1) * per_page
+
+    cursor.execute(f"""
+        SELECT id, cita_id, paciente, correo, especialidad, tratamiento,
+               tipo_atencion, fecha, hora, monto_total, adelanto,
+               estado, estado_pago, eliminada_en
+        FROM citas_eliminadas
+        {where}
+        ORDER BY eliminada_en DESC, id DESC
+        LIMIT %s OFFSET %s
+    """, params + [per_page, offset])
+    eliminadas = cursor.fetchall()
+
+    # KPIs globales (mismas tarjetas del encabezado)
+    cursor.execute("""
+        SELECT COUNT(*) AS total,
+               COUNT(*) FILTER (WHERE estado = 'pendiente') AS pendientes,
+               COUNT(*) FILTER (WHERE estado = 'confirmada') AS confirmadas,
+               COUNT(*) FILTER (WHERE fecha = %s) AS hoy,
+               COUNT(*) FILTER (WHERE estado_pago = 'pendiente_verificacion') AS por_verificar
+        FROM citas
+    """, (hoy,))
+    kpi = cursor.fetchone()
+    conn.close()
+
+    return render_template(
+        "admin_citas.html",
+        citas=[], grupos=[],
+        # Paginación
+        page=page, per_page=per_page, total=total, total_paginas=total_paginas,
+        rango_inicio=offset + 1 if total else 0,
+        rango_fin=min(offset + per_page, total),
+        rango_paginas=_rango_paginas(page, total_paginas),
+        estado="eliminadas", q=q,
+        # KPIs globales
+        total_citas=kpi["total"], kpi_pendientes=kpi["pendientes"],
+        kpi_confirmadas=kpi["confirmadas"], citas_hoy=kpi["hoy"],
+        por_verificar=kpi["por_verificar"],
+        # Citas eliminadas
+        eliminadas=eliminadas,
+    )
+
+
 @app.route("/admin/citas")
 @admin_required
 def admin_citas():
@@ -3429,6 +3494,10 @@ def admin_citas():
     estado = (request.args.get("estado") or "todos").strip().lower()
     q = (request.args.get("q") or "").strip()
     hoy = date.today()
+
+    # ── Filtro especial: citas eliminadas (soft delete) ──
+    if estado == "eliminadas":
+        return _render_citas_eliminadas(page, per_page, q, hoy)
 
     # ── Filtros → cláusula WHERE con parámetros ──
     condiciones = []
@@ -3633,10 +3702,54 @@ def eliminar_cita(id):
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM citas WHERE id = %s", (id,))
-    conn.commit()
-    conn.close()
-    _log_auditoria("eliminar_cita", detalle=f"cita #{id}")
+    try:
+        # Copia de la cita antes de borrarla, para mostrarla en "Eliminadas".
+        cursor.execute("""
+            SELECT c.id, c.fecha, c.hora, c.estado, c.estado_pago,
+                   c.monto_total, c.adelanto, c.tipo_atencion,
+                   TRIM(CONCAT_WS(' ', u.nombre, u.apepaterno, u.apematerno)) AS paciente,
+                   u.correo, e.nombre AS especialidad,
+                   (
+                       SELECT t.nombre
+                       FROM cita_tratamiento ct
+                       JOIN tratamientos t ON t.id_tratamiento = ct.id_tratamiento
+                       WHERE ct.id_cita = c.id
+                       ORDER BY ct.id
+                       LIMIT 1
+                   ) AS tratamiento
+            FROM citas c
+            JOIN usuarios u ON c.paciente_id = u.id
+            JOIN especialidades e ON c.especialidad_id = e.id
+            WHERE c.id = %s
+        """, (id,))
+        cita = cursor.fetchone()
+
+        if cita:
+            cursor.execute("""
+                INSERT INTO citas_eliminadas
+                    (cita_id, paciente, correo, especialidad, tratamiento,
+                     tipo_atencion, fecha, hora, monto_total, adelanto,
+                     estado, estado_pago, eliminada_por)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                cita["id"], cita["paciente"], cita["correo"], cita["especialidad"],
+                cita["tratamiento"], cita["tipo_atencion"], cita["fecha"], cita["hora"],
+                cita["monto_total"], cita["adelanto"], cita["estado"], cita["estado_pago"],
+                session.get("usuario_id"),
+            ))
+            cursor.execute("DELETE FROM citas WHERE id = %s", (id,))
+            conn.commit()
+            _log_auditoria("eliminar_cita", detalle=f"cita #{id}")
+            flash("Cita movida a Eliminadas", "success")
+        else:
+            conn.rollback()
+            flash("La cita ya no existe.", "warning")
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error al eliminar la cita #{id}: {e}")
+        flash(f"Error al eliminar la cita: {e}", "danger")
+    finally:
+        conn.close()
 
     return redirect(url_for("admin_citas"))
 
@@ -5956,7 +6069,41 @@ def crear_tabla_auditoria():
         logger.error(f"Error al crear tabla auditoria: {e}")
 
 
+def crear_tabla_citas_eliminadas():
+    """Crea (idempotente) la tabla que conserva las citas eliminadas."""
+    try:
+        with db_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS citas_eliminadas (
+                    id SERIAL PRIMARY KEY,
+                    cita_id INT NOT NULL,
+                    paciente VARCHAR(200),
+                    correo VARCHAR(150),
+                    especialidad VARCHAR(120),
+                    tratamiento VARCHAR(200),
+                    tipo_atencion VARCHAR(80),
+                    fecha DATE,
+                    hora TIME,
+                    monto_total NUMERIC(10,2),
+                    adelanto NUMERIC(10,2),
+                    estado VARCHAR(30),
+                    estado_pago VARCHAR(40),
+                    eliminada_por INT,
+                    eliminada_en TIMESTAMP DEFAULT NOW()
+                )
+            """)
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_citas_eliminadas_fecha
+                ON citas_eliminadas(eliminada_en DESC)
+            """)
+            conn.commit()
+    except Exception as e:
+        logger.error(f"Error al crear tabla citas_eliminadas: {e}")
+
+
 crear_tabla_auditoria()
+crear_tabla_citas_eliminadas()
 
 
 if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":

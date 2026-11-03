@@ -1,4 +1,5 @@
 {% extends "base_admin.html" %}
+{% from "_paginacion.html" import paginador %}
 {% block title %}Citas — Sele Dent Admin{% endblock %}
 
 {% block topbar_titulo %}Gestión de Citas{% endblock %}
@@ -89,7 +90,7 @@
   <!-- ══ TOOLBAR ══ -->
   {% set tabs = [('todos', 'Todas'), ('pendiente', 'Pendientes'),
                  ('confirmada', 'Confirmadas'), ('atendida', 'Atendidas'),
-                 ('cancelada', 'Canceladas')] %}
+                 ('cancelada', 'Canceladas'), ('eliminadas', 'Eliminadas')] %}
   <form class="ctc-toolbar" id="ctcFiltrosForm" method="get"
         action="{{ url_for('admin_citas') }}">
     <div class="ctc-search">
@@ -110,6 +111,97 @@
 
   <!-- ══ TABLA (agrupada por fecha de agendamiento) ══ -->
   <div class="chart-card ctc-card">
+    {% if estado == 'eliminadas' %}
+    <!-- ══ CITAS ELIMINADAS (soft delete) ══ -->
+    <div class="ctc-scroll">
+      <table class="tb ctc-table">
+        <thead>
+          <tr>
+            <th class="ctc-col-id">#</th>
+            <th>Paciente</th>
+            <th>Especialidad</th>
+            <th>Tratamiento</th>
+            <th>Fecha de la cita</th>
+            <th>Hora</th>
+            <th>Monto</th>
+            <th>Estado anterior</th>
+            <th>Eliminada</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in eliminadas %}
+          <tr class="ctc-row">
+            <td class="ctc-col-id"><span class="ctc-id">#{{ e.cita_id }}</span></td>
+
+            <td>
+              <div class="ctc-pac">
+                <div class="ctc-avatar">{{ (e.paciente or '?')[0]|upper }}</div>
+                <div class="ctc-pac-info">
+                  <span class="ctc-pac-name">{{ e.paciente or '—' }}</span>
+                  {% if e.correo %}<span class="ctc-pac-familiar">{{ e.correo }}</span>{% endif %}
+                </div>
+              </div>
+            </td>
+
+            <td><span class="ctc-esp">{{ e.especialidad or '—' }}</span></td>
+
+            <td>
+              {% if e.tratamiento %}
+                <span class="ctc-trt">{{ e.tratamiento }}</span>
+              {% elif e.tipo_atencion %}
+                <span class="ctc-trt ctc-trt--tipo">{{ e.tipo_atencion }}</span>
+              {% else %}
+                <span class="tb-muted">—</span>
+              {% endif %}
+            </td>
+
+            <td class="tb-nowrap">
+              <span class="ctc-fecha">{{ e.fecha.strftime('%d/%m/%Y') if e.fecha else '—' }}</span>
+            </td>
+            <td><span class="pill-time">{{ e.hora.strftime('%H:%M') if e.hora else '—' }}</span></td>
+
+            <td class="tb-nowrap">
+              <span class="ctc-trt">S/ {{ '%.2f'|format(e.monto_total or 0) }}</span>
+            </td>
+
+            <td>
+              <div class="ctc-estado">
+                {% if e.estado == 'pendiente' %}
+                  <span class="pill pill-amber">Pendiente</span>
+                {% elif e.estado == 'confirmada' %}
+                  <span class="pill pill-teal">Confirmada</span>
+                {% elif e.estado in ['completada', 'atendida', 'atendido'] %}
+                  <span class="pill pill-gray">Completada</span>
+                {% elif e.estado in ['cancelada', 'cancelado'] %}
+                  <span class="pill pill-red">Cancelada</span>
+                {% else %}
+                  <span class="pill pill-gray">{{ e.estado or '—' }}</span>
+                {% endif %}
+              </div>
+            </td>
+
+            <td class="tb-nowrap">
+              <span class="tb-muted">
+                {{ e.eliminada_en.strftime('%d/%m/%Y %H:%M') if e.eliminada_en else '—' }}
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="9" class="empty">
+              No hay citas eliminadas todavía. Al presionar el tacho rojo, la cita se moverá aquí.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {{ paginador('admin_citas', page, total_paginas, rango_paginas,
+                 total, rango_inicio, rango_fin, 'cita eliminada',
+                 param='page', extra={'estado': 'eliminadas', 'q': q, 'per_page': per_page},
+                 plural='citas eliminadas') }}
+    {% else %}
     <div class="ctc-scroll">
       <table class="tb ctc-table">
         <thead>
@@ -319,6 +411,7 @@
           <p class="ctc-empty-sub">Las citas agendadas por los pacientes aparecerán aquí.</p>
         </div>
       {% endif %}
+    {% endif %}
     {% endif %}
   </div>
 

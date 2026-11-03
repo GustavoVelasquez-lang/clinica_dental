@@ -11,12 +11,13 @@
    ============================================================ #}
 {% macro paginador(endpoint, page, total_paginas, rango_paginas, total,
                    rango_inicio, rango_fin, etiqueta='registro',
-                   param='page', extra={}) %}
+                   param='page', extra={}, plural=None) %}
 {% if total > 0 %}
 <div class="ap-paginacion">
   <span class="ap-paginacion-info">
     Mostrando <strong>{{ rango_inicio }}–{{ rango_fin }}</strong> de
-    <strong>{{ total }}</strong> {{ etiqueta }}{{ '' if total == 1 else 's' }}
+    <strong>{{ total }}</strong>
+    {{ etiqueta if total == 1 else (plural or etiqueta ~ 's') }}
   </span>
   <div class="ap-paginacion-nav">
     {% if page > 1 %}
