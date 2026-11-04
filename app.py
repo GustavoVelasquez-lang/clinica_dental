@@ -5548,6 +5548,7 @@ def consultar_dni(dni):
 
 
 @app.route("/api/consultar_dni/<dni>")
+@login_required
 def consultar_dni_legacy(dni):
     """Alias compatible con la ruta antigua (guion bajo)."""
     return consultar_dni(dni)
