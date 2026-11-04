@@ -9,10 +9,12 @@
 -- Este script:
 --   1. Crea la tabla `citas_eliminadas` (idempotente).
 --   2. Crea un índice por fecha de eliminación.
---   3. Reconstruye (backfill) las eliminaciones antiguas usando la
---      tabla `auditoria` (accion = 'eliminar_cita', detalle = 'cita #N').
---      Solo se recupera el ID y la fecha; el resto queda en NULL porque
---      la fila original ya no existe.
+--   3. Agrega las columnas del historial de restauración.
+--
+-- NOTA: las eliminaciones antiguas (anteriores a este módulo) NO se
+-- recuperan. Solo existía el registro de auditoría ("cita #N") y esos
+-- registros no tienen paciente ni montos, así que se descartaron para
+-- no mostrar filas vacías en el filtro "Eliminadas".
 -- ============================================================
 
 BEGIN;
@@ -46,29 +48,7 @@ ALTER TABLE citas_eliminadas ADD COLUMN IF NOT EXISTS restaurada_por INT;
 CREATE INDEX IF NOT EXISTS idx_citas_eliminadas_fecha
     ON citas_eliminadas(eliminada_en DESC);
 
--- 3. Backfill desde auditoría
---    DISTINCT ON conserva solo la última eliminación registrada por cita.
---    NOT EXISTS evita duplicar las que ya guardó el código nuevo.
-INSERT INTO citas_eliminadas (cita_id, eliminada_por, eliminada_en)
-SELECT a.cita_id, a.usuario_id, a.created_at
-FROM (
-    SELECT DISTINCT ON (NULLIF(regexp_replace(detalle, '\D', '', 'g'), '')::int)
-           NULLIF(regexp_replace(detalle, '\D', '', 'g'), '')::int AS cita_id,
-           usuario_id,
-           created_at
-    FROM auditoria
-    WHERE accion = 'eliminar_cita'
-      AND detalle ~ 'cita #[0-9]+'
-    ORDER BY NULLIF(regexp_replace(detalle, '\D', '', 'g'), '')::int,
-             created_at DESC
-) AS a
-WHERE a.cita_id IS NOT NULL
-  AND NOT EXISTS (
-      SELECT 1 FROM citas c WHERE c.id = a.cita_id
-  )
-  AND NOT EXISTS (
-      SELECT 1 FROM citas_eliminadas ce WHERE ce.cita_id = a.cita_id
-  );
+-- 3. (Sin backfill) Las eliminaciones antiguas no se recuperan.
 
 COMMIT;
 
