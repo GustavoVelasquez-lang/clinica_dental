@@ -33,8 +33,14 @@ CREATE TABLE IF NOT EXISTS citas_eliminadas (
     estado VARCHAR(30),
     estado_pago VARCHAR(40),
     eliminada_por INT,
-    eliminada_en TIMESTAMP DEFAULT NOW()
+    eliminada_en TIMESTAMP DEFAULT NOW(),
+    restaurada_en TIMESTAMP,
+    restaurada_por INT
 );
+
+-- 1b. Columnas de historial de restauración (para tablas ya existentes)
+ALTER TABLE citas_eliminadas ADD COLUMN IF NOT EXISTS restaurada_en TIMESTAMP;
+ALTER TABLE citas_eliminadas ADD COLUMN IF NOT EXISTS restaurada_por INT;
 
 -- 2. Índice para ordenar el listado por fecha de eliminación
 CREATE INDEX IF NOT EXISTS idx_citas_eliminadas_fecha

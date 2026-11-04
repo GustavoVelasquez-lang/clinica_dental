@@ -126,6 +126,7 @@
             <th>Monto</th>
             <th>Estado anterior</th>
             <th>Eliminada</th>
+            <th class="ctc-col-center">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -185,10 +186,22 @@
                 {{ e.eliminada_en.strftime('%d/%m/%Y %H:%M') if e.eliminada_en else '—' }}
               </span>
             </td>
+
+            <td class="ctc-col-center">
+              {% if e.puede_restaurar %}
+                <a href="{{ url_for('restaurar_cita', id=e.id) }}"
+                   onclick="return confirm('¿Restaurar esta cita? Volverá a la agenda como cita activa.')"
+                   class="btn-a btn-teal" title="Restaurar cita">
+                  <i class="fa-solid fa-rotate-left me-1"></i>Restaurar
+                </a>
+              {% else %}
+                <span class="tb-muted" title="Sin datos suficientes para restaurar">—</span>
+              {% endif %}
+            </td>
           </tr>
           {% else %}
           <tr>
-            <td colspan="9" class="empty">
+            <td colspan="10" class="empty">
               No hay citas eliminadas todavía. Al presionar el tacho rojo, la cita se moverá aquí.
             </td>
           </tr>

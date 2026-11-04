@@ -3419,7 +3419,7 @@ def _render_citas_eliminadas(page, per_page, q, hoy):
     conn = get_connection()
     cursor = conn.cursor()
 
-    condiciones = []
+    condiciones = ["restaurada_en IS NULL"]
     params = []
     if q:
         like = f"%{q}%"
@@ -3429,7 +3429,7 @@ def _render_citas_eliminadas(page, per_page, q, hoy):
             OR CAST(cita_id AS TEXT) ILIKE %s
         )""")
         params.extend([like] * 5)
-    where = ("WHERE " + " AND ".join(condiciones)) if condiciones else ""
+    where = "WHERE " + " AND ".join(condiciones)
 
     cursor.execute(f"SELECT COUNT(*) AS total FROM citas_eliminadas {where}", params)
     total = cursor.fetchone()["total"]
@@ -3448,6 +3448,11 @@ def _render_citas_eliminadas(page, per_page, q, hoy):
         LIMIT %s OFFSET %s
     """, params + [per_page, offset])
     eliminadas = cursor.fetchall()
+
+    # Solo las eliminaciones con datos completos se pueden restaurar
+    # (las recuperadas desde `auditoria` solo tienen el ID y la fecha).
+    for e in eliminadas:
+        e["puede_restaurar"] = bool(e["paciente"] and e["especialidad"])
 
     # KPIs globales (mismas tarjetas del encabezado)
     cursor.execute("""
@@ -3752,6 +3757,108 @@ def eliminar_cita(id):
         conn.close()
 
     return redirect(url_for("admin_citas"))
+
+@app.route("/admin/restaurar/<int:id>")
+@admin_required
+def restaurar_cita(id):
+    """Reinserta en `citas` una cita eliminada usando el snapshot guardado."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            SELECT id, cita_id, paciente, correo, especialidad, tipo_atencion,
+                   fecha, hora, monto_total, adelanto, estado, estado_pago,
+                   restaurada_en
+            FROM citas_eliminadas
+            WHERE id = %s
+            FOR UPDATE
+        """, (id,))
+        eliminada = cursor.fetchone()
+
+        if not eliminada:
+            conn.rollback()
+            flash("La cita eliminada ya no existe.", "warning")
+            return redirect(url_for("admin_citas", estado="eliminadas"))
+
+        if eliminada["restaurada_en"]:
+            conn.rollback()
+            flash("Esta cita ya fue restaurada anteriormente.", "warning")
+            return redirect(url_for("admin_citas", estado="eliminadas"))
+
+        if not eliminada["paciente"] or not eliminada["especialidad"]:
+            conn.rollback()
+            flash("Esta cita antigua no tiene datos suficientes para restaurarla.", "warning")
+            return redirect(url_for("admin_citas", estado="eliminadas"))
+
+        # Resolver el paciente por correo (el snapshot no guarda el ID)
+        cursor.execute("""
+            SELECT u.id
+            FROM usuarios u
+            JOIN roles r ON u.id_rol = r.id
+            WHERE LOWER(u.correo) = LOWER(%s)
+            ORDER BY (r.nombre = 'paciente') DESC, u.id
+            LIMIT 1
+        """, (eliminada["correo"] or "",))
+        paciente = cursor.fetchone()
+        if not paciente:
+            conn.rollback()
+            flash("No se encontró al paciente en el sistema; no se puede restaurar.", "danger")
+            return redirect(url_for("admin_citas", estado="eliminadas"))
+
+        # Resolver la especialidad por nombre
+        cursor.execute(
+            "SELECT id FROM especialidades WHERE LOWER(nombre) = LOWER(%s) LIMIT 1",
+            (eliminada["especialidad"],),
+        )
+        especialidad = cursor.fetchone()
+        if not especialidad:
+            conn.rollback()
+            flash("No se encontró la especialidad de la cita; no se puede restaurar.", "danger")
+            return redirect(url_for("admin_citas", estado="eliminadas"))
+
+        # Evitar duplicar una cita activa del mismo paciente en la misma fecha y hora
+        cursor.execute("""
+            SELECT id FROM citas
+            WHERE paciente_id = %s AND fecha = %s AND hora = %s
+            LIMIT 1
+        """, (paciente["id"], eliminada["fecha"], eliminada["hora"]))
+        if cursor.fetchone():
+            conn.rollback()
+            flash("Ya existe una cita activa de este paciente en esa fecha y hora.", "warning")
+            return redirect(url_for("admin_citas", estado="eliminadas"))
+
+        cursor.execute("""
+            INSERT INTO citas
+                (paciente_id, especialidad_id, odontologo_id, fecha, hora,
+                 estado, estado_pago, monto_total, adelanto, tipo_atencion)
+            VALUES (%s, %s, NULL, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+        """, (
+            paciente["id"], especialidad["id"], eliminada["fecha"], eliminada["hora"],
+            eliminada["estado"] or "pendiente", eliminada["estado_pago"] or "pendiente",
+            eliminada["monto_total"], eliminada["adelanto"], eliminada["tipo_atencion"],
+        ))
+        nueva_id = cursor.fetchone()["id"]
+
+        # No se borra el registro: se marca como restaurado (historial)
+        cursor.execute("""
+            UPDATE citas_eliminadas
+               SET restaurada_en = NOW(), restaurada_por = %s
+             WHERE id = %s AND restaurada_en IS NULL
+        """, (session.get("usuario_id"), id))
+
+        conn.commit()
+        _log_auditoria("restaurar_cita", detalle=f"cita #{nueva_id} (desde eliminada #{id})")
+        flash("Cita restaurada correctamente", "success")
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error al restaurar la cita eliminada #{id}: {e}")
+        flash(f"Error al restaurar la cita: {e}", "danger")
+    finally:
+        conn.close()
+
+    return redirect(url_for("admin_citas", estado="eliminadas"))
 
 @app.route("/admin/editar/<int:id>", methods=["GET", "POST"])
 @admin_required
@@ -6092,6 +6199,16 @@ def crear_tabla_citas_eliminadas():
                     eliminada_por INT,
                     eliminada_en TIMESTAMP DEFAULT NOW()
                 )
+            """)
+            # Columnas del historial de restauración (idempotente para
+            # instalaciones que ya tenían la tabla creada).
+            cur.execute("""
+                ALTER TABLE citas_eliminadas
+                ADD COLUMN IF NOT EXISTS restaurada_en TIMESTAMP
+            """)
+            cur.execute("""
+                ALTER TABLE citas_eliminadas
+                ADD COLUMN IF NOT EXISTS restaurada_por INT
             """)
             cur.execute("""
                 CREATE INDEX IF NOT EXISTS idx_citas_eliminadas_fecha

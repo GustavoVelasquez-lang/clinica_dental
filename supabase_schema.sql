@@ -1371,7 +1371,9 @@ CREATE TABLE IF NOT EXISTS citas_eliminadas (
     estado VARCHAR(30),
     estado_pago VARCHAR(40),
     eliminada_por INT,
-    eliminada_en TIMESTAMP DEFAULT NOW()
+    eliminada_en TIMESTAMP DEFAULT NOW(),
+    restaurada_en TIMESTAMP,
+    restaurada_por INT
 );
 
 CREATE INDEX IF NOT EXISTS idx_citas_eliminadas_fecha
