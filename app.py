@@ -2446,6 +2446,19 @@ def nosotros():
     conn.close()
     return render_template("nosotros.html", especialidades=especialidades)
 
+
+@app.route("/privacidad")
+def privacidad():
+    """Página pública con la política de privacidad (requerida por Google OAuth)."""
+    return render_template("legal_privacidad.html")
+
+
+@app.route("/terminos")
+def terminos():
+    """Página pública con los términos y condiciones del servicio."""
+    return render_template("legal_terminos.html")
+
+
 @app.route("/especialidades")
 def especialidades():
     conn = get_connection()

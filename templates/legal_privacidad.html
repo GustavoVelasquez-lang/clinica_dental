@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Política de privacidad - Clínica Sele Dent{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}?v=5">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/legal.css') }}">
+{% endblock %}
+
+{% block content %}
+{% set pagina = 'legal' %}
+{% include "_navbar.html" %}
+
+<section class="lg-hero">
+  <div class="container">
+    <h1>Política de privacidad</h1>
+    <p>Cómo tratamos y protegemos tus datos personales en Clínica Sele Dent.</p>
+  </div>
+</section>
+
+<section class="lg-wrap">
+  <div class="container">
+    <div class="lg-card">
+
+      <h2>1. Responsable del tratamiento</h2>
+      <p>
+        El responsable de los datos personales que se recogen en este sitio es
+        <strong>Clínica Sele Dent</strong>, con atención en El Tambo, Huancayo, Perú.
+        Para cualquier consulta sobre esta política puedes escribir a
+        <a href="mailto:clinicaseledentsip@gmail.com">clinicaseledentsip@gmail.com</a>
+        o llamar al +51 956 536 766.
+      </p>
+
+      <h2>2. Qué datos recopilamos</h2>
+      <ul>
+        <li><strong>Datos de identificación:</strong> nombres, apellidos, DNI y fecha de nacimiento.</li>
+        <li><strong>Datos de contacto:</strong> correo electrónico y número de teléfono.</li>
+        <li><strong>Datos de atención:</strong> especialidad, tratamiento, fecha y hora de la cita, odontólogo asignado y observaciones que decidas registrar.</li>
+        <li><strong>Datos de pago:</strong> monto del adelanto o pago, número de operación y la imagen del comprobante que subes para validarlo.</li>
+        <li><strong>Datos de la cuenta:</strong> correo de acceso y contraseña almacenada de forma cifrada (nunca en texto plano).</li>
+      </ul>
+
+      <h2>3. Para qué usamos tus datos</h2>
+      <ul>
+        <li>Crear y administrar tu cuenta y tu perfil de paciente.</li>
+        <li>Registrar, confirmar, reprogramar o cancelar tus citas.</li>
+        <li>Enviarte correos de confirmación y recordatorios de tus citas.</li>
+        <li>Validar los adelantos y pagos que realizas.</li>
+        <li>Enviarte un código cuando solicitas restablecer tu contraseña.</li>
+        <li>Atender consultas, reclamos y solicitudes de soporte.</li>
+        <li>Cumplir obligaciones legales, contables y sanitarias.</li>
+      </ul>
+
+      <h2>4. Base legal</h2>
+      <p>
+        Tratamos tus datos porque son necesarios para ejecutar el servicio que solicitas
+        (gestionar tu cita y tu cuenta) y porque nos otorgas tu consentimiento al
+        registrarte y aceptar esta política. Puedes retirar tu consentimiento en
+        cualquier momento, aunque ello puede impedir que sigamos prestando el servicio.
+      </p>
+
+      <h2>5. Con quién compartimos los datos</h2>
+      <p>
+        <strong>No vendemos ni alquilamos tus datos.</strong> Solo los compartimos con
+        proveedores tecnológicos que nos ayudan a operar el sitio y que actúan por
+        nuestra cuenta: alojamiento de la aplicación, base de datos y envío de correos
+        electrónicos. También podemos entregarlos cuando una autoridad competente lo
+        exija por ley.
+      </p>
+
+      <h2>6. Cuánto tiempo los conservamos</h2>
+      <p>
+        Mientras tu cuenta permanezca activa y durante los plazos que exijan las
+        obligaciones legales, contables y sanitarias aplicables. Luego se eliminan o
+        se anonimizan de forma segura.
+      </p>
+
+      <h2>7. Seguridad</h2>
+      <p>
+        Aplicamos medidas técnicas y organizativas razonables: contraseñas cifradas con
+        algoritmos de hash, conexiones cifradas con el servidor, acceso restringido a la
+        información y respaldo de la base de datos. Ningún sistema es absolutamente
+        infalible, pero trabajamos para reducir esos riesgos.
+      </p>
+
+      <h2>8. Tus derechos</h2>
+      <p>
+        Puedes solicitar el acceso, la rectificación, la cancelación o la oposición al
+        tratamiento de tus datos (derechos ARCO), así como actualizar tu información
+        desde tu cuenta. Escríbenos a
+        <a href="mailto:clinicaseledentsip@gmail.com">clinicaseledentsip@gmail.com</a>
+        indicando en el asunto "Derechos ARCO" y el correo con el que te registraste.
+        Responderemos en un plazo razonable.
+      </p>
+
+      <h2>9. Cookies y sesiones</h2>
+      <p>
+        Usamos cookies propias necesarias para mantener tu sesión iniciada y para
+        recordar preferencias básicas del sitio. No utilizamos cookies publicitarias ni
+        compartimos información con redes de anuncios.
+      </p>
+
+      <h2>10. Menores de edad y dependientes</h2>
+      <p>
+        Los datos de menores de edad o de familiares a cargo deben ser registrados por
+        su padre, madre o tutor, quien asume la responsabilidad sobre la veracidad de la
+        información y sobre el uso de la cuenta.
+      </p>
+
+      <h2>11. Cambios en esta política</h2>
+      <p>
+        Podemos actualizar esta política para reflejar cambios en el servicio o en la
+        normativa. Publicaremos la versión vigente en esta misma página con su fecha de
+        actualización.
+      </p>
+
+      <p class="lg-meta">Última actualización: 4 de noviembre de 2026.</p>
+
+    </div>
+  </div>
+</section>
+
+{% include "_footer.html" %}
+{% endblock %}
