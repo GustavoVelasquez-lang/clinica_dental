@@ -5673,7 +5673,6 @@ def consultar_dni_api(dni):
 
 
 @app.route("/api/consultar-dni/<dni>")
-@login_required
 def consultar_dni(dni):
     """Consulta el DNI en Decolecta y devuelve nombres y apellidos."""
     dni = (dni or "").strip()
