@@ -31,6 +31,7 @@ def generar_token():
         "client_id": creds.client_id,
         "client_secret": creds.client_secret,
         "scopes": creds.scopes,
+        "expiry": creds.expiry.isoformat() if creds.expiry else None,
     }
 
     with open(TOKEN_FILE, "w") as f:

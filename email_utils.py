@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import threading
+from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
@@ -111,6 +112,15 @@ def _get_credentials() -> Credentials | None:
         try:
             with open(_TOKEN_FILE) as f:
                 token_data = json.load(f)
+
+            expira = token_data.get("expiry")
+            expira_dt = None
+            if expira:
+                try:
+                    expira_dt = datetime.fromisoformat(str(expira).replace("Z", "+00:00"))
+                except ValueError:
+                    expira_dt = None
+
             creds = Credentials(
                 token=token_data.get("token"),
                 refresh_token=token_data.get("refresh_token"),
@@ -118,6 +128,7 @@ def _get_credentials() -> Credentials | None:
                 client_id=token_data.get("client_id"),
                 client_secret=token_data.get("client_secret"),
                 scopes=token_data.get("scopes", SCOPES),
+                expiry=expira_dt,
             )
         except Exception as e:
             logger.warning(f"No se pudo leer {_TOKEN_FILE}: {e}")
@@ -134,8 +145,15 @@ def _get_credentials() -> Credentials | None:
         )
         return None
 
-    try:
-        if creds.expired and creds.refresh_token:
+    # Refresca también cuando el archivo no trae 'expiry' (tokens antiguos):
+    # antes se usaba el access token caducado y el envío fallaba con 401.
+    necesita_refresco = (
+        creds.refresh_token
+        and (not creds.token or creds.expiry is None or creds.expired)
+    )
+
+    if necesita_refresco:
+        try:
             creds.refresh(Request())
             if _TOKEN_FILE.exists():
                 try:
@@ -148,6 +166,11 @@ def _get_credentials() -> Credentials | None:
                                 "client_id": creds.client_id,
                                 "client_secret": creds.client_secret,
                                 "scopes": creds.scopes,
+                                "expiry": (
+                                    creds.expiry.isoformat()
+                                    if creds.expiry
+                                    else None
+                                ),
                             },
                             f,
                             indent=2,
@@ -155,9 +178,9 @@ def _get_credentials() -> Credentials | None:
                     logger.info("Token de Gmail actualizado automáticamente")
                 except Exception as e:
                     logger.warning(f"No se pudo guardar el token actualizado: {e}")
-    except Exception as e:
-        logger.warning(f"No se pudo refrescar el token de Gmail: {e}")
-        return None
+        except Exception as e:
+            logger.warning(f"No se pudo refrescar el token de Gmail: {e}")
+            return None
 
     return creds
 
