@@ -1,5 +1,13 @@
 const DASH = JSON.parse(document.getElementById('dashData').textContent);
 
+/* selector de mes */
+const dashMes = document.getElementById("dashMes");
+if (dashMes) {
+  dashMes.addEventListener("change", function () {
+    if (this.form) this.form.submit();
+  });
+}
+
 /* bar chart */
 const diasN = DASH.labels;
 const actual = DASH.actual;
@@ -44,15 +52,15 @@ diasN.forEach((d, i) => {
   const hA = Math.round((actual[i] / maxBar) * CHAR_ALTO);
   const hP = Math.round((pasado[i] / maxBar) * CHAR_ALTO);
   g.innerHTML = `<div class="bar-wrap">
-    <div class="bar citas bar-inicial" data-h="${hA}" aria-label="Actual ${d}: ${actual[i]} citas"></div>
-    <div class="bar pacientes bar-inicial" data-h="${hP}" aria-label="Semana pasada ${d}: ${pasado[i]} citas"></div>
+    <div class="bar citas bar-inicial" data-h="${hA}" aria-label="${DASH.mesActual || 'Actual'} ${d}: ${actual[i]} citas"></div>
+    <div class="bar pacientes bar-inicial" data-h="${hP}" aria-label="${DASH.mesPasado || 'Mes anterior'} ${d}: ${pasado[i]} citas"></div>
   </div><span class="bar-label">${d}</span>`;
 
   const bA = g.querySelector(".bar.citas");
   const bP = g.querySelector(".bar.pacientes");
-  bA.addEventListener("mouseenter", () => mostrarTip(bA, "Actual", actual[i], "#2563eb"));
+  bA.addEventListener("mouseenter", () => mostrarTip(bA, DASH.mesActual || "Actual", actual[i], "#2563eb"));
   bA.addEventListener("mouseleave", ocultarTip);
-  bP.addEventListener("mouseenter", () => mostrarTip(bP, "Semana pasada", pasado[i], "#cbd5e1"));
+  bP.addEventListener("mouseenter", () => mostrarTip(bP, DASH.mesPasado || "Mes anterior", pasado[i], "#cbd5e1"));
   bP.addEventListener("mouseleave", ocultarTip);
   g.addEventListener("mouseleave", ocultarTip);
 
@@ -116,19 +124,34 @@ function animateCount(el) {
 }
 
 /* observer */
-const obs = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((e) => {
-      if (!e.isIntersecting) return;
-      e.target.querySelectorAll(".bar[data-h]").forEach((b) => {
-        setTimeout(() => { b.style.height = b.dataset.h + "px"; b.style.transition = "height 1.1s cubic-bezier(.22,1,.36,1)"; }, 80);
-      });
-      e.target.querySelectorAll(".kpi-bar-fill[data-w],.esp-legend-bar-fill[data-w],.ingreso-item-bar[data-w]")
-        .forEach((b) => { setTimeout(() => { b.style.width = b.dataset.w + "%"; }, 200); });
-      e.target.querySelectorAll("[data-target]").forEach(animateCount);
-      obs.unobserve(e.target);
-    });
-  },
-  { threshold: 0.1 }
-);
-obs.observe(document.getElementById("dashContent"));
+const dashContent = document.getElementById("dashContent");
+let animado = false;
+
+function activarAnimaciones(root) {
+  if (!root || animado) return;
+  animado = true;
+  root.querySelectorAll(".bar[data-h]").forEach((b) => {
+    setTimeout(() => { b.style.height = b.dataset.h + "px"; b.style.transition = "height 1.1s cubic-bezier(.22,1,.36,1)"; }, 80);
+  });
+  root.querySelectorAll(".kpi-bar-fill[data-w],.esp-legend-bar-fill[data-w],.ingreso-item-bar[data-w]")
+    .forEach((b) => { setTimeout(() => { b.style.width = b.dataset.w + "%"; }, 200); });
+  root.querySelectorAll("[data-target]").forEach(animateCount);
+}
+
+if (dashContent) {
+  if ("IntersectionObserver" in window) {
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          activarAnimaciones(e.target);
+          obs.unobserve(e.target);
+        });
+      },
+      { threshold: 0.1 }
+    );
+    obs.observe(dashContent);
+  }
+  /* Respaldo: si el observer no se dispara, animar igualmente al cargar */
+  setTimeout(() => activarAnimaciones(dashContent), 700);
+}

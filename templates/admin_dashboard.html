@@ -4,15 +4,41 @@
 {% block topbar_titulo %}Dashboard{% endblock %}
 
 {% block admin_content %}
+<!-- ══ SELECTOR DE MES ══ -->
+<div class="dash-mes-bar">
+  <a class="dash-mes-arrow" href="{{ url_for('admin_dashboard', mes=mes_prev) }}"
+     title="Mes anterior" aria-label="Mes anterior">
+    <i class="fa-solid fa-chevron-left"></i>
+  </a>
+  <form class="dash-mes-form" id="dashMesForm" method="get"
+        action="{{ url_for('admin_dashboard') }}">
+    <i class="fa-solid fa-calendar-days"></i>
+    <select name="mes" id="dashMes" class="dash-mes-select"
+            aria-label="Seleccionar mes del dashboard">
+      {% for m in meses_disponibles %}
+      <option value="{{ m.valor }}"{% if m.valor == mes_sel %} selected{% endif %}>{{ m.etiqueta }}</option>
+      {% endfor %}
+    </select>
+    <noscript><button type="submit" class="btn-a btn-teal">Ver</button></noscript>
+  </form>
+  <a class="dash-mes-arrow" href="{{ url_for('admin_dashboard', mes=mes_next) }}"
+     title="Mes siguiente" aria-label="Mes siguiente">
+    <i class="fa-solid fa-chevron-right"></i>
+  </a>
+  <span class="dash-mes-info">
+    {{ mes_etiqueta }} · comparado con {{ mes_anterior_etiqueta }}
+  </span>
+</div>
+
 <!-- KPIs — datos desde Flask -->
 <div class="kpi-grid">
   <div class="kpi-card c-teal">
     <div class="kpi-header">
       <div class="kpi-icon"><i class="fa-solid fa-calendar-days"></i></div>
-      <span class="kpi-trend trend-up">Hoy</span>
+      <span class="kpi-trend {{ var_citas.clase }}">{{ var_citas.texto }}</span>
     </div>
-    <div class="kpi-num" data-target="{{ citas_hoy }}">0</div>
-    <div class="kpi-label">Citas hoy</div>
+    <div class="kpi-num" data-target="{{ citas_mes }}">{{ citas_mes }}</div>
+    <div class="kpi-label">Citas del mes</div>
     <div class="kpi-bar">
       <div class="kpi-bar-fill" data-w="72" ></div>
     </div>
@@ -20,11 +46,11 @@
 
   <div class="kpi-card c-gold">
     <div class="kpi-header">
-      <div class="kpi-icon"><i class="fa-regular fa-calendar"></i></div>
-      <span class="kpi-trend trend-up">Semana</span>
+      <div class="kpi-icon"><i class="fa-solid fa-calendar-check"></i></div>
+      <span class="kpi-trend {{ var_atendidas.clase }}">{{ var_atendidas.texto }}</span>
     </div>
-    <div class="kpi-num" data-target="{{ citas_semana }}">0</div>
-    <div class="kpi-label">Citas esta semana</div>
+    <div class="kpi-num" data-target="{{ citas_atendidas }}">{{ citas_atendidas }}</div>
+    <div class="kpi-label">Citas atendidas</div>
     <div class="kpi-bar">
       <div class="kpi-bar-fill" data-w="60" ></div>
     </div>
@@ -33,10 +59,10 @@
   <div class="kpi-card c-red">
     <div class="kpi-header">
       <div class="kpi-icon"><i class="fa-solid fa-user-plus"></i></div>
-      <span class="kpi-trend trend-up">Mes</span>
+      <span class="kpi-trend {{ var_pacientes.clase }}">{{ var_pacientes.texto }}</span>
     </div>
-    <div class="kpi-num" data-target="{{ pacientes_nuevos }}">0</div>
-    <div class="kpi-label">Pacientes nuevos (mes)</div>
+    <div class="kpi-num" data-target="{{ pacientes_nuevos }}">{{ pacientes_nuevos }}</div>
+    <div class="kpi-label">Pacientes nuevos</div>
     <div class="kpi-bar">
       <div class="kpi-bar-fill" data-w="45" ></div>
     </div>
@@ -45,12 +71,12 @@
   <div class="kpi-card c-blue">
     <div class="kpi-header">
       <div class="kpi-icon"><i class="fa-solid fa-sack-dollar"></i></div>
-      <span class="kpi-trend trend-up">Mes</span>
+      <span class="kpi-trend {{ var_ingresos.clase }}">{{ var_ingresos.texto }}</span>
     </div>
     <div class="kpi-num" data-target="{{ ingresos_mes|round|int }}" data-prefix="S/ ">
-      S/ 0
+      S/ {{ "{:,.0f}".format(ingresos_mes).replace(",", " ") }}
     </div>
-    <div class="kpi-label">Ingresos este mes</div>
+    <div class="kpi-label">Ingresos del mes</div>
     <div class="kpi-bar">
       <div class="kpi-bar-fill" data-w="83" ></div>
     </div>
@@ -62,8 +88,8 @@
   <div class="chart-card">
     <div class="chart-header">
       <div>
-        <h3>Citas por día</h3>
-        <p>Estos 7 días vs la semana pasada</p>
+        <h3>Citas por día de la semana</h3>
+        <p>{{ mes_etiqueta }} vs {{ mes_anterior_etiqueta }}</p>
       </div>
     </div>
     <div class="bar-chart-wrap">
@@ -73,11 +99,11 @@
     <div class="legend-flex">
       <div class="legend-item">
         <span class="legend-swatch sw-actual"></span>
-        Actual
+        {{ mes_etiqueta }}
       </div>
       <div class="legend-item">
         <span class="legend-swatch sw-pasado"></span>
-        Semana pasada
+        {{ mes_anterior_etiqueta }}
       </div>
     </div>
   </div>
@@ -86,7 +112,7 @@
     <div class="chart-header">
       <div>
         <h3>Especialidades</h3>
-        <p>Más solicitadas este mes</p>
+        <p>Más solicitadas en {{ mes_etiqueta }}</p>
       </div>
     </div>
     <div class="donut-wrap">
@@ -108,15 +134,18 @@
 <!-- Bottom -->
 <div class="bottom-row">
   <div class="citas-card">
-    <h3>Citas de hoy</h3>
-    <p>Próximas citas programadas</p>
-    {% if citas_hoy_lista %}
-    {% for cita in citas_hoy_lista %}
+    <h3>{{ lista_titulo }}</h3>
+    <p>{{ lista_subtitulo }}</p>
+    {% if citas_lista %}
+    {% for cita in citas_lista %}
     <div class="cita-item">
-      <span class="cita-hora">{{ cita.hora }}</span>
+      <span class="cita-hora">{{ cita.hora.strftime('%H:%M') if cita.hora else '—' }}</span>
       <div class="cita-info">
         <strong>{{ cita.paciente }}</strong>
-        <span>{% if cita.tipo_atencion %}{{ cita.tipo_atencion }}{% else %}{{ cita.servicio }}{% endif %}</span>
+        <span>
+          {% if not es_mes_actual %}{{ cita.fecha.strftime('%d/%m/%Y') }} · {% endif %}
+          {% if cita.tipo_atencion %}{{ cita.tipo_atencion }}{% else %}{{ cita.servicio }}{% endif %}
+        </span>
       </div>
       <span class="cita-status
         {%- if cita.estado == 'confirmada' %} st-ok
@@ -127,12 +156,14 @@
     </div>
     {% endfor %}
     {% else %}
-    <p class="graf-vacio">Sin citas programadas para hoy.</p>
+    <p class="graf-vacio">
+      {% if es_mes_actual %}Sin citas programadas para hoy.{% else %}Sin citas registradas en {{ mes_etiqueta }}.{% endif %}
+    </p>
     {% endif %}
   </div>
 
   <div class="ingresos-card">
-    <div class="ingresos-label">Ingresos del mes</div>
+    <div class="ingresos-label">Ingresos de {{ mes_etiqueta }}</div>
     <div class="ingresos-num">S/ {{ "{:,.0f}".format(ingresos_mes).replace(",", " ") }}</div>
     <div class="ingresos-sub">Total adelantos/pagos registrados</div>
     <div class="ingresos-list" id="ingresosList"></div>
@@ -142,7 +173,7 @@
 
 {% block admin_js %}
 <script id="dashData" type="application/json">
-{{ {'labels': dias_labels, 'actual': citas_actual, 'pasado': citas_pasado, 'maxCitas': max_citas, 'escalaY': escala_y, 'esp': esp_donut, 'ing': ingresos_lista}|tojson }}
+{{ {'labels': dias_labels, 'actual': citas_actual, 'pasado': citas_pasado, 'maxCitas': max_citas, 'escalaY': escala_y, 'esp': esp_donut, 'ing': ingresos_lista, 'mesActual': mes_etiqueta, 'mesPasado': mes_anterior_etiqueta}|tojson }}
 </script>
-<script src="{{ url_for('static', filename='js/admin_dashboard.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='js/admin_dashboard.js') }}?v=3"></script>
 {% endblock %}

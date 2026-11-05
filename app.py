@@ -4114,63 +4114,143 @@ def _escala_eje_y(valores):
     return tope, [paso * i for i in range(6)]
 
 
+MESES_ES = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+
+
+def _rango_mes(anio, mes):
+    """Devuelve (primer día, último día, primer día del mes siguiente)."""
+    inicio = date(anio, mes, 1)
+    siguiente = date(anio + 1, 1, 1) if mes == 12 else date(anio, mes + 1, 1)
+    return inicio, siguiente - timedelta(days=1), siguiente
+
+
+def _mes_desplazado(anio, mes, delta):
+    """Año y mes resultantes de sumar/restar meses."""
+    indice = (anio * 12 + (mes - 1)) + delta
+    return indice // 12, indice % 12 + 1
+
+
+def _variacion(actual, anterior):
+    """Chip de variación porcentual respecto al mes anterior."""
+    actual = float(actual or 0)
+    anterior = float(anterior or 0)
+    if not anterior:
+        if not actual:
+            return {"texto": "—", "clase": "trend-neutral"}
+        return {"texto": "+100%", "clase": "trend-up"}
+    dif = (actual - anterior) * 100.0 / anterior
+    if abs(dif) < 0.05:
+        return {"texto": "0%", "clase": "trend-neutral"}
+    return {
+        "texto": f"{'▲' if dif > 0 else '▼'} {abs(dif):.0f}%",
+        "clase": "trend-up" if dif > 0 else "trend-down",
+    }
+
+
 @app.route("/admin/dashboard")
 @admin_required
 def admin_dashboard():
     hoy = date.today()
-    lunes = hoy - timedelta(days=hoy.weekday())
-    inicio_mes = hoy.replace(day=1)
+
+    # ── Mes seleccionado (?mes=YYYY-MM) ──
+    mes_arg = (request.args.get("mes") or "").strip()
+    if re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", mes_arg):
+        anio, mes = int(mes_arg[:4]), int(mes_arg[5:])
+    else:
+        anio, mes = hoy.year, hoy.month
+
+    inicio_mes, fin_mes, siguiente_mes = _rango_mes(anio, mes)
+    anio_prev, mes_prev_num = _mes_desplazado(anio, mes, -1)
+    inicio_prev, fin_prev, siguiente_prev = _rango_mes(anio_prev, mes_prev_num)
+    anio_next, mes_next_num = _mes_desplazado(anio, mes, 1)
+
+    mes_sel = f"{anio:04d}-{mes:02d}"
+    mes_etiqueta = f"{MESES_ES[mes]} {anio}"
+    mes_anterior_etiqueta = f"{MESES_ES[mes_prev_num]} {anio_prev}"
+    es_mes_actual = (anio, mes) == (hoy.year, hoy.month)
 
     conn = get_connection()
     cur = conn.cursor()
 
-                
-    cur.execute("SELECT COALESCE(COUNT(*),0) AS n FROM citas WHERE fecha = %s AND estado <> 'cancelada'", (hoy,))
-    citas_hoy = cur.fetchone()["n"]
-
-    cur.execute("SELECT COALESCE(COUNT(*),0) AS n FROM citas WHERE fecha BETWEEN %s AND %s AND estado <> 'cancelada'",
-                (lunes, lunes + timedelta(days=6)))
-    citas_semana = cur.fetchone()["n"]
-
-    cur.execute("SELECT COALESCE(COUNT(*),0) AS n FROM usuarios WHERE id_rol = 2 AND fecha_registro >= %s", (inicio_mes,))
-    pacientes_nuevos = cur.fetchone()["n"]
-
+    # ── Meses disponibles para el menú (con datos + mes actual) ──
     cur.execute("""
-        SELECT COALESCE(SUM(adelanto),0) AS total
-        FROM citas WHERE fecha BETWEEN %s AND %s AND estado_pago <> 'pendiente'
-    """, (inicio_mes, hoy))
-    ingresos_mes = float(cur.fetchone()["total"])
+        SELECT DISTINCT TO_CHAR(fecha, 'YYYY-MM') AS mes FROM citas
+        WHERE fecha IS NOT NULL
+        UNION
+        SELECT DISTINCT TO_CHAR(fecha, 'YYYY-MM') AS mes FROM pagos
+        WHERE fecha IS NOT NULL
+    """)
+    valores_meses = {r["mes"] for r in cur.fetchall() if r["mes"]}
+    valores_meses.add(mes_sel)
+    valores_meses.add(f"{hoy.year:04d}-{hoy.month:02d}")
+    meses_disponibles = []
+    for valor in sorted(valores_meses, reverse=True):
+        meses_disponibles.append({
+            "valor": valor,
+            "etiqueta": f"{MESES_ES[int(valor[5:])]} {int(valor[:4])}",
+        })
 
-                        
-    cur.execute("""
-        SELECT c.id, c.hora, c.estado, u.nombre AS paciente, e.nombre AS servicio
-        FROM citas c
-        JOIN usuarios u ON c.paciente_id = u.id
-        JOIN especialidades e ON c.especialidad_id = e.id
-        WHERE c.fecha = %s AND c.estado <> 'cancelada'
-        ORDER BY c.hora
-    """, (hoy,))
-    citas_hoy_lista = cur.fetchall()
+    # ── Métricas de un mes (para el actual y el anterior) ──
+    def _metricas(ini, fin, sig):
+        cur.execute("""
+            SELECT COUNT(*) AS n FROM citas
+            WHERE fecha BETWEEN %s AND %s AND estado <> 'cancelada'
+        """, (ini, fin))
+        citas = cur.fetchone()["n"]
 
-                                                 
-    cur.execute("""
-        SELECT fecha, COUNT(*) AS n FROM citas
-        WHERE fecha BETWEEN %s AND %s AND estado <> 'cancelada'
-        GROUP BY fecha
-    """, (lunes - timedelta(days=7), lunes + timedelta(days=6)))
-    por_fecha = {r["fecha"]: r["n"] for r in cur.fetchall()}
+        cur.execute("""
+            SELECT COUNT(*) AS n FROM citas
+            WHERE fecha BETWEEN %s AND %s
+              AND estado IN ('atendida', 'atendido', 'completada')
+        """, (ini, fin))
+        atendidas = cur.fetchone()["n"]
 
-    citas_actual = [por_fecha.get(lunes + timedelta(days=d), 0) for d in range(7)]
-    citas_pasado = [por_fecha.get(lunes - timedelta(days=7) + timedelta(days=d), 0) for d in range(7)]
+        cur.execute("""
+            SELECT COUNT(*) AS n FROM usuarios
+            WHERE id_rol = 2 AND fecha_registro >= %s AND fecha_registro < %s
+        """, (ini, sig))
+        nuevos = cur.fetchone()["n"]
+
+        cur.execute("""
+            SELECT COALESCE(SUM(adelanto), 0) AS total FROM citas
+            WHERE fecha BETWEEN %s AND %s AND estado_pago <> 'pendiente'
+        """, (ini, fin))
+        ingresos = float(cur.fetchone()["total"])
+
+        return {"citas": citas, "atendidas": atendidas,
+                "nuevos": nuevos, "ingresos": ingresos}
+
+    actual = _metricas(inicio_mes, fin_mes, siguiente_mes)
+    previo = _metricas(inicio_prev, fin_prev, siguiente_prev)
+
+    citas_mes = actual["citas"]
+    citas_atendidas = actual["atendidas"]
+    pacientes_nuevos = actual["nuevos"]
+    ingresos_mes = actual["ingresos"]
+
+    # ── Citas por día de la semana: mes seleccionado vs mes anterior ──
+    def _por_dia_semana(ini, fin):
+        cur.execute("""
+            SELECT EXTRACT(ISODOW FROM fecha)::int AS dow, COUNT(*) AS n
+            FROM citas
+            WHERE fecha BETWEEN %s AND %s AND estado <> 'cancelada'
+            GROUP BY dow
+        """, (ini, fin))
+        mapa = {r["dow"]: r["n"] for r in cur.fetchall()}
+        return [mapa.get(d, 0) for d in range(1, 8)]
+
+    citas_actual = _por_dia_semana(inicio_mes, fin_mes)
+    citas_pasado = _por_dia_semana(inicio_prev, fin_prev)
     max_citas, escala_y = _escala_eje_y(citas_actual + citas_pasado)
 
-                                              
+    # ── Especialidades más solicitadas del mes ──
     cur.execute("""
         SELECT e.nombre AS nombre, COUNT(*) AS n
         FROM citas c JOIN especialidades e ON c.especialidad_id = e.id
         WHERE c.fecha BETWEEN %s AND %s AND c.estado <> 'cancelada'
         GROUP BY e.nombre ORDER BY n DESC LIMIT 4
-    """, (inicio_mes, hoy))
+    """, (inicio_mes, fin_mes))
     top_esp = cur.fetchall()
     total_tratamientos = sum(r["n"] for r in top_esp)
     esp_donut = []
@@ -4183,13 +4263,13 @@ def admin_dashboard():
             "id": f"d{i + 1}"
         })
 
-                                           
+    # ── Ingresos por especialidad del mes ──
     cur.execute("""
-        SELECT e.nombre AS nombre, COALESCE(SUM(c.adelanto),0) AS total
+        SELECT e.nombre AS nombre, COALESCE(SUM(c.adelanto), 0) AS total
         FROM citas c JOIN especialidades e ON c.especialidad_id = e.id
         WHERE c.fecha BETWEEN %s AND %s AND c.estado_pago <> 'pendiente'
         GROUP BY e.nombre ORDER BY total DESC LIMIT 4
-    """, (inicio_mes, hoy))
+    """, (inicio_mes, fin_mes))
     top_ing = cur.fetchall()
     ing_max = max((float(r["total"]) for r in top_ing), default=1)
     ingresos_lista = [{
@@ -4198,22 +4278,69 @@ def admin_dashboard():
         "pct": round(float(r["total"]) * 100 / ing_max) if ing_max else 0
     } for r in top_ing]
 
+    # ── Listado inferior: citas de hoy (mes actual) o del mes ──
+    if es_mes_actual:
+        cur.execute("""
+            SELECT c.id, c.hora, c.estado, c.fecha, c.tipo_atencion,
+                   u.nombre AS paciente, e.nombre AS servicio
+            FROM citas c
+            JOIN usuarios u ON c.paciente_id = u.id
+            JOIN especialidades e ON c.especialidad_id = e.id
+            WHERE c.fecha = %s AND c.estado <> 'cancelada'
+            ORDER BY c.hora
+        """, (hoy,))
+        lista_titulo = "Citas de hoy"
+        lista_subtitulo = "Próximas citas programadas"
+    else:
+        cur.execute("""
+            SELECT c.id, c.hora, c.estado, c.fecha, c.tipo_atencion,
+                   u.nombre AS paciente, e.nombre AS servicio
+            FROM citas c
+            JOIN usuarios u ON c.paciente_id = u.id
+            JOIN especialidades e ON c.especialidad_id = e.id
+            WHERE c.fecha BETWEEN %s AND %s AND c.estado <> 'cancelada'
+            ORDER BY c.fecha, c.hora
+            LIMIT 6
+        """, (inicio_mes, fin_mes))
+        lista_titulo = f"Citas de {mes_etiqueta}"
+        lista_subtitulo = "Citas registradas en el mes"
+    citas_lista = cur.fetchall()
+
     conn.close()
 
-    return render_template("admin_dashboard.html",
-                           citas_hoy=citas_hoy,
-                           citas_semana=citas_semana,
-                           pacientes_nuevos=pacientes_nuevos,
-                           ingresos_mes=ingresos_mes,
-                           citas_hoy_lista=citas_hoy_lista,
-                           dias_labels=["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
-                           citas_actual=citas_actual,
-                           citas_pasado=citas_pasado,
-                           max_citas=max_citas,
-                           escala_y=escala_y,
-                           esp_donut=esp_donut,
-                           total_tratamientos=total_tratamientos,
-                           ingresos_lista=ingresos_lista)
+    return render_template(
+        "admin_dashboard.html",
+        # Mes seleccionado
+        meses_disponibles=meses_disponibles,
+        mes_sel=mes_sel,
+        mes_etiqueta=mes_etiqueta,
+        mes_anterior_etiqueta=mes_anterior_etiqueta,
+        mes_prev=f"{anio_prev:04d}-{mes_prev_num:02d}",
+        mes_next=f"{anio_next:04d}-{mes_next_num:02d}",
+        es_mes_actual=es_mes_actual,
+        # KPIs del mes + variación
+        citas_mes=citas_mes,
+        citas_atendidas=citas_atendidas,
+        pacientes_nuevos=pacientes_nuevos,
+        ingresos_mes=ingresos_mes,
+        var_citas=_variacion(citas_mes, previo["citas"]),
+        var_atendidas=_variacion(citas_atendidas, previo["atendidas"]),
+        var_pacientes=_variacion(pacientes_nuevos, previo["nuevos"]),
+        var_ingresos=_variacion(ingresos_mes, previo["ingresos"]),
+        # Gráficos
+        dias_labels=["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+        citas_actual=citas_actual,
+        citas_pasado=citas_pasado,
+        max_citas=max_citas,
+        escala_y=escala_y,
+        esp_donut=esp_donut,
+        total_tratamientos=total_tratamientos,
+        ingresos_lista=ingresos_lista,
+        # Listado inferior
+        citas_lista=citas_lista,
+        lista_titulo=lista_titulo,
+        lista_subtitulo=lista_subtitulo,
+    )
 
 
 @app.route("/admin/pacientes")
@@ -5546,12 +5673,6 @@ def consultar_dni(dni):
 
     return jsonify({"success": True, **payload}), 200
 
-
-@app.route("/api/consultar_dni/<dni>")
-@login_required
-def consultar_dni_legacy(dni):
-    """Alias compatible con la ruta antigua (guion bajo)."""
-    return consultar_dni(dni)
 
 
 MAX_INTENTOS   = 5                                           
